@@ -1,0 +1,46 @@
+{
+  "name": "@ralph/cli",
+  "version": "1.0.0",
+  "description": "Autonomous AI agent loop for Claude Code - Zero friction installation",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "ralph": "./bin/ralph.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates"
+  ],
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "automation",
+    "autonomous",
+    "agent",
+    "loop",
+    "cli"
+  ],
+  "author": "snarktank",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snarktank/ralph.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/snarktank/ralph/issues"
+  },
+  "homepage": "https://github.com/snarktank/ralph#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "chalk": "^5.3.0"
+  }
+}

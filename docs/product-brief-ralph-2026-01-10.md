@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Ralph is an autonomous AI agent loop template for Claude Code. It enables developers to run Claude Code repeatedly until all PRD items are complete, with memory persisting via git history and status files. This refactored version replaces the Amp-specific implementation with Claude Code compatibility, shifting the developer's focus from real-time supervision to designing quality gates.
+Ralph is an autonomous AI agent loop template for Claude Code. It enables developers to run Claude Code repeatedly until all PRD items are complete, with memory persisting via git history and status files. This implementation shifts the developer's focus from real-time supervision to designing quality gates.
 
 ---
 
@@ -22,7 +22,7 @@ Developers using AI coding assistants spend too much time in a reactive loop - a
 
 ### Why Now?
 
-Claude Code subscriptions are widely available, but there's no standardized autonomous loop pattern for it like Ralph provides for Amp. The original Ralph pattern (by Geoffrey Huntley) proved the concept works - now it needs a Claude Code implementation.
+Claude Code subscriptions are widely available, but there's no standardized autonomous loop pattern for it. The original Ralph pattern (by Geoffrey Huntley) proved the concept works - now Ralph provides a Claude Code implementation.
 
 ### Impact if Unsolved
 
@@ -103,13 +103,13 @@ Personal productivity tool that demonstrates autonomous AI coding patterns. Can 
   - Search and read BMAD documentation from project folder
   - Auto-construct loop files (prd.json, prompt, script) from BMAD docs
 - Update docs (README, AGENTS.md) for Claude Code usage
-- Remove Amp-specific references
+- Optimized for Claude Code CLI
 - Keep flowchart visualization
 
 ### Out of Scope
 
 - `/skills/prd` changes - BMAD `/prd` workflow handles PRD creation
-- Backward compatibility with Amp
+- Backward compatibility with other AI coding tools
 - Changes to BMAD core workflows
 - Multi-platform installers or packaging
 

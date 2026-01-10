@@ -1,0 +1,34 @@
+{
+  "name": "ralph-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ralph - Autonomous AI agent loop for Claude Code",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/flowchart",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snarktank/ralph.git"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "automation",
+    "autonomous",
+    "agent"
+  ],
+  "author": "snarktank",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/snarktank/ralph/issues"
+  },
+  "homepage": "https://github.com/snarktank/ralph#readme"
+}
