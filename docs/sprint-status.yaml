@@ -1,0 +1,275 @@
+version: "6.0.0"
+project_name: "Ralph"
+project_level: 3
+current_sprint: 1
+sprint_plan_path: "docs/sprint-plan-ralph-2026-01-10.md"
+last_updated: "2026-01-10"  # Updated with Sprint 3 completion
+
+sprints:
+  - sprint_number: 1
+    start_date: "2026-01-10"
+    end_date: "2026-01-24"
+    capacity_points: 30
+    committed_points: 30
+    completed_points: 30
+    status: "completed"
+    goal: "Complete document ingestion and loop configuration interview"
+    stories:
+      - story_id: "STORY-001"
+        title: "Read Product Brief Document"
+        epic_id: "EPIC-001"
+        points: 2
+        status: "done"
+        priority: "must_have"
+        dependencies: []
+      - story_id: "STORY-002"
+        title: "Parse PRD Document"
+        epic_id: "EPIC-001"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: []
+      - story_id: "STORY-003"
+        title: "Read Architecture Document"
+        epic_id: "EPIC-001"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: []
+      - story_id: "STORY-004"
+        title: "Parse Sprint Status YAML"
+        epic_id: "EPIC-001"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: []
+      - story_id: "STORY-005"
+        title: "Read Individual Story Files"
+        epic_id: "EPIC-001"
+        points: 2
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-004"]
+      - story_id: "STORY-006"
+        title: "Display Documentation Summary"
+        epic_id: "EPIC-002"
+        points: 2
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-001", "STORY-002", "STORY-003", "STORY-004", "STORY-005"]
+      - story_id: "STORY-007"
+        title: "Scope Selection Interview"
+        epic_id: "EPIC-002"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-006"]
+      - story_id: "STORY-008"
+        title: "Quality Gates Configuration"
+        epic_id: "EPIC-002"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-007"]
+      - story_id: "STORY-009"
+        title: "Loop Parameters Configuration"
+        epic_id: "EPIC-002"
+        points: 2
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-008"]
+      - story_id: "STORY-010"
+        title: "Generate prd.json from Selected Stories"
+        epic_id: "EPIC-003"
+        points: 5
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-009"]
+      - story_id: "STORY-014"
+        title: "Initialize Progress File"
+        epic_id: "EPIC-003"
+        points: 2
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-010"]
+
+  - sprint_number: 2
+    start_date: "2026-01-25"
+    end_date: "2026-02-07"
+    capacity_points: 30
+    committed_points: 29
+    completed_points: 29
+    status: "completed"
+    goal: "Complete file generation and implement core loop execution"
+    stories:
+      - story_id: "STORY-011"
+        title: "Order Stories by Dependency"
+        epic_id: "EPIC-003"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-010"]
+      - story_id: "STORY-012"
+        title: "Generate Prompt Template"
+        epic_id: "EPIC-003"
+        points: 5
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-011"]
+      - story_id: "STORY-013"
+        title: "Generate Loop Script"
+        epic_id: "EPIC-003"
+        points: 8
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-012"]
+      - story_id: "STORY-015"
+        title: "Pre-Execution Summary and Confirmation"
+        epic_id: "EPIC-004"
+        points: 3
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-013", "STORY-014"]
+      - story_id: "STORY-016"
+        title: "Loop State Machine Core"
+        epic_id: "EPIC-004"
+        points: 8
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-015"]
+      - story_id: "STORY-023"
+        title: "AGENTS.md Update Instructions"
+        epic_id: "EPIC-005"
+        points: 2
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-012"]
+
+  - sprint_number: 3
+    start_date: "2026-02-08"
+    end_date: "2026-02-21"
+    capacity_points: 30
+    committed_points: 32
+    completed_points: 32
+    status: "completed"
+    goal: "Complete execution engine, add state management, register as BMAD workflow"
+    stories:
+      - story_id: "STORY-017"
+        title: "Quality Gate Execution"
+        epic_id: "EPIC-004"
+        points: 5
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-016"]
+      - story_id: "STORY-018"
+        title: "Stuck Detection and Exit Handling"
+        epic_id: "EPIC-004"
+        points: 5
+        status: "done"
+        priority: "must_have"
+        dependencies: ["STORY-016"]
+      - story_id: "STORY-019"
+        title: "Real-Time Progress Display"
+        epic_id: "EPIC-004"
+        points: 3
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-016"]
+      - story_id: "STORY-020"
+        title: "Loop Resumability"
+        epic_id: "EPIC-004"
+        points: 5
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-016"]
+      - story_id: "STORY-021"
+        title: "Archive Previous Run Handling"
+        epic_id: "EPIC-005"
+        points: 3
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-020"]
+      - story_id: "STORY-022"
+        title: "Sprint Status YAML Updates"
+        epic_id: "EPIC-005"
+        points: 3
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-016"]
+      - story_id: "STORY-024"
+        title: "Create Workflow File Structure"
+        epic_id: "EPIC-006"
+        points: 3
+        status: "done"
+        priority: "should_have"
+        dependencies: []
+      - story_id: "STORY-025"
+        title: "Workflow Status Integration"
+        epic_id: "EPIC-006"
+        points: 2
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-024"]
+      - story_id: "STORY-026"
+        title: "Distribution Package and Installer"
+        epic_id: "EPIC-006"
+        points: 3
+        status: "done"
+        priority: "should_have"
+        dependencies: ["STORY-024", "STORY-025"]
+
+epics:
+  - epic_id: "EPIC-001"
+    name: "BMAD Document Ingestion"
+    priority: "must_have"
+    total_points: 13
+    stories_count: 5
+    status: "completed"
+  - epic_id: "EPIC-002"
+    name: "Loop Configuration Interview"
+    priority: "must_have"
+    total_points: 10
+    stories_count: 4
+    status: "completed"
+  - epic_id: "EPIC-003"
+    name: "Loop File Generation"
+    priority: "must_have"
+    total_points: 23
+    stories_count: 5
+    status: "completed"
+  - epic_id: "EPIC-004"
+    name: "Loop Execution & Monitoring"
+    priority: "must_have"
+    total_points: 29
+    stories_count: 6
+    status: "completed"
+  - epic_id: "EPIC-005"
+    name: "State Management & Integration"
+    priority: "should_have"
+    total_points: 8
+    stories_count: 3
+    status: "completed"
+  - epic_id: "EPIC-006"
+    name: "BMAD Workflow Registration"
+    priority: "should_have"
+    total_points: 8
+    stories_count: 3
+    status: "completed"
+
+velocity:
+  sprint_1: null
+  sprint_2: null
+  sprint_3: null
+  rolling_average: null
+
+team:
+  size: 1
+  sprint_length_weeks: 2
+  capacity_per_sprint: 30
+
+metrics:
+  total_stories: 26
+  total_points: 91
+  stories_completed: 26
+  stories_in_progress: 0
+  stories_not_started: 0
