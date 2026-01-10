@@ -187,6 +187,357 @@ After reading all documents, display summary:
 
 ---
 
+## Consensus Validation Phase
+
+After document ingestion, validate the project architecture with external AI review before proceeding to configuration.
+
+### Purpose
+
+Use adversarial AI dialogue to:
+- Challenge epic definitions for blindspots
+- Identify missing requirements or edge cases
+- Validate architectural decisions
+- Reach consensus on critical implementation concerns
+
+This phase creates a **hard gate** - critical issues must be resolved before coding begins.
+
+---
+
+### Step 1: Prepare Consensus Context
+
+Build a structured context document from ingested data:
+
+**Context Structure:**
+```json
+{
+  "project": "{project_name}",
+  "type": "{project_type}",
+  "level": "{project_level}",
+  "vision": "{executive_summary from product brief}",
+  "epics": [
+    {
+      "id": "EPIC-XXX",
+      "name": "{epic_name}",
+      "description": "{epic_description}",
+      "stories": "{story_count}",
+      "priority": "{must_have|should_have}"
+    }
+  ],
+  "architecture": {
+    "pattern": "{architectural_pattern}",
+    "techStack": "{key_technologies}",
+    "components": "{component_count}"
+  },
+  "constraints": "{constraints from PRD}",
+  "risks": "{identified risks}"
+}
+```
+
+**Store as:** `consensus.context`
+
+---
+
+### Step 2: Round 1 - External Challenge
+
+**Action:** Send context to Perplexity MCP requesting ChatGPT 5.2 with reasoning.
+
+**MCP Tool Call:**
+```
+Use the perplexity MCP server to query:
+"Using ChatGPT 5.2 with reasoning mode, analyze this project critically..."
+```
+
+**Prompt Template:**
+```
+You are a senior technical architect reviewing a project before implementation begins.
+
+PROJECT CONTEXT:
+{consensus.context as formatted JSON}
+
+TASK:
+Analyze these epics critically. Your job is to find problems BEFORE coding starts.
+
+Identify:
+1. BLINDSPOTS - What important aspects are missing from the epics?
+2. RISKS - What could go wrong with this architecture?
+3. DEPENDENCIES - Are there hidden dependencies between epics?
+4. SCOPE CREEP - Are any epics too vague or unbounded?
+5. TECHNICAL DEBT - What decisions might cause problems later?
+
+Be specific. Reference epic IDs. Propose alternatives where relevant.
+Format your response as structured JSON with severity ratings (critical/major/minor).
+```
+
+**Store response as:** `consensus.challenges`
+
+**Display to user:**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              CONSENSUS ROUND 1: EXTERNAL CHALLENGE               ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Source: ChatGPT 5.2 via Perplexity                               ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Challenges Found: {count}                                        ║
+║   Critical: {critical_count}                                     ║
+║   Major: {major_count}                                           ║
+║   Minor: {minor_count}                                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+{formatted list of challenges with severity and epic references}
+```
+
+---
+
+### Step 3: Round 2 - Ralph Counter-Arguments
+
+**Action:** Ralph (Claude) analyzes challenges and provides counter-arguments.
+
+**Internal Analysis:**
+For each challenge:
+1. Assess validity (valid/partially valid/invalid)
+2. Check if already addressed in documentation
+3. Propose mitigation if valid
+4. Explain rationale if disagreeing
+
+**Prompt Template (internal):**
+```
+Review these external challenges against the project documentation:
+
+CHALLENGES:
+{consensus.challenges}
+
+AVAILABLE DOCUMENTATION:
+- PRD: {ingested.prd summary}
+- Architecture: {ingested.architecture summary}
+- Sprint Status: {ingested.sprintStatus summary}
+
+For each challenge:
+1. Is it valid? (yes/partially/no)
+2. If already addressed, cite the specific section
+3. If valid and not addressed, propose a mitigation
+4. Provide clear rationale
+
+Format as structured JSON matching challenge IDs.
+```
+
+**Store as:** `consensus.counterArguments`
+
+**Display:**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              CONSENSUS ROUND 2: RALPH'S ANALYSIS                 ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Challenges Accepted: {accepted_count}                            ║
+║ Challenges Refuted: {refuted_count}                              ║
+║ Partially Valid: {partial_count}                                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+{formatted counter-arguments with rationale for each challenge}
+```
+
+---
+
+### Step 4: Round 3 - Consensus Synthesis
+
+**Action:** Send counter-arguments back to Perplexity MCP for consensus building.
+
+**Prompt Template:**
+```
+You previously raised challenges about a project. The project team has responded.
+
+ORIGINAL CHALLENGES:
+{consensus.challenges}
+
+TEAM RESPONSE:
+{consensus.counterArguments}
+
+TASK:
+Synthesize points of consensus:
+
+1. AGREED ISSUES - Challenges both sides accept need addressing
+2. RESOLVED CONCERNS - Challenges adequately addressed by team
+3. REMAINING DISPUTES - Unresolved disagreements (flag for human review)
+4. NEW INSIGHTS - Any new considerations from the dialogue
+
+For AGREED ISSUES, suggest specific action items.
+Format as structured JSON with clear categorization.
+```
+
+**Store as:** `consensus.synthesis`
+
+**Display:**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              CONSENSUS ROUND 3: SYNTHESIS                        ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Agreed Issues: {agreed_count}                                    ║
+║ Resolved: {resolved_count}                                       ║
+║ Disputes: {dispute_count}                                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+{formatted synthesis with categorized items}
+```
+
+---
+
+### Step 5: User Checkpoint
+
+**HALT AND WAIT FOR USER INPUT**
+
+**Display:**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                    USER REVIEW REQUIRED                          ║
+╠══════════════════════════════════════════════════════════════════╣
+║ The AI consensus dialogue has completed 3 rounds.                ║
+║                                                                  ║
+║ Summary:                                                         ║
+║   - {agreed_count} issues both AIs agree need addressing         ║
+║   - {resolved_count} concerns adequately addressed               ║
+║   - {dispute_count} unresolved disagreements                     ║
+║                                                                  ║
+║ Critical Issues Requiring Resolution: {critical_agreed_count}    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Please review the consensus above.
+
+Options:
+[A] Accept consensus and proceed to final agreement
+[R] Request additional dialogue round on specific issue
+[M] Manually override - mark specific issues as resolved
+[X] Abort - return to document ingestion to revise epics
+```
+
+**Store user decision as:** `consensus.userDecision`
+
+**If user selects [R]:** Prompt for specific issue, run additional round, return to checkpoint
+**If user selects [M]:** Prompt for issues to override, mark as resolved, continue
+**If user selects [X]:** Exit consensus phase, return to document ingestion summary
+
+---
+
+### Step 6: Round 4 - Final Agreement
+
+**Action:** Ralph synthesizes final agreements and action items.
+
+**Generate:**
+```json
+{
+  "consensusReached": true|false,
+  "timestamp": "{ISO timestamp}",
+  "participants": ["Claude (Ralph)", "ChatGPT 5.2"],
+  "rounds": 4,
+  "agreements": [
+    {
+      "id": "AGR-001",
+      "description": "{what was agreed}",
+      "actionRequired": true|false,
+      "actionItem": "{specific action if required}",
+      "assignedTo": "implementation|architecture|prd",
+      "relatedEpics": ["EPIC-XXX"]
+    }
+  ],
+  "acceptedRisks": [
+    {
+      "id": "RISK-001",
+      "description": "{acknowledged risk}",
+      "mitigation": "{how it will be handled}",
+      "acceptedBy": "user"
+    }
+  ],
+  "unresolvedDisputes": [],
+  "proceedToImplementation": true|false
+}
+```
+
+**Store as:** `consensus.finalAgreement`
+
+**Display:**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                    CONSENSUS COMPLETE                            ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Status: {CONSENSUS REACHED | PROCEEDING WITH CAVEATS}            ║
+║                                                                  ║
+║ Agreements: {agreement_count}                                    ║
+║ Action Items: {action_count}                                     ║
+║ Accepted Risks: {risk_count}                                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+{if action_items}
+Action Items for Implementation:
+{formatted action items with epic references}
+{/if}
+```
+
+---
+
+### Step 7: Hard Gate Enforcement
+
+**Gate Logic:**
+
+```
+IF consensus.finalAgreement.proceedToImplementation == false:
+  DISPLAY: "Cannot proceed - critical issues unresolved"
+  DISPLAY: List of blocking issues
+  OFFER: Options to revise epics or manually override
+  HALT: Do not proceed to Configuration Interview
+
+IF consensus.finalAgreement.unresolvedDisputes.length > 0:
+  DISPLAY: Warning about proceeding with disputes
+  REQUIRE: Explicit user confirmation to continue
+
+IF consensus.finalAgreement.proceedToImplementation == true:
+  APPEND: Action items to config.customInstructions
+  PROCEED: To Configuration Interview
+```
+
+**If gate blocks:**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                    HARD GATE: BLOCKED                            ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Cannot proceed to implementation.                                ║
+║                                                                  ║
+║ Blocking Issues:                                                 ║
+{list of critical unresolved issues}
+║                                                                  ║
+║ Options:                                                         ║
+║ [1] Revise epics to address issues                               ║
+║ [2] Override gate (not recommended)                              ║
+║ [3] Request additional consensus dialogue                        ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+### Consensus Data Persistence
+
+Save consensus results to `ralph/consensus.json` for audit and resume:
+
+```json
+{
+  "version": "1.0.0",
+  "generatedAt": "{timestamp}",
+  "context": { ... },
+  "rounds": [
+    { "round": 1, "type": "challenge", "data": { ... } },
+    { "round": 2, "type": "counter", "data": { ... } },
+    { "round": 3, "type": "synthesis", "data": { ... } },
+    { "round": 4, "type": "agreement", "data": { ... } }
+  ],
+  "userCheckpoint": { ... },
+  "finalAgreement": { ... }
+}
+```
+
+This file is preserved for:
+- Audit trail of pre-implementation validation
+- Resume capability if interrupted
+- Reference during implementation for action items
+
+---
+
 ## Configuration Interview
 
 After document ingestion, ask user to configure the loop.
@@ -297,6 +648,66 @@ Create `ralph/loop.sh` executable bash script.
 
 Create `ralph/progress.txt` with header.
 
+### Generate consensus.json
+
+Create `ralph/consensus.json` with consensus validation results from the Consensus Validation Phase:
+
+```json
+{
+  "version": "1.0.0",
+  "generatedAt": "{ISO timestamp}",
+  "context": {
+    "project": "{project_name}",
+    "epics": [...],
+    "architecture": {...}
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "type": "challenge",
+      "source": "ChatGPT 5.2 via Perplexity",
+      "data": {consensus.challenges}
+    },
+    {
+      "round": 2,
+      "type": "counter",
+      "source": "Claude (Ralph)",
+      "data": {consensus.counterArguments}
+    },
+    {
+      "round": 3,
+      "type": "synthesis",
+      "source": "ChatGPT 5.2 via Perplexity",
+      "data": {consensus.synthesis}
+    },
+    {
+      "round": 4,
+      "type": "agreement",
+      "source": "Claude (Ralph)",
+      "data": {consensus.finalAgreement}
+    }
+  ],
+  "userCheckpoint": {
+    "decision": "{A|R|M|X}",
+    "timestamp": "{ISO timestamp}",
+    "overrides": []
+  },
+  "finalAgreement": {
+    "consensusReached": true|false,
+    "agreements": [...],
+    "acceptedRisks": [...],
+    "unresolvedDisputes": [],
+    "proceedToImplementation": true|false
+  }
+}
+```
+
+This file preserves:
+- Complete audit trail of AI dialogue
+- User checkpoint decisions
+- Action items for reference during implementation
+- Resume capability if interrupted
+
 ---
 
 ## Execution
@@ -336,6 +747,36 @@ if [ -f "ralph/prd.json" ]; then
 fi
 ```
 
+### Step 1b: Check for Existing Consensus State
+
+```bash
+if [ -f "ralph/consensus.json" ]; then
+  CONSENSUS_COMPLETE=$(jq -r '.finalAgreement.proceedToImplementation // false' ralph/consensus.json)
+  CONSENSUS_ROUNDS=$(jq '.rounds | length' ralph/consensus.json)
+  CONSENSUS_TIMESTAMP=$(jq -r '.generatedAt' ralph/consensus.json)
+fi
+```
+
+**If consensus.json exists and complete (`proceedToImplementation: true`):**
+- Show: "Found existing consensus validation from {timestamp}"
+- Show: "{rounds} rounds completed, implementation approved"
+- Skip consensus validation phase
+- Display summary of agreements and action items
+- Proceed to configuration interview (or execution if resuming full loop)
+
+**If consensus.json exists but incomplete (`proceedToImplementation: false` or missing rounds):**
+- Show: "Found incomplete consensus validation"
+- Ask using AskUserQuestion:
+  - Option 1: "Resume consensus from round {last_completed + 1}"
+  - Option 2: "Start fresh consensus validation"
+  - Option 3: "Skip consensus and proceed anyway"
+- Resume: Load existing rounds, continue from next round
+- Fresh: Archive consensus.json, restart validation
+- Skip: Set flag to bypass consensus phase (not recommended)
+
+**If no consensus.json exists:**
+- Proceed normally with consensus validation phase
+
 ### Step 2: Compare Branch Names
 
 **If same feature (branch matches):**
@@ -365,6 +806,7 @@ mv ralph/prd.json "$ARCHIVE_DIR/"
 mv ralph/progress.txt "$ARCHIVE_DIR/" 2>/dev/null || true
 mv ralph/prompt.md "$ARCHIVE_DIR/" 2>/dev/null || true
 mv ralph/loop.sh "$ARCHIVE_DIR/" 2>/dev/null || true
+mv ralph/consensus.json "$ARCHIVE_DIR/" 2>/dev/null || true
 
 echo "Archived previous run to: $ARCHIVE_DIR"
 ```
@@ -373,10 +815,15 @@ echo "Archived previous run to: $ARCHIVE_DIR"
 
 When resuming:
 1. Skip document ingestion (already in prd.json)
-2. Skip configuration interview (already in prd.json)
-3. Skip file generation (files exist)
-4. Update prompt.md with fresh progress context (last 3 entries from progress.txt)
-5. Go directly to execution
+2. Check consensus.json state:
+   - If complete: Skip consensus validation, load action items into context
+   - If incomplete: Resume from last completed round
+   - If missing: Run full consensus validation (re-read docs for context)
+3. Skip configuration interview (already in prd.json)
+4. Skip file generation (files exist)
+5. Update prompt.md with fresh progress context (last 3 entries from progress.txt)
+6. Include consensus action items in prompt context
+7. Go directly to execution
 
 ---
 
@@ -622,6 +1069,23 @@ The generated `ralph/prompt.md` uses this structure:
 - Pattern: {architectural_pattern}
 - Tech Stack: {key_technologies}
 - File Structure: {project structure if defined}
+
+## Consensus Validation Results
+{if consensus.finalAgreement exists}
+Pre-implementation validation completed with external AI review.
+
+**Action Items from Consensus:**
+{list consensus.finalAgreement.agreements where actionRequired == true}
+- {action item description} (related to {epic_ids})
+
+**Accepted Risks:**
+{list consensus.finalAgreement.acceptedRisks}
+- {risk description}: {mitigation strategy}
+
+When implementing stories, consider these consensus findings.
+{else}
+No consensus validation performed.
+{/if}
 
 ## Quality Gates
 Before committing, ALL must pass:
