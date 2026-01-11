@@ -133,6 +133,17 @@
       "execution_order": 3
     },
     {
+      "type": "plugin-load",
+      "name": "mcp-credential-validation",
+      "description": "Validate MCP server credentials and ensure secure credential handling",
+      "script": "./mcp-credential-validator.sh",
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 4,
+      "enabled": true
+    },
+    {
       "type": "pre-commit",
       "name": "pre-commit-quality-gates",
       "description": "Run quality gates before committing changes",

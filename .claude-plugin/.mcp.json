@@ -56,12 +56,21 @@
     }
   },
   "security": {
-    "encrypt_credentials_at_rest": false,
+    "encrypt_credentials_at_rest": true,
+    "credential_storage_method": "environment_variables",
+    "support_claude_credential_store": true,
+    "support_os_keychain": true,
     "never_log_credentials": true,
+    "sanitize_logs_on_write": true,
     "allowed_domains": [
       "api.perplexity.ai",
       "*.anthropic.com"
-    ]
+    ],
+    "credential_validation": {
+      "validate_on_startup": true,
+      "fail_on_invalid": false,
+      "show_warnings": true
+    }
   },
   "monitoring": {
     "track_usage": true,
