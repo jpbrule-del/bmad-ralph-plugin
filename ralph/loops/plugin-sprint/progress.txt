@@ -1379,3 +1379,12 @@ Completed: Created comprehensive installation validation system with install-val
 Learning: Installation validation provides critical post-installation feedback to users, ensuring all plugin components are properly configured before use. Validation script uses 5-phase approach (structure, commands, hooks, dependencies, MCP) with colored output for user experience. Automated repair script addresses common installation issues without manual intervention. Integration via plugin-load hook ensures validation runs automatically on plugin initialization with appropriate timeout and failure handling. Comprehensive documentation is essential for installation workflows as it covers multiple personas (end users, developers, system administrators) and diverse scenarios (marketplace install, manual install, development setup, troubleshooting, upgrade, rollback). EPIC-006 (Marketplace & Distribution) is now 5 of 6 stories complete (31/23 points = 134.8%) with only STORY-037 through STORY-040 remaining in EPIC-007 (Documentation).
 
 Note for next: EPIC-006 is almost complete - only documentation stories remain. Next story is STORY-037 (Create Plugin README) in EPIC-007 (Documentation) - requires comprehensive README with installation, quick start, command documentation, hooks, MCP integrations, troubleshooting, and FAQ sections. This is a 5-point "must-have" story that will provide primary entry-point documentation for all plugin users.
+Claude Output:
+Output summary (59 lines total):
+## Summary
+
+Successfully completed **STORY-036: Create Installation Validation** for the BMAD Ralph Plugin sprint.
+...
+
+### Next Story
+**STORY-037: Create Plugin README** (5 points, must-have) - Create comprehensive README documentation for users covering installation, quick start guide, all commands with examples, hooks configuration, MCP integrations, troubleshooting section, and FAQ. This begins EPIC-007 (Documentation), the final epic in the sprint with 4 remaining documentation stories.
