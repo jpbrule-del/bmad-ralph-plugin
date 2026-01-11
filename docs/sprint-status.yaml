@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver BMAD Ralph Plugin with full Claude Code integration"
 sprint_start_date: "2026-01-11"
 sprint_end_date: "2026-01-15"
-last_updated: "2026-01-11T08:22:44Z"
+last_updated: "2026-01-11T08:22:49Z"
 sprint_status: "not_started"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8, 13)
 # 1 = Trivial (< 1 hour)
@@ -684,7 +684,7 @@ epics:
     status: "not_started"
     priority: "should-have"
     total_points: 23
-    completed_points: 18
+    completed_points: 23
     stories:
       - id: "STORY-032"
         title: "Create Marketplace Manifest"
@@ -768,7 +768,7 @@ epics:
 
           As a plugin user, I want installation verification so that I know
           the plugin is working.
-        status: "not_started"
+        status: "completed"
         points: 5
         priority: "should-have"
         functional_requirements:
