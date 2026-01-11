@@ -84,18 +84,28 @@ cmd_archive() {
   fi
 
   # Collect feedback (STORY-051: Implement mandatory feedback questionnaire)
-  # For now, require --skip-feedback flag to archive without feedback
+  local feedback_json=""
   if [[ "$skip_feedback" != "true" ]]; then
-    error "Cannot archive without feedback"
-    echo ""
-    echo "Feedback collection is required before archiving a loop."
-    echo "This ensures continuous improvement of Ralph's effectiveness."
-    echo ""
-    echo "To archive without feedback (not recommended), use:"
-    echo "  ralph archive $loop_name --skip-feedback"
-    echo ""
-    echo "Note: Feedback collection will be implemented in STORY-051"
-    exit 1
+    # Source feedback questionnaire module
+    local lib_dir
+    lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    # shellcheck source=../feedback/questionnaire.sh
+    source "$lib_dir/feedback/questionnaire.sh"
+
+    # Collect feedback from user
+    feedback_json=$(collect_feedback "$loop_name" "$prd_file")
+
+    # Check if feedback collection was successful
+    if [[ $? -ne 0 ]] || [[ -z "$feedback_json" ]]; then
+      error "Feedback collection failed or was cancelled"
+      echo "Loop will not be archived without feedback."
+      echo ""
+      echo "To archive without feedback (not recommended), use:"
+      echo "  ralph archive $loop_name --skip-feedback"
+      exit 1
+    fi
+  else
+    info "Skipping feedback collection (--skip-feedback flag provided)"
   fi
 
   # Create archive directory if it doesn't exist
@@ -137,6 +147,18 @@ cmd_archive() {
 
   # Move loop to archive
   if mv "$loop_path" "$archive_path"; then
+    # Save feedback to archive directory if collected
+    # STORY-052 will implement proper feedback storage
+    if [[ -n "$feedback_json" ]]; then
+      local feedback_file="$archive_path/feedback.json"
+      echo "$feedback_json" > "$feedback_file"
+      if [[ $? -eq 0 ]]; then
+        info "Feedback saved to: $feedback_file"
+      else
+        warning "Failed to save feedback to archive"
+      fi
+    fi
+
     success "Loop '$loop_name' archived successfully"
     echo ""
     info "Archive location: $archive_path"
