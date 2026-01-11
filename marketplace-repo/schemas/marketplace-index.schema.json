@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://marketplace.svrnty.com/schemas/marketplace-index.schema.json",
+  "title": "Marketplace Index Schema",
+  "description": "Schema for the marketplace index file listing all available plugins",
+  "type": "object",
+  "required": ["version", "updated_at", "plugins"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Marketplace index version (semver)"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp (ISO 8601)"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "List of all available plugins",
+      "items": {
+        "$ref": "#/definitions/pluginListEntry"
+      }
+    },
+    "categories": {
+      "type": "object",
+      "description": "Category definitions",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "$ref": "#/definitions/category"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Marketplace metadata",
+      "properties": {
+        "total_plugins": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_downloads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "index_version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "pluginListEntry": {
+      "type": "object",
+      "required": ["id", "name", "slug", "author", "repository", "marketplace_entry", "version"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Unique plugin identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable plugin name"
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "URL-friendly plugin identifier"
+        },
+        "author": {
+          "type": "string",
+          "description": "Plugin author/organization"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "description": "Plugin repository URL"
+        },
+        "marketplace_entry": {
+          "type": "string",
+          "description": "Path to plugin metadata.json"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Current plugin version (semver)"
+        },
+        "min_claude_code_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Minimum required Claude Code version"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Short plugin description"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Plugin categories"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Plugin tags for search"
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Whether plugin is featured"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether plugin is verified"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["alpha", "beta", "stable", "deprecated"],
+          "description": "Plugin status"
+        },
+        "downloads": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total download count"
+        },
+        "rating": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Average rating (0-5)"
+        },
+        "added_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When plugin was added to marketplace"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      }
+    },
+    "category": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Category display name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Category description"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Category icon (emoji or URL)"
+        }
+      }
+    }
+  }
+}

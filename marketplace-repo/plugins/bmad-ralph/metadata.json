@@ -1,0 +1,169 @@
+{
+  "$schema": "../../schemas/plugin-entry.schema.json",
+  "id": "bmad-ralph",
+  "name": "BMAD Ralph Plugin",
+  "slug": "bmad-ralph",
+  "version": "1.0.0",
+  "description": "Autonomous development loop automation using the BMAD Method for executing sprints with quality gates, git workflow, and feedback tracking",
+  "long_description": "BMAD Ralph Plugin transforms your Claude Code into an autonomous development powerhouse. It executes sprint stories in priority order, runs quality gates after each story, handles git workflows automatically, and tracks progress with detailed feedback. Perfect for agile teams, solo developers, and startups looking to automate their development workflow.",
+  "author": {
+    "name": "Svrnty",
+    "email": "contact@svrnty.com",
+    "url": "https://svrnty.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svrnty/bmad-ralph-plugin"
+  },
+  "homepage": "https://github.com/svrnty/bmad-ralph-plugin",
+  "documentation": "https://github.com/svrnty/bmad-ralph-plugin#readme",
+  "bugs": "https://github.com/svrnty/bmad-ralph-plugin/issues",
+  "license": "MIT",
+  "keywords": [
+    "automation",
+    "agile",
+    "sprints",
+    "BMAD",
+    "loops",
+    "quality-gates",
+    "git-workflow",
+    "project-management",
+    "productivity",
+    "development-tools"
+  ],
+  "categories": [
+    "automation",
+    "productivity",
+    "development-tools",
+    "project-management",
+    "agile"
+  ],
+  "platform": {
+    "min_claude_code_version": "1.0.0",
+    "supported_platforms": ["darwin", "linux", "win32"],
+    "supported_architectures": ["x64", "arm64"]
+  },
+  "dependencies": {
+    "required": [
+      {
+        "name": "jq",
+        "version": ">=1.6",
+        "description": "JSON processor for parsing configuration"
+      },
+      {
+        "name": "yq",
+        "version": ">=4.0.0",
+        "description": "YAML processor for sprint status files"
+      },
+      {
+        "name": "git",
+        "version": ">=2.0.0",
+        "description": "Version control for branch management"
+      }
+    ],
+    "optional": [
+      {
+        "name": "npm",
+        "version": ">=8.0.0",
+        "description": "For running quality gates (test, lint, build)"
+      }
+    ]
+  },
+  "features": [
+    {
+      "title": "Autonomous Loop Execution",
+      "description": "Execute sprint stories in priority order with automatic iteration",
+      "icon": "🔄"
+    },
+    {
+      "title": "Quality Gate Integration",
+      "description": "Run tests, linting, and builds after each story completion",
+      "icon": "✅"
+    },
+    {
+      "title": "Git Workflow Automation",
+      "description": "Automatic branch management, commits, and pull request creation",
+      "icon": "🌿"
+    },
+    {
+      "title": "Progress Tracking",
+      "description": "Detailed progress logs with iteration metrics and feedback",
+      "icon": "📊"
+    },
+    {
+      "title": "Stuck Detection",
+      "description": "Automatic detection and handling of blocked stories",
+      "icon": "🚨"
+    },
+    {
+      "title": "MCP Integration",
+      "description": "Perplexity AI research during story implementation",
+      "icon": "🔍"
+    },
+    {
+      "title": "Hook System",
+      "description": "Extensible hooks for pre-commit, post-story, and lifecycle events",
+      "icon": "🪝"
+    },
+    {
+      "title": "Feedback Analytics",
+      "description": "Aggregate feedback reports with satisfaction metrics",
+      "icon": "📈"
+    }
+  ],
+  "commands": {
+    "count": 13,
+    "list": [
+      "init",
+      "create",
+      "run",
+      "status",
+      "list",
+      "show",
+      "edit",
+      "clone",
+      "delete",
+      "archive",
+      "unarchive",
+      "config",
+      "feedback-report"
+    ]
+  },
+  "assets": {
+    "icon": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/icon.png",
+    "banner": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/banner.png",
+    "screenshots": [
+      {
+        "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/loop-execution.png",
+        "caption": "Loop execution with quality gates and progress tracking",
+        "type": "screenshot"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/status-dashboard.png",
+        "caption": "Real-time status dashboard with live updates",
+        "type": "screenshot"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/feedback-report.png",
+        "caption": "Feedback analytics with satisfaction metrics",
+        "type": "screenshot"
+      }
+    ],
+    "demo": {
+      "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/demo.gif",
+      "caption": "Full loop execution demo"
+    }
+  },
+  "stats": {
+    "downloads": 0,
+    "stars": 0,
+    "rating": 0.0,
+    "reviews": 0
+  },
+  "status": "stable",
+  "verified": true,
+  "featured": true,
+  "added_at": "2026-01-11T00:00:00Z",
+  "updated_at": "2026-01-11T00:00:00Z",
+  "changelog_url": "https://github.com/svrnty/bmad-ralph-plugin/blob/main/CHANGELOG.md"
+}

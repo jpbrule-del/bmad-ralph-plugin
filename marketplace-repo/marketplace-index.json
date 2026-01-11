@@ -1,0 +1,84 @@
+{
+  "$schema": "./schemas/marketplace-index.schema.json",
+  "version": "1.0.0",
+  "updated_at": "2026-01-11T00:00:00Z",
+  "plugins": [
+    {
+      "id": "bmad-ralph",
+      "name": "BMAD Ralph Plugin",
+      "slug": "bmad-ralph",
+      "author": "Svrnty",
+      "repository": "https://github.com/svrnty/bmad-ralph-plugin",
+      "marketplace_entry": "./plugins/bmad-ralph/metadata.json",
+      "version": "1.0.0",
+      "min_claude_code_version": "1.0.0",
+      "description": "Autonomous development loop automation using the BMAD Method for sprint execution",
+      "categories": [
+        "automation",
+        "productivity",
+        "development-tools",
+        "project-management",
+        "agile"
+      ],
+      "tags": [
+        "automation",
+        "agile",
+        "sprints",
+        "BMAD",
+        "loops",
+        "quality-gates",
+        "git-workflow"
+      ],
+      "featured": true,
+      "verified": true,
+      "status": "stable",
+      "downloads": 0,
+      "rating": 0.0,
+      "added_at": "2026-01-11T00:00:00Z",
+      "updated_at": "2026-01-11T00:00:00Z"
+    }
+  ],
+  "categories": {
+    "automation": {
+      "name": "Automation",
+      "description": "Workflow and task automation plugins",
+      "icon": "⚙️"
+    },
+    "productivity": {
+      "name": "Productivity",
+      "description": "Developer productivity enhancement tools",
+      "icon": "🚀"
+    },
+    "development-tools": {
+      "name": "Development Tools",
+      "description": "Code generation, refactoring, and testing tools",
+      "icon": "🛠️"
+    },
+    "project-management": {
+      "name": "Project Management",
+      "description": "Agile, planning, and tracking tools",
+      "icon": "📋"
+    },
+    "agile": {
+      "name": "Agile",
+      "description": "Agile methodology and sprint management",
+      "icon": "🔄"
+    },
+    "integration": {
+      "name": "Integration",
+      "description": "External service integrations",
+      "icon": "🔌"
+    },
+    "ai-enhancement": {
+      "name": "AI Enhancement",
+      "description": "AI-powered development features",
+      "icon": "🤖"
+    }
+  },
+  "metadata": {
+    "total_plugins": 1,
+    "total_downloads": 0,
+    "last_updated": "2026-01-11T00:00:00Z",
+    "index_version": "1.0.0"
+  }
+}

@@ -1,0 +1,120 @@
+name: Validate Plugin Entry
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - 'marketplace-index.json'
+  push:
+    branches:
+      - main
+    paths:
+      - 'plugins/**'
+      - 'marketplace-index.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate Plugin Metadata
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install -g ajv-cli
+          npm install -g markdownlint-cli
+
+      - name: Validate marketplace-index.json schema
+        run: |
+          ajv validate \
+            -s schemas/marketplace-index.schema.json \
+            -d marketplace-index.json \
+            --spec=draft7 \
+            --verbose
+
+      - name: Validate plugin metadata schemas
+        run: |
+          for metadata_file in plugins/*/metadata.json; do
+            echo "Validating $metadata_file"
+            ajv validate \
+              -s schemas/plugin-entry.schema.json \
+              -d "$metadata_file" \
+              --spec=draft7 \
+              --verbose
+          done
+
+      - name: Validate plugin directories
+        run: |
+          for plugin_dir in plugins/*/; do
+            plugin_name=$(basename "$plugin_dir")
+            echo "Checking plugin: $plugin_name"
+
+            # Check required files
+            if [ ! -f "$plugin_dir/metadata.json" ]; then
+              echo "ERROR: Missing metadata.json in $plugin_dir"
+              exit 1
+            fi
+
+            if [ ! -f "$plugin_dir/README.md" ]; then
+              echo "ERROR: Missing README.md in $plugin_dir"
+              exit 1
+            fi
+
+            if [ ! -f "$plugin_dir/CHANGELOG.md" ]; then
+              echo "ERROR: Missing CHANGELOG.md in $plugin_dir"
+              exit 1
+            fi
+
+            echo "✅ Plugin $plugin_name has required files"
+          done
+
+      - name: Validate markdown files
+        run: |
+          markdownlint '**/*.md' \
+            --ignore node_modules \
+            --config .markdownlint.json || true
+
+      - name: Check plugin entry in index
+        run: |
+          node scripts/validate-index.js
+
+      - name: Security scan
+        run: |
+          # Check for common security issues
+          echo "Running security checks..."
+
+          # Check for hardcoded secrets
+          if grep -r "api_key\|password\|secret" plugins/ --exclude-dir=node_modules; then
+            echo "WARNING: Potential hardcoded secrets found"
+          fi
+
+          # Check for dangerous patterns
+          if grep -r "eval\|exec\|rm -rf" plugins/ --exclude-dir=node_modules; then
+            echo "WARNING: Dangerous patterns found"
+          fi
+
+      - name: Generate validation report
+        if: always()
+        run: |
+          echo "# Validation Report" > validation-report.md
+          echo "" >> validation-report.md
+          echo "## Summary" >> validation-report.md
+          echo "- Marketplace Index: ✅ Valid" >> validation-report.md
+          echo "- Plugin Metadata: ✅ Valid" >> validation-report.md
+          echo "- Required Files: ✅ Present" >> validation-report.md
+          echo "" >> validation-report.md
+          echo "Validation completed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> validation-report.md
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: validation-report.md

@@ -1,0 +1,82 @@
+name: Publish Marketplace Index
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'marketplace-index.json'
+      - 'plugins/*/metadata.json'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish Updated Index
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update index metadata
+        run: |
+          # Update marketplace-index.json with current stats
+          node scripts/update-index-metadata.js
+
+      - name: Generate static site
+        run: |
+          # Generate static HTML marketplace site
+          npm install
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          cname: marketplace.svrnty.com
+
+      - name: Create index archive
+        run: |
+          # Create versioned archive of marketplace index
+          VERSION=$(jq -r '.version' marketplace-index.json)
+          tar -czf "marketplace-index-${VERSION}.tar.gz" \
+            marketplace-index.json \
+            plugins/ \
+            schemas/
+
+      - name: Upload index archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketplace-index
+          path: marketplace-index-*.tar.gz
+
+      - name: Create release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: marketplace-index-*.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify webhook
+        if: success()
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{
+              "event": "marketplace_updated",
+              "version": "${{ steps.version.outputs.version }}",
+              "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"
+            }' \
+            ${{ secrets.MARKETPLACE_WEBHOOK_URL }} || true
