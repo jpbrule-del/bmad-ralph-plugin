@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # ralph create - Create a new loop
 
+# Source sprint analysis utilities
+# Use the LIB_DIR variable from main script, or fallback to relative path
+readonly CREATE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
+source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
+
 cmd_create() {
   local loop_name=""
   local epic_filter=""
@@ -82,6 +87,75 @@ cmd_create() {
     echo "Choose a different name or delete the existing loop first"
     exit 1
   fi
+
+  # Validate sprint-status.yaml exists and is readable
+  info "Analyzing sprint status..."
+  if ! validate_sprint_status; then
+    exit 1
+  fi
+
+  # Validate epic filter if provided
+  if [[ -n "$epic_filter" ]]; then
+    if ! epic_exists "$epic_filter"; then
+      error "Epic not found: $epic_filter"
+      echo ""
+      echo "Available epics:"
+      while IFS= read -r epic_id; do
+        local epic_name
+        epic_name=$(get_epic_name "$epic_id")
+        echo "  $epic_id: $epic_name"
+      done < <(get_all_epics)
+      exit 1
+    fi
+  fi
+
+  # Get pending stories count
+  local story_count
+  story_count=$(get_pending_story_count "$epic_filter")
+
+  if [[ "$story_count" -eq 0 ]]; then
+    warning "No pending stories found"
+    if [[ -n "$epic_filter" ]]; then
+      echo ""
+      echo "Epic $epic_filter has no pending stories"
+      echo "All stories may already be completed"
+    else
+      echo ""
+      echo "All stories in sprint may already be completed"
+    fi
+    exit 1
+  fi
+
+  # Display story analysis
+  echo ""
+  if [[ -n "$epic_filter" ]]; then
+    local epic_name
+    epic_name=$(get_epic_name "$epic_filter")
+    header "Epic: $epic_filter - $epic_name"
+  else
+    header "All Epics"
+  fi
+
+  echo ""
+  info "Found $story_count pending stories"
+  echo ""
+
+  # Show first few stories as preview
+  local preview_count=0
+  local max_preview=5
+
+  while IFS= read -r story_yaml; do
+    if [[ $preview_count -lt $max_preview ]]; then
+      print_story_summary "$story_yaml"
+      ((preview_count++))
+    fi
+  done < <(get_pending_stories "$epic_filter")
+
+  if [[ $story_count -gt $max_preview ]]; then
+    echo "  ... and $((story_count - max_preview)) more"
+  fi
+
+  echo ""
 
   # Create loop directory
   info "Creating loop: $loop_name"
