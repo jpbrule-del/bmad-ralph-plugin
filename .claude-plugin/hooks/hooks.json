@@ -1,5 +1,106 @@
 {
   "$schema": "https://claude.ai/schemas/plugin-hooks-v1.json",
+  "version": "1.0.0",
+  "description": "Comprehensive hooks configuration for BMAD Ralph Plugin lifecycle events",
+  "metadata": {
+    "plugin": "bmad-ralph",
+    "author": "BMAD Team",
+    "last_updated": "2026-01-11T09:00:00Z"
+  },
+  "hook_types": {
+    "plugin-load": {
+      "description": "Executed when plugin is loaded/initialized",
+      "execution_phase": "initialization",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "pre-commit": {
+      "description": "Executed before git commit operations",
+      "execution_phase": "pre-operation",
+      "default_timeout": 30000,
+      "allows_multiple": true,
+      "execution_order": "sequential",
+      "can_block": true
+    },
+    "post-commit": {
+      "description": "Executed after successful git commit operations",
+      "execution_phase": "post-operation",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "parallel"
+    },
+    "post-command": {
+      "description": "Executed after command completion",
+      "execution_phase": "post-operation",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "post-story": {
+      "description": "Executed after story completion",
+      "execution_phase": "post-operation",
+      "default_timeout": 10000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "loop-start": {
+      "description": "Executed when loop execution begins",
+      "execution_phase": "lifecycle",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "loop-pause": {
+      "description": "Executed when loop execution is paused",
+      "execution_phase": "lifecycle",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "loop-resume": {
+      "description": "Executed when loop execution is resumed",
+      "execution_phase": "lifecycle",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "loop-complete": {
+      "description": "Executed when loop execution completes",
+      "execution_phase": "lifecycle",
+      "default_timeout": 10000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "iteration-milestone": {
+      "description": "Executed at iteration milestones",
+      "execution_phase": "monitoring",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "quality-gate-failure": {
+      "description": "Executed when quality gates fail",
+      "execution_phase": "error-handling",
+      "default_timeout": 5000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    },
+    "stuck-detection": {
+      "description": "Executed when stuck condition is detected",
+      "execution_phase": "error-handling",
+      "default_timeout": 10000,
+      "allows_multiple": true,
+      "execution_order": "sequential"
+    }
+  },
+  "execution_config": {
+    "global_timeout": 60000,
+    "max_concurrent_hooks": 3,
+    "retry_on_failure": false,
+    "log_execution": true,
+    "log_path": ".ralph-cache/hooks.log"
+  },
   "hooks": [
     {
       "type": "plugin-load",
@@ -8,7 +109,8 @@
       "script": "./show-permissions.sh",
       "timeout": 3000,
       "required": false,
-      "on_failure": "warn"
+      "on_failure": "warn",
+      "execution_order": 1
     },
     {
       "type": "plugin-load",
@@ -17,7 +119,8 @@
       "script": "./verify-dependencies.sh",
       "timeout": 5000,
       "required": true,
-      "on_failure": "block"
+      "on_failure": "block",
+      "execution_order": 2
     },
     {
       "type": "plugin-load",
@@ -26,7 +129,106 @@
       "script": "./validate-config.sh",
       "timeout": 3000,
       "required": true,
-      "on_failure": "warn"
+      "on_failure": "warn",
+      "execution_order": 3
+    },
+    {
+      "type": "pre-commit",
+      "name": "pre-commit-quality-gates",
+      "description": "Run quality gates before committing changes",
+      "script": "./pre-commit-quality-gates.sh",
+      "timeout": 30000,
+      "required": true,
+      "on_failure": "block",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-024"
+    },
+    {
+      "type": "post-story",
+      "name": "post-story-update",
+      "description": "Update progress and trigger follow-up actions after story completion",
+      "script": "./post-story-update.sh",
+      "timeout": 10000,
+      "required": true,
+      "on_failure": "warn",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-025"
+    },
+    {
+      "type": "post-story",
+      "name": "skill-invocation-story",
+      "description": "Check for skills to invoke after story completion",
+      "script": "./skill-invocation.sh",
+      "args": ["story_completion"],
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 2
+    },
+    {
+      "type": "loop-start",
+      "name": "loop-start-notification",
+      "description": "Initialize loop execution and send start notification",
+      "script": "./loop-start.sh",
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-026"
+    },
+    {
+      "type": "loop-pause",
+      "name": "loop-pause-notification",
+      "description": "Handle loop pause and send notification",
+      "script": "./loop-pause.sh",
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-026"
+    },
+    {
+      "type": "loop-resume",
+      "name": "loop-resume-notification",
+      "description": "Handle loop resume and send notification",
+      "script": "./loop-resume.sh",
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-026"
+    },
+    {
+      "type": "loop-complete",
+      "name": "loop-complete-notification",
+      "description": "Handle loop completion and send notification",
+      "script": "./loop-complete.sh",
+      "timeout": 10000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-026"
+    },
+    {
+      "type": "stuck-detection",
+      "name": "stuck-detection-handler",
+      "description": "Detect stuck conditions and provide diagnostics",
+      "script": "./stuck-detection.sh",
+      "timeout": 10000,
+      "required": true,
+      "on_failure": "warn",
+      "execution_order": 1,
+      "enabled": false,
+      "note": "To be implemented in STORY-027",
+      "triggers": {
+        "threshold": 3
+      }
     },
     {
       "type": "post-command",
@@ -37,19 +239,10 @@
       "timeout": 5000,
       "required": false,
       "on_failure": "warn",
+      "execution_order": 1,
       "triggers": {
         "commands": ["bmad-ralph:run", "bmad-ralph:status"]
       }
-    },
-    {
-      "type": "post-story",
-      "name": "skill-invocation-story",
-      "description": "Check for skills to invoke after story completion",
-      "script": "./skill-invocation.sh",
-      "args": ["story_completion"],
-      "timeout": 5000,
-      "required": false,
-      "on_failure": "warn"
     },
     {
       "type": "iteration-milestone",
@@ -60,6 +253,7 @@
       "timeout": 5000,
       "required": false,
       "on_failure": "warn",
+      "execution_order": 1,
       "triggers": {
         "interval": 5
       }
@@ -73,6 +267,7 @@
       "timeout": 5000,
       "required": false,
       "on_failure": "warn",
+      "execution_order": 1,
       "triggers": {
         "threshold": 2
       }
