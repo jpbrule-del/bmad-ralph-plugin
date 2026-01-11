@@ -87,6 +87,14 @@ route_command() {
       source "$LIB_DIR/commands/feedback_report.sh"
       cmd_feedback_report "$@"
       ;;
+    update)
+      source "$LIB_DIR/commands/update.sh"
+      cmd_update "$@"
+      ;;
+    uninstall)
+      source "$LIB_DIR/commands/uninstall.sh"
+      cmd_uninstall "$@"
+      ;;
     help|--help|-h)
       show_help
       ;;
@@ -238,6 +246,25 @@ COMMANDS:
         Options:
           --json          Output in JSON format
 
+  CLI Management:
+    update [--check] [--force] [--skip-skills]
+        Update ralph CLI from git remote. Pulls latest version and
+        reinstalls CLI and Claude Code skills.
+
+        Options:
+          --check         Check for updates without installing
+          --force         Update even with uncommitted local changes
+          --skip-skills   Skip reinstalling Claude Code skills
+
+    uninstall [--force] [--keep-projects] [--dry-run]
+        Completely remove ralph from the system. Removes global CLI,
+        Claude Code skills, project directories, and git branches.
+
+        Options:
+          --force         Skip confirmation prompts
+          --keep-projects Don't remove project-level ralph/ directories
+          --dry-run       Show what would be removed without removing
+
 GLOBAL OPTIONS:
   --help, -h        Show this help message
   --version, -v     Show version number
@@ -269,6 +296,15 @@ EXAMPLES:
 
   # View feedback analytics across all archived loops
   ralph feedback-report
+
+  # Check for updates
+  ralph update --check
+
+  # Update to latest version
+  ralph update
+
+  # Uninstall ralph (dry run to see what will be removed)
+  ralph uninstall --dry-run
 
   # List all loops
   ralph list
