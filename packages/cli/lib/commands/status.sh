@@ -152,9 +152,23 @@ display_status() {
     fi
   fi
 
-  # Get story title from sprint-status.yaml if we have a current story
+  # Get story title and epic info from sprint-status.yaml if we have a current story
+  local current_epic_id=""
+  local current_epic_name=""
+  local epic_total_points=0
+  local epic_completed_points=0
+
   if [[ -n "$current_story" ]] && [[ -f "$sprint_status_path" ]]; then
     current_story_title=$(yq eval ".epics[].stories[] | select(.id == \"$current_story\") | .title" "$sprint_status_path" 2>/dev/null | head -1)
+
+    # Get epic info for current story
+    current_epic_id=$(yq eval ".epics[] | select(.stories[].id == \"$current_story\") | .id" "$sprint_status_path" 2>/dev/null | head -1)
+
+    if [[ -n "$current_epic_id" ]]; then
+      current_epic_name=$(yq eval ".epics[] | select(.id == \"$current_epic_id\") | .name" "$sprint_status_path" 2>/dev/null)
+      epic_total_points=$(yq eval ".epics[] | select(.id == \"$current_epic_id\") | .total_points" "$sprint_status_path" 2>/dev/null)
+      epic_completed_points=$(yq eval ".epics[] | select(.id == \"$current_epic_id\") | .completed_points" "$sprint_status_path" 2>/dev/null)
+    fi
   fi
 
   # Calculate progress percentage
@@ -225,14 +239,29 @@ display_status() {
   section "Progress"
   echo "Stories:        $stories_completed / $total_stories completed ($progress_percent%)"
 
-  # Simple progress bar
+  # Overall progress bar
   local bar_width=40
   local filled=$((progress_percent * bar_width / 100))
   local empty=$((bar_width - filled))
-  echo -n "Progress:       ["
+  echo -n "Overall:        ["
   for ((i=0; i<filled; i++)); do echo -n "█"; done
   for ((i=0; i<empty; i++)); do echo -n "░"; done
   echo "]"
+
+  # Current epic progress bar (if we have epic info)
+  if [[ -n "$current_epic_id" ]] && [[ $epic_total_points -gt 0 ]]; then
+    local epic_progress_percent=$((epic_completed_points * 100 / epic_total_points))
+    local epic_filled=$((epic_progress_percent * bar_width / 100))
+    local epic_empty=$((bar_width - epic_filled))
+
+    echo ""
+    echo "Epic:           $current_epic_name ($current_epic_id)"
+    echo "Points:         $epic_completed_points / $epic_total_points points ($epic_progress_percent%)"
+    echo -n "Epic Progress:  ["
+    for ((i=0; i<epic_filled; i++)); do echo -n "█"; done
+    for ((i=0; i<epic_empty; i++)); do echo -n "░"; done
+    echo "]"
+  fi
 
   echo ""
   echo -e "Iterations:     ${iteration_color}$iterations_run / $max_iterations${COLOR_RESET} ($iterations_remaining remaining)"
