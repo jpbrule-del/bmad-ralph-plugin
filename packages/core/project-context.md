@@ -205,6 +205,50 @@ last_updated               # "YYYY-MM-DD"
 2. **Stuck Loop**: Same story failing repeatedly - split into smaller pieces
 3. **Quality Gate Failures**: Check `ralph/.gate-output.log` for details
 4. **Resume State**: Existing `ralph/prd.json` triggers resume flow, not fresh start
+5. **yq vs jq Syntax**: See section below - they are NOT interchangeable
+
+---
+
+## yq vs jq: Critical Syntax Differences
+
+**WARNING**: yq (Mike Farah v4.x) and jq have different syntax. Do NOT copy patterns between them.
+
+| Feature | jq Syntax | yq Syntax |
+|---------|-----------|-----------|
+| Default value | `// empty` or `// "default"` | Handle null in bash: `if [ "$result" = "null" ]` |
+| Variable binding | `--arg name value` | Shell interpolation: `"$variable"` in double quotes |
+| Null coalescing | `.field // "fallback"` | Not supported - check for "null" string |
+
+### Correct yq Pattern (bash)
+```bash
+get_value() {
+  local result
+  result=$(yq -r '.field' file.yaml)
+  if [ "$result" = "null" ] || [ -z "$result" ]; then
+    echo "default"
+  else
+    echo "$result"
+  fi
+}
+```
+
+### Wrong (jq syntax in yq)
+```bash
+# BROKEN - yq doesn't support // empty
+yq -r '.field // empty' file.yaml
+```
+
+---
+
+## Pre-flight Checklist
+
+Before starting a ralph loop, verify:
+
+1. **Build passes**: `npm run build` (or configured build command)
+2. **Lint passes**: `npm run lint` (or configured lint command)
+3. **yq version**: `yq --version` should show Mike Farah v4.x
+4. **Dependencies**: `jq`, `yq`, `git`, `claude` all installed
+5. **Clean git state**: No uncommitted changes that could interfere
 
 ---
 

@@ -385,10 +385,33 @@ handle_stuck_exit() {
 }
 
 handle_interrupt() {
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
   echo ""
   print_final_summary "INTERRUPTED"
+
+  # Save current state to config.json
+  # Note: iterationsRun is already correct (only incremented on success)
+  # We just need to ensure interruptedAt timestamp is recorded
+  if [[ -n "$CONFIG_FILE" ]] && [[ -f "$CONFIG_FILE" ]]; then
+    jq --arg ts "$timestamp" '.stats.interruptedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE" 2>/dev/null || true
+  fi
+
+  # Log interruption to progress.txt
+  if [[ -n "$PROGRESS_FILE" ]]; then
+    {
+      echo ""
+      echo "## Iteration ${iteration:-unknown} - ${STORY_ID:-unknown} - INTERRUPTED"
+      echo "Timestamp: $timestamp"
+      echo "Story: ${STORY_TITLE:-N/A}"
+      echo "Attempts: ${ATTEMPTS:-0}/$STUCK_THRESHOLD"
+      echo "Reason: User interrupt (Ctrl+C or SIGTERM)"
+      echo "State: Saved to config.json - resume with ./loop.sh"
+    } >> "$PROGRESS_FILE" 2>/dev/null || true
+  fi
+
   echo ""
-  log_warning "Loop interrupted. State saved - run ./loop.sh to resume from iteration $((iteration))."
+  log_warning "Loop interrupted. State saved - run ./loop.sh to resume from iteration ${iteration:-unknown}."
   echo ""
   echo "Or run ./loop.sh --restart to start fresh."
   exit 130
@@ -441,8 +464,8 @@ log_claude_output() {
 # MAIN EXECUTION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Trap Ctrl+C
-trap 'handle_interrupt' INT
+# Trap Ctrl+C and SIGTERM
+trap 'handle_interrupt' INT TERM
 
 # Check dependencies
 command -v jq >/dev/null 2>&1 || { log_error "jq is required but not installed"; exit 1; }
