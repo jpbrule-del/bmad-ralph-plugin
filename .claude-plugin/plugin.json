@@ -49,7 +49,54 @@
     "config": "hooks/hooks.json"
   },
   "skills": {
-    "directory": "skills/"
+    "directory": "skills/",
+    "auto_invoke": {
+      "enabled": true,
+      "triggers": {
+        "command_completion": {
+          "commands": ["bmad-ralph:run", "bmad-ralph:status"],
+          "phase": "post"
+        },
+        "story_completion": {
+          "enabled": true,
+          "phase": "post"
+        },
+        "iteration_milestone": {
+          "enabled": true,
+          "interval": 5
+        },
+        "quality_gate_failure": {
+          "enabled": true,
+          "threshold": 2
+        }
+      },
+      "context_detection": {
+        "loop_running": {
+          "check": "file_exists",
+          "path": "ralph/loops/*/\.lock"
+        },
+        "iteration_count": {
+          "check": "json_value",
+          "path": "ralph/loops/*/config.json",
+          "key": "stats.iterationsRun"
+        },
+        "quality_gate_status": {
+          "check": "file_parse",
+          "path": "ralph/loops/*/progress.txt",
+          "pattern": "Quality gates: (.*)"
+        }
+      },
+      "chaining": {
+        "mode": "sequential",
+        "max_chain_depth": 3,
+        "interrupt_on_error": false
+      },
+      "logging": {
+        "enabled": true,
+        "path": "ralph/logs/skill-invocations.log",
+        "level": "info"
+      }
+    }
   },
   "agents": {
     "directory": "agents/"

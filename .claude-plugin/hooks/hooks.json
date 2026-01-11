@@ -27,6 +27,55 @@
       "timeout": 3000,
       "required": true,
       "on_failure": "warn"
+    },
+    {
+      "type": "post-command",
+      "name": "skill-invocation-command",
+      "description": "Check for skills to invoke after command completion",
+      "script": "./skill-invocation.sh",
+      "args": ["command_completion"],
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "triggers": {
+        "commands": ["bmad-ralph:run", "bmad-ralph:status"]
+      }
+    },
+    {
+      "type": "post-story",
+      "name": "skill-invocation-story",
+      "description": "Check for skills to invoke after story completion",
+      "script": "./skill-invocation.sh",
+      "args": ["story_completion"],
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn"
+    },
+    {
+      "type": "iteration-milestone",
+      "name": "skill-invocation-milestone",
+      "description": "Check for skills to invoke at iteration milestones",
+      "script": "./skill-invocation.sh",
+      "args": ["iteration_milestone"],
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "triggers": {
+        "interval": 5
+      }
+    },
+    {
+      "type": "quality-gate-failure",
+      "name": "skill-invocation-qg-failure",
+      "description": "Check for skills to invoke after quality gate failures",
+      "script": "./skill-invocation.sh",
+      "args": ["quality_gate_failure"],
+      "timeout": 5000,
+      "required": false,
+      "on_failure": "warn",
+      "triggers": {
+        "threshold": 2
+      }
     }
   ]
 }
