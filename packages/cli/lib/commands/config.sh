@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ralph config - Manage ralph configuration
 
-# Source interactive utilities
+# Source utilities
 readonly CONFIG_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
+source "$CONFIG_LIB_DIR/core/output.sh"
 source "$CONFIG_LIB_DIR/core/interactive.sh"
 
 cmd_config() {
@@ -82,10 +83,10 @@ cmd_config_show() {
     lint=$(jq -r '.config.qualityGates.lint // "null"' "$config_file" 2>/dev/null || echo "null")
     build=$(jq -r '.config.qualityGates.build // "null"' "$config_file" 2>/dev/null || echo "null")
   else
-    typecheck=$(yq -r '.qualityGates.typecheck // "null"' "$config_file" 2>/dev/null || echo "null")
-    test=$(yq -r '.qualityGates.test // "null"' "$config_file" 2>/dev/null || echo "null")
-    lint=$(yq -r '.qualityGates.lint // "null"' "$config_file" 2>/dev/null || echo "null")
-    build=$(yq -r '.qualityGates.build // "null"' "$config_file" 2>/dev/null || echo "null")
+    typecheck=$(yq -r '.defaults.quality_gates.typecheck // "null"' "$config_file" 2>/dev/null || echo "null")
+    test=$(yq -r '.defaults.quality_gates.test // "null"' "$config_file" 2>/dev/null || echo "null")
+    lint=$(yq -r '.defaults.quality_gates.lint // "null"' "$config_file" 2>/dev/null || echo "null")
+    build=$(yq -r '.defaults.quality_gates.build // "null"' "$config_file" 2>/dev/null || echo "null")
   fi
 
   # Display with status indicators
@@ -213,27 +214,27 @@ cmd_config_quality_gates() {
     local yq_cmd="yq"
 
     if [[ "$typecheck" != "null" ]]; then
-      yq_cmd="$yq_cmd '.qualityGates.typecheck = \"$typecheck\"'"
+      yq_cmd="$yq_cmd '.defaults.quality_gates.typecheck = \"$typecheck\"'"
     else
-      yq_cmd="$yq_cmd 'del(.qualityGates.typecheck)'"
+      yq_cmd="$yq_cmd '.defaults.quality_gates.typecheck = null'"
     fi
 
     if [[ "$test" != "null" ]]; then
-      yq_cmd="$yq_cmd ' | .qualityGates.test = \"$test\"'"
+      yq_cmd="$yq_cmd ' | .defaults.quality_gates.test = \"$test\"'"
     else
-      yq_cmd="$yq_cmd ' | del(.qualityGates.test)'"
+      yq_cmd="$yq_cmd ' | .defaults.quality_gates.test = null'"
     fi
 
     if [[ "$lint" != "null" ]]; then
-      yq_cmd="$yq_cmd ' | .qualityGates.lint = \"$lint\"'"
+      yq_cmd="$yq_cmd ' | .defaults.quality_gates.lint = \"$lint\"'"
     else
-      yq_cmd="$yq_cmd ' | del(.qualityGates.lint)'"
+      yq_cmd="$yq_cmd ' | .defaults.quality_gates.lint = null'"
     fi
 
     if [[ "$build" != "null" ]]; then
-      yq_cmd="$yq_cmd ' | .qualityGates.build = \"$build\"'"
+      yq_cmd="$yq_cmd ' | .defaults.quality_gates.build = \"$build\"'"
     else
-      yq_cmd="$yq_cmd ' | del(.qualityGates.build)'"
+      yq_cmd="$yq_cmd ' | .defaults.quality_gates.build = null'"
     fi
 
     # Execute yq command

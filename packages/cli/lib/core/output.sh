@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Output utilities for colored terminal output
 
+# Guard against multiple sourcing
+[[ -n "${_OUTPUT_SH_SOURCED:-}" ]] && return 0
+readonly _OUTPUT_SH_SOURCED=1
+
 # Color codes (respect NO_COLOR environment variable)
 if [[ -z "${NO_COLOR:-}" ]] && [[ -t 1 ]]; then
   readonly COLOR_RED='\033[0;31m'
@@ -47,4 +51,23 @@ section() {
 
 warn() {
   warning "$@"
+}
+
+# Colorize text with a named color
+# Arguments:
+#   $1: text - The text to colorize
+#   $2: color - Color name (green, red, yellow, blue, cyan, dim)
+colorize() {
+  local text="$1"
+  local color="${2:-}"
+
+  case "$color" in
+    green)  echo -e "${COLOR_GREEN}${text}${COLOR_RESET}" ;;
+    red)    echo -e "${COLOR_RED}${text}${COLOR_RESET}" ;;
+    yellow) echo -e "${COLOR_YELLOW}${text}${COLOR_RESET}" ;;
+    blue)   echo -e "${COLOR_BLUE}${text}${COLOR_RESET}" ;;
+    cyan)   echo -e "${COLOR_CYAN}${text}${COLOR_RESET}" ;;
+    dim)    echo -e "${COLOR_DIM}${text}${COLOR_RESET}" ;;
+    *)      echo "$text" ;;
+  esac
 }

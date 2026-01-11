@@ -125,9 +125,9 @@ prompt_stuck_threshold() {
 # Prompt for quality gates configuration
 # Returns: JSON object with quality gate commands (via stdout)
 prompt_quality_gates() {
-  echo ""
-  echo "Configure quality gates (commands to run after each story):"
-  echo ""
+  echo "" >&2
+  echo "Configure quality gates (commands to run after each story):" >&2
+  echo "" >&2
 
   # Read current defaults from ralph/config
   local current_typecheck=""
@@ -136,10 +136,10 @@ prompt_quality_gates() {
   local current_build=""
 
   if [[ -f "ralph/config.yaml" ]]; then
-    current_typecheck=$(yq -r '.qualityGates.typecheck // ""' ralph/config.yaml 2>/dev/null || echo "")
-    current_test=$(yq -r '.qualityGates.test // ""' ralph/config.yaml 2>/dev/null || echo "")
-    current_lint=$(yq -r '.qualityGates.lint // ""' ralph/config.yaml 2>/dev/null || echo "")
-    current_build=$(yq -r '.qualityGates.build // ""' ralph/config.yaml 2>/dev/null || echo "")
+    current_typecheck=$(yq -r '.defaults.quality_gates.typecheck // ""' ralph/config.yaml 2>/dev/null || echo "")
+    current_test=$(yq -r '.defaults.quality_gates.test // ""' ralph/config.yaml 2>/dev/null || echo "")
+    current_lint=$(yq -r '.defaults.quality_gates.lint // ""' ralph/config.yaml 2>/dev/null || echo "")
+    current_build=$(yq -r '.defaults.quality_gates.build // ""' ralph/config.yaml 2>/dev/null || echo "")
   elif [[ -f "ralph/config.json" ]]; then
     current_typecheck=$(jq -r '.config.qualityGates.typecheck // ""' ralph/config.json 2>/dev/null || echo "")
     current_test=$(jq -r '.config.qualityGates.test // ""' ralph/config.json 2>/dev/null || echo "")
@@ -266,10 +266,10 @@ get_default_quality_gates() {
   local build_cmd=""
 
   if [[ -f "ralph/config.yaml" ]]; then
-    typecheck_cmd=$(yq -r '.qualityGates.typecheck // ""' ralph/config.yaml 2>/dev/null || echo "")
-    test_cmd=$(yq -r '.qualityGates.test // ""' ralph/config.yaml 2>/dev/null || echo "")
-    lint_cmd=$(yq -r '.qualityGates.lint // ""' ralph/config.yaml 2>/dev/null || echo "")
-    build_cmd=$(yq -r '.qualityGates.build // ""' ralph/config.yaml 2>/dev/null || echo "")
+    typecheck_cmd=$(yq -r '.defaults.quality_gates.typecheck // ""' ralph/config.yaml 2>/dev/null || echo "")
+    test_cmd=$(yq -r '.defaults.quality_gates.test // ""' ralph/config.yaml 2>/dev/null || echo "")
+    lint_cmd=$(yq -r '.defaults.quality_gates.lint // ""' ralph/config.yaml 2>/dev/null || echo "")
+    build_cmd=$(yq -r '.defaults.quality_gates.build // ""' ralph/config.yaml 2>/dev/null || echo "")
   elif [[ -f "ralph/config.json" ]]; then
     typecheck_cmd=$(jq -r '.config.qualityGates.typecheck // ""' ralph/config.json 2>/dev/null || echo "")
     test_cmd=$(jq -r '.config.qualityGates.test // ""' ralph/config.json 2>/dev/null || echo "")

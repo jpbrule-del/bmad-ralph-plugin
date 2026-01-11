@@ -118,7 +118,8 @@ cmd_list() {
     echo "  \"loops\": ["
 
     local first=true
-    for data in "${loop_data[@]}"; do
+    for data in "${loop_data[@]+"${loop_data[@]}"}"; do
+      [[ -z "$data" ]] && continue
       IFS='|' read -r status name created stories_completed total_stories iterations archive_date feedback_score <<< "$data"
 
       if [[ "$first" == "true" ]]; then
@@ -180,7 +181,8 @@ cmd_list() {
     fi
 
     # Print loop data
-    for data in "${loop_data[@]}"; do
+    for data in "${loop_data[@]+"${loop_data[@]}"}"; do
+      [[ -z "$data" ]] && continue
       IFS='|' read -r status name created stories_completed total_stories iterations archive_date feedback_score <<< "$data"
 
       # Format created date (extract date part only)
