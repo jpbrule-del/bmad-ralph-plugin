@@ -9,6 +9,15 @@
       "timeout": 5000,
       "required": true,
       "on_failure": "block"
+    },
+    {
+      "type": "plugin-load",
+      "name": "validate-config",
+      "description": "Validate plugin configuration and merge project-level overrides",
+      "script": "./validate-config.sh",
+      "timeout": 3000,
+      "required": true,
+      "on_failure": "warn"
     }
   ]
 }

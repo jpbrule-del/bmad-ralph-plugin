@@ -1,0 +1,24 @@
+# Ralph Plugin Configuration
+# This file allows you to override the default plugin configuration
+# Copy this file to ralph/config.yaml to customize settings for your project
+
+# Maximum number of iterations before stopping a loop (default: 100)
+max_iterations: 100
+
+# Number of failed attempts before marking a story as stuck (default: 3)
+stuck_threshold: 3
+
+# Quality gates to run before committing (optional)
+# These will override the defaults from plugin.json
+quality_gates:
+  lint: "npm run lint"
+  typecheck: "npx tsc --noEmit"
+  test: "npm test"
+  build: "npm run build"
+
+# Example: Custom configuration for a smaller project
+# max_iterations: 50
+# stuck_threshold: 2
+# quality_gates:
+#   lint: "eslint ."
+#   build: "npm run build"

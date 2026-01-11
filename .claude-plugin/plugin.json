@@ -56,5 +56,57 @@
   },
   "mcp": {
     "config": ".mcp.json"
+  },
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "max_iterations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Maximum number of iterations before stopping a loop"
+        },
+        "stuck_threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of failed attempts before marking a story as stuck"
+        },
+        "quality_gates": {
+          "type": "object",
+          "description": "Commands to run as quality gates before committing",
+          "properties": {
+            "lint": {
+              "type": "string",
+              "description": "Linting command"
+            },
+            "typecheck": {
+              "type": "string",
+              "description": "Type checking command"
+            },
+            "test": {
+              "type": "string",
+              "description": "Testing command"
+            },
+            "build": {
+              "type": "string",
+              "description": "Build command"
+            }
+          }
+        }
+      }
+    },
+    "defaults": {
+      "max_iterations": 100,
+      "stuck_threshold": 3,
+      "quality_gates": {
+        "lint": "npm run lint",
+        "typecheck": "npx tsc --noEmit",
+        "test": "npm test",
+        "build": "npm run build"
+      }
+    },
+    "override_path": "ralph/config.yaml"
   }
 }
