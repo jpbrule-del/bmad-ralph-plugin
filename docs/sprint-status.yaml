@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-10T21:41:39Z"
+last_updated: "2026-01-11T01:50:00Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -473,7 +473,7 @@ epics:
 
           As a developer, I want Claude to implement my stories so that I
           can review code instead of writing it.
-        status: "not-started"
+        status: "completed"
         points: 5
         priority: "must-have"
         functional_requirements:

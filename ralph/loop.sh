@@ -206,6 +206,16 @@ get_story_attempts() {
   jq -r --arg id "$story_id" '.storyAttempts[$id] // 0' "$CONFIG_FILE"
 }
 
+get_story_points() {
+  local story_id="$1"
+  yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].points" "$SPRINT_STATUS"
+}
+
+get_story_epic_id() {
+  local story_id="$1"
+  yq -r ".epics[] | select(.stories[].id == \"$story_id\") | .id" "$SPRINT_STATUS"
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # QUALITY GATES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -280,18 +290,52 @@ mark_story_complete() {
   local story_id="$1"
   local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+  # Get story metadata
+  local story_points=$(get_story_points "$story_id")
+  local epic_id=$(get_story_epic_id "$story_id")
+  local story_title=$(get_story_title "$story_id")
+  local attempts=$(get_story_attempts "$story_id")
+
   # Update sprint-status.yaml (single source of truth)
   local tmp_file=$(mktemp)
   yq eval "
     (.epics[].stories[] | select(.id == \"$story_id\")).status = \"completed\" |
+    (.epics[] | select(.id == \"$epic_id\")).completed_points += $story_points |
     .last_updated = \"$(date +%Y-%m-%dT%H:%M:%SZ)\"
   " "$SPRINT_STATUS" > "$tmp_file" && mv "$tmp_file" "$SPRINT_STATUS"
 
-  # Update stats in config.json
+  # Update stats in config.json and add storyNotes
   local completed=$(get_completed_count)
-  jq --arg ts "$timestamp" --argjson count "$completed" '
-    .stats.storiesCompleted = $count
+  local commit_hash=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+  jq --arg ts "$timestamp" \
+     --argjson count "$completed" \
+     --arg id "$story_id" \
+     --arg title "$story_title" \
+     --argjson points "$story_points" \
+     --arg epic "$epic_id" \
+     --argjson attempts "$attempts" \
+     --arg commit "$commit_hash" '
+    .stats.storiesCompleted = $count |
+    .storyNotes[$id] = {
+      "title": $title,
+      "points": $points,
+      "epic": $epic,
+      "attempts": $attempts,
+      "completedAt": $ts,
+      "commit": $commit
+    }
   ' "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
+
+  # Log completion to progress.txt
+  {
+    echo ""
+    echo "## Iteration $iteration - $story_id"
+    echo "Completed: $story_title"
+    echo "Epic: $epic_id"
+    echo "Points: $story_points"
+    echo "Attempts: $attempts"
+    echo "Commit: $commit_hash"
+  } >> "$PROGRESS_FILE"
 }
 
 increment_story_attempts() {
