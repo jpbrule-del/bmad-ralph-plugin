@@ -4,6 +4,7 @@
 cmd_status() {
   local loop_name=""
   local once=false
+  local refresh_rate=2
 
   # Parse arguments
   while [[ $# -gt 0 ]]; do
@@ -12,9 +13,24 @@ cmd_status() {
         once=true
         shift
         ;;
+      --refresh)
+        if [[ -z "$2" ]] || [[ "$2" =~ ^- ]]; then
+          error "--refresh requires a numeric argument (seconds)"
+          echo "Usage: ralph status <loop-name> [--once] [--refresh <seconds>]"
+          exit 1
+        fi
+        # Validate numeric
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+          error "Refresh rate must be a positive integer"
+          echo "Usage: ralph status <loop-name> [--once] [--refresh <seconds>]"
+          exit 1
+        fi
+        refresh_rate="$2"
+        shift 2
+        ;;
       -*)
         error "Unknown option: $1"
-        echo "Usage: ralph status <loop-name> [--once]"
+        echo "Usage: ralph status <loop-name> [--once] [--refresh <seconds>]"
         exit 1
         ;;
       *)
@@ -22,7 +38,7 @@ cmd_status() {
           loop_name="$1"
         else
           error "Unexpected argument: $1"
-          echo "Usage: ralph status <loop-name> [--once]"
+          echo "Usage: ralph status <loop-name> [--once] [--refresh <seconds>]"
           exit 1
         fi
         shift
@@ -33,7 +49,7 @@ cmd_status() {
   # Validate loop name provided
   if [[ -z "$loop_name" ]]; then
     error "Loop name is required"
-    echo "Usage: ralph status <loop-name> [--once]"
+    echo "Usage: ralph status <loop-name> [--once] [--refresh <seconds>]"
     exit 1
   fi
 
@@ -83,15 +99,31 @@ cmd_status() {
     # Set up trap to handle Ctrl+C gracefully
     trap 'echo ""; info "Exiting status monitor"; exit 0' INT TERM
 
-    info "Monitoring loop: $loop_name (Press Ctrl+C to exit)"
+    info "Monitoring loop: $loop_name (Press q to quit, r to refresh)"
     echo ""
 
     while true; do
       clear
       display_status "$loop_path" "$prd_file" "$is_archived"
       echo ""
-      echo -e "${COLOR_DIM}Refreshing every 2 seconds... (Press Ctrl+C to exit)${COLOR_RESET}"
-      sleep 2
+      echo -e "${COLOR_DIM}Refreshing every ${refresh_rate}s... (Press 'q' to quit, 'r' to refresh now)${COLOR_RESET}"
+
+      # Use read with timeout to allow keypress during wait
+      local key=""
+      read -t "$refresh_rate" -n 1 key 2>/dev/null
+
+      # Handle keypresses
+      case "$key" in
+        q|Q)
+          echo ""
+          info "Exiting status monitor"
+          exit 0
+          ;;
+        r|R)
+          # Refresh immediately by continuing loop
+          continue
+          ;;
+      esac
     done
   fi
 }
