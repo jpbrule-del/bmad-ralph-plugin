@@ -1101,3 +1101,33 @@ Perfect! Successfully completed **STORY-029: Create MCP Configuration** for the 
 ### Next Story
 
 **STORY-030: Implement Perplexity MCP Server** (8 points, could-have) - Build on this configuration to expose search/research capabilities to the agent, handle API authentication, implement rate limiting, cache queries, and provide graceful network error handling. This completes the full Perplexity MCP integration.
+
+## Iteration 29 - STORY-029 (COMPLETED)
+Timestamp: 2026-01-11T09:30:01Z
+Story: Create MCP Configuration
+Epic: EPIC-005
+Points: 3
+Attempts: 0
+Quality gates: All passed
+Commit: e561748
+
+## Iteration 30 - STORY-030 - STARTED
+Timestamp: 2026-01-11T09:30:03Z
+Story: Implement Perplexity MCP Server
+Attempts: 0/3
+
+## Iteration 30 - STORY-030 (COMPLETED)
+Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Story: Implement Perplexity MCP Server
+Epic: EPIC-005
+Points: 8
+Attempts: 0
+Quality gates: All passed
+Commit: 23cbbef
+
+Completed: Implemented comprehensive MCP integration for Perplexity AI research with helper scripts (mcp-health-check.sh, mcp-usage-stats.sh, mcp-test-connection.sh), logging infrastructure (ralph/logs/), updated ralph-agent.md with MCP capabilities documentation, created AGENT-INTEGRATION.md comprehensive guide for agents/skills, and enhanced loop-optimization skill with MCP usage analysis and recommendations.
+
+Learning: MCP (Model Context Protocol) integration enables Ralph agent to access external research capabilities via Perplexity AI during story implementation. Four MCP tools available: perplexity_search (quick lookups), perplexity_research (deep analysis), perplexity_ask (conversational), perplexity_reason (step-by-step reasoning). MCP is most effective for researching unfamiliar technologies, current best practices, and troubleshooting complex errors - but should not replace codebase exploration or built-in knowledge. Helper scripts provide health checking, usage analytics, and connection testing. Agent documentation now includes explicit guidance on when to use MCP vs built-in knowledge. Loop optimization skill can now detect knowledge gaps and recommend MCP usage patterns. Configuration in .mcp.json includes rate limiting (10 req/min), retry policies, caching (5-min TTL), and error handling. STORY-029 created configuration, STORY-030 implemented integration infrastructure and agent enablement.
+
+Note for next: STORY-031 (Implement MCP Security) requires secure credential handling with environment variables, Claude Code credential store, encryption at rest, and validation on startup. Most MCP security architecture already defined in STORY-029 configuration (.mcp.json) - STORY-031 will implement credential validation scripts and security documentation.
+
