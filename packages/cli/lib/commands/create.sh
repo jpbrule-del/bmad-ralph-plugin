@@ -7,6 +7,7 @@ readonly CREATE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" &&
 source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
 source "$CREATE_LIB_DIR/generator/loop_generator.sh"
 source "$CREATE_LIB_DIR/generator/prd_generator.sh"
+source "$CREATE_LIB_DIR/generator/prompt_generator.sh"
 
 cmd_create() {
   local loop_name=""
@@ -179,6 +180,15 @@ cmd_create() {
     success "Generated prd.json"
   else
     error "Failed to generate prd.json"
+    exit 1
+  fi
+
+  # Generate prompt.md
+  info "Generating prompt.md context file..."
+  if generate_prompt_md "$loop_name" "$loop_dir" "$epic_filter"; then
+    success "Generated prompt.md"
+  else
+    error "Failed to generate prompt.md"
     exit 1
   fi
 
