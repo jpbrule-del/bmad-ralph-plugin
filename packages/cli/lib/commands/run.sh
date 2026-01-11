@@ -138,16 +138,37 @@ cmd_run() {
     info "Already on branch: $branch_name"
   fi
 
-  # Placeholder for future implementation
-  # STORY-031 will implement the actual Claude CLI integration
-  # STORY-039 will implement --dry-run functionality
-  # The loop.sh script in each loop directory will handle the actual execution
-
+  # Execute the loop
   success "Loop validation passed"
-  info "Loop '$loop_name' is ready to run"
+  info "Starting loop execution: $loop_name"
   echo ""
-  echo "The actual execution logic (Claude CLI integration) will be implemented in STORY-031"
-  echo ""
-  echo "For now, you can run the loop script directly:"
-  echo "  cd $loop_path && bash loop.sh"
+
+  # Build loop.sh arguments
+  local loop_args=()
+  if [[ "$restart" == "true" ]]; then
+    loop_args+=(--restart)
+  fi
+
+  # Execute loop.sh script
+  local loop_script="$loop_path/loop.sh"
+  if [[ ! -f "$loop_script" ]]; then
+    error "Loop script not found: $loop_script"
+    echo "The loop may be corrupted. Try recreating it."
+    exit 1
+  fi
+
+  # Make loop.sh executable if it isn't already
+  chmod +x "$loop_script"
+
+  # Execute the loop script
+  # Pass through exit code from loop.sh
+  if [[ "$dry_run" == "true" ]]; then
+    # Dry run mode - not implemented yet (STORY-039)
+    info "Dry run mode not yet implemented (STORY-039)"
+    echo "Would execute: $loop_script ${loop_args[*]}"
+    exit 0
+  else
+    # Execute the loop
+    exec "$loop_script" "${loop_args[@]}"
+  fi
 }
