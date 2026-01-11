@@ -1,0 +1,22 @@
+# Ralph Workflow Configuration
+# This file contains the Phase 5 workflow configuration for ralph
+# To be merged into docs/bmm-workflow-status.yaml
+
+ralph:
+  status: "bmm/agents/ralph.md"
+  description: "Autonomous loop execution for story implementation"
+  inputs:
+    - "docs/sprint-status.yaml (stories and acceptance criteria)"
+    - "docs/prd-*.md (requirements and context)"
+    - "docs/architecture-*.md (patterns and tech stack)"
+  outputs:
+    - "Implemented stories with passing quality gates"
+    - "Updated docs/sprint-status.yaml (story completion)"
+    - "ralph/progress.txt (iteration log)"
+    - "Git commits (one per completed story)"
+  invocation: "/ralph"
+  phase_position: "5"
+  prerequisites:
+    - "Phase 4 sprint planning completed"
+    - "Quality gates configured"
+    - "Stories have acceptance criteria"

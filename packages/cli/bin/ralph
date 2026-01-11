@@ -113,12 +113,14 @@ USAGE:
 COMMANDS:
 
   Project Initialization:
-    init [--force]
+    init [--force] [--install-agent]
         Initialize ralph in a BMAD project by creating ralph/ directory
         structure and config.yaml. Detects BMAD project automatically.
 
         Options:
-          --force    Reinitialize even if already initialized
+          --force           Reinitialize even if already initialized
+          --install-agent   Install ralph agent files into project BMAD config
+                            (copies agent definition and registers workflow)
 
   Configuration:
     config <subcommand>
@@ -234,6 +236,9 @@ GLOBAL OPTIONS:
 EXAMPLES:
   # Initialize ralph in your BMAD project
   ralph init
+
+  # Initialize with agent integration for BMAD workflows
+  ralph init --install-agent
 
   # Configure quality gates
   ralph config quality-gates

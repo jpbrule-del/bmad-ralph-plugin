@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-10T23:50:44Z"
+last_updated: "2026-01-10T23:54:01Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -997,7 +997,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 18
-    completed_points: 15
+    completed_points: 20
     stories:
       - id: "STORY-060"
         title: "Create agent definition file"
