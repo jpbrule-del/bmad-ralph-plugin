@@ -1656,3 +1656,19 @@ Story: Migrate Archive Command
 Attempts: 0/3
 Claude Output:
 Invalid API key · Fix external API key
+
+## Iteration 55 - STORY-015 (COMPLETED)
+Timestamp: 2026-01-11T13:19:58Z
+Story: Migrate Archive Command
+Epic: EPIC-002
+Points: 5
+Attempts: 0
+Quality gates: All passed
+Commit: 11dbdec
+
+## Iteration 54 - STORY-016 - STARTED
+Timestamp: 2026-01-11T13:20:00Z
+Story: Migrate Unarchive Command
+Attempts: 0/3
+Claude Output:
+Invalid API key · Fix external API key

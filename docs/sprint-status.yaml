@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver BMAD Ralph Plugin with full Claude Code integration"
 sprint_start_date: "2026-01-11"
 sprint_end_date: "2026-01-15"
-last_updated: "2026-01-11T08:19:53Z"
+last_updated: "2026-01-11T08:19:58Z"
 sprint_status: "not_started"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8, 13)
 # 1 = Trivial (< 1 hour)
@@ -132,7 +132,7 @@ epics:
     status: "not_started"
     priority: "must-have"
     total_points: 68
-    completed_points: 50
+    completed_points: 55
     stories:
       - id: "STORY-006"
         title: "Migrate Init Command"
@@ -320,7 +320,7 @@ epics:
 
           As a user, I want `/bmad-ralph:archive <name>` command so that I can
           archive completed loops with feedback.
-        status: "not_started"
+        status: "completed"
         points: 5
         priority: "should-have"
         functional_requirements:
