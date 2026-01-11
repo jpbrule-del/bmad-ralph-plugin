@@ -74,6 +74,10 @@ route_command() {
       source "$LIB_DIR/commands/config.sh"
       cmd_config "$@"
       ;;
+    feedback-report)
+      source "$LIB_DIR/commands/feedback_report.sh"
+      cmd_feedback_report "$@"
+      ;;
     help|--help|-h)
       show_help
       ;;
@@ -201,10 +205,27 @@ COMMANDS:
           r                   Refresh immediately
           l                   View full log (progress.txt)
 
-  Loop Archival:
-    archive <loop-name>
+  Loop Archival & Analytics:
+    archive <loop-name> [--skip-feedback]
         Archive a completed loop after collecting mandatory feedback.
         Moves loop to ralph/archive/ for historical record.
+
+        Options:
+          --skip-feedback Skip feedback collection (not recommended)
+
+    unarchive <loop-name> [--reset-stats] [--no-branch]
+        Restore a loop from archive back to active status.
+
+        Options:
+          --reset-stats   Reset execution statistics to zero
+          --no-branch     Don't create git branch
+
+    feedback-report [--json]
+        Generate aggregate feedback analytics across all archived loops.
+        Shows satisfaction scores, success rates, and common themes.
+
+        Options:
+          --json          Output in JSON format
 
 GLOBAL OPTIONS:
   --help, -h        Show this help message
@@ -231,6 +252,9 @@ EXAMPLES:
 
   # Archive the loop when done
   ralph archive feature-auth
+
+  # View feedback analytics across all archived loops
+  ralph feedback-report
 
   # List all loops
   ralph list
