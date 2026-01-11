@@ -1131,3 +1131,12 @@ Learning: MCP (Model Context Protocol) integration enables Ralph agent to access
 
 Note for next: STORY-031 (Implement MCP Security) requires secure credential handling with environment variables, Claude Code credential store, encryption at rest, and validation on startup. Most MCP security architecture already defined in STORY-029 configuration (.mcp.json) - STORY-031 will implement credential validation scripts and security documentation.
 
+Claude Output:
+Output summary (105 lines total):
+## Summary
+
+Successfully completed **STORY-030: Implement Perplexity MCP Server** for the BMAD Ralph Plugin sprint.
+...
+### Next Story
+
+**STORY-031: Implement MCP Security** (5 points, should-have) - Implement secure credential handling for MCP servers with environment variable support, Claude Code credential store integration, credential encryption at rest, validation on startup, and clear error messages for auth failures.
