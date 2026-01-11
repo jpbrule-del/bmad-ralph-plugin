@@ -152,7 +152,8 @@ display_status() {
     fi
   fi
 
-  # Get story title and epic info from sprint-status.yaml if we have a current story
+  # Get story title, points, and epic info from sprint-status.yaml if we have a current story
+  local current_story_points=0
   local current_epic_id=""
   local current_epic_name=""
   local epic_total_points=0
@@ -160,6 +161,7 @@ display_status() {
 
   if [[ -n "$current_story" ]] && [[ -f "$sprint_status_path" ]]; then
     current_story_title=$(yq eval ".epics[].stories[] | select(.id == \"$current_story\") | .title" "$sprint_status_path" 2>/dev/null | head -1)
+    current_story_points=$(yq eval ".epics[].stories[] | select(.id == \"$current_story\") | .points" "$sprint_status_path" 2>/dev/null | head -1)
 
     # Get epic info for current story
     current_epic_id=$(yq eval ".epics[] | select(.stories[].id == \"$current_story\") | .id" "$sprint_status_path" 2>/dev/null | head -1)
@@ -168,6 +170,44 @@ display_status() {
       current_epic_name=$(yq eval ".epics[] | select(.id == \"$current_epic_id\") | .name" "$sprint_status_path" 2>/dev/null)
       epic_total_points=$(yq eval ".epics[] | select(.id == \"$current_epic_id\") | .total_points" "$sprint_status_path" 2>/dev/null)
       epic_completed_points=$(yq eval ".epics[] | select(.id == \"$current_epic_id\") | .completed_points" "$sprint_status_path" 2>/dev/null)
+    fi
+  fi
+
+  # Calculate time elapsed on current story
+  local time_elapsed=""
+  if [[ -n "$current_story" ]] && [[ -f "$progress_file" ]]; then
+    # Find the first occurrence of current story in progress.txt (when it started)
+    local story_start_line=$(grep -n "^## Iteration [0-9]\\+ - $current_story" "$progress_file" | head -1 | cut -d: -f1)
+
+    if [[ -n "$story_start_line" ]]; then
+      # Try to extract timestamp from Completed/Learning lines after the iteration header
+      # Format typically: "Completed: ... at 2026-01-11T03:41:47Z" or similar
+      # Or we can use file modification time as fallback
+
+      # Get the file modification time as a reasonable approximation
+      # This shows how long since the progress file was last updated
+      local current_time=$(date +%s)
+      local file_mod_time=$(stat -f %m "$progress_file" 2>/dev/null || stat -c %Y "$progress_file" 2>/dev/null)
+
+      if [[ -n "$file_mod_time" ]]; then
+        local elapsed_seconds=$((current_time - file_mod_time))
+
+        # Format elapsed time nicely
+        local days=$((elapsed_seconds / 86400))
+        local hours=$(((elapsed_seconds % 86400) / 3600))
+        local minutes=$(((elapsed_seconds % 3600) / 60))
+        local seconds=$((elapsed_seconds % 60))
+
+        if [[ $days -gt 0 ]]; then
+          time_elapsed="${days}d ${hours}h ${minutes}m"
+        elif [[ $hours -gt 0 ]]; then
+          time_elapsed="${hours}h ${minutes}m"
+        elif [[ $minutes -gt 0 ]]; then
+          time_elapsed="${minutes}m ${seconds}s"
+        else
+          time_elapsed="${seconds}s"
+        fi
+      fi
     fi
   fi
 
@@ -220,6 +260,11 @@ display_status() {
       echo "Title:          $current_story_title"
     fi
 
+    # Show story points
+    if [[ -n "$current_story_points" ]] && [[ "$current_story_points" != "0" ]]; then
+      echo "Points:         $current_story_points"
+    fi
+
     # Get attempt count for current story
     local current_attempts=$(jq -r ".storyAttempts.\"$current_story\" // 0" "$prd_file")
 
@@ -229,6 +274,11 @@ display_status() {
       echo "Attempts:       ${COLOR_YELLOW}$current_attempts / $stuck_threshold (approaching threshold)${COLOR_RESET}"
     else
       echo "Attempts:       $current_attempts / $stuck_threshold"
+    fi
+
+    # Show time elapsed
+    if [[ -n "$time_elapsed" ]]; then
+      echo "Time Elapsed:   $time_elapsed"
     fi
   else
     echo "${COLOR_DIM}No story currently in progress${COLOR_RESET}"
