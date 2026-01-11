@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-11T03:45:13Z"
+last_updated: "2026-01-10T22:45:57Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -659,7 +659,7 @@ epics:
     status: "in-progress"
     priority: "should-have"
     total_points: 26
-    completed_points: 10
+    completed_points: 13
     stories:
       - id: "STORY-040"
         title: "Implement status command basic structure"
@@ -722,7 +722,7 @@ epics:
 
           As a developer, I want ETA so that I can plan my time while
           loops run.
-        status: "not-started"
+        status: "completed"
         points: 3
         priority: "should-have"
         functional_requirements:
