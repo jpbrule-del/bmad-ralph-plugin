@@ -1,0 +1,32 @@
+{
+  "$schema": "auto-update.schema.json",
+  "enabled": true,
+  "check_interval_hours": 24,
+  "last_check_timestamp": null,
+  "auto_install": false,
+  "update_channel": "stable",
+  "deferred_updates": {},
+  "notify_method": "console",
+  "backup_before_update": true,
+  "preserve_configuration": {
+    "files": [
+      "ralph/config.yaml",
+      ".claude-plugin/auto-update.json",
+      ".claude-plugin/hooks/hooks.json"
+    ],
+    "directories": [
+      "ralph/loops",
+      "ralph/archive"
+    ]
+  },
+  "update_source": {
+    "type": "github",
+    "repository": "snarktank/ralph",
+    "api_endpoint": "https://api.github.com/repos/snarktank/ralph/releases/latest"
+  },
+  "changelog_display": {
+    "show_on_notify": true,
+    "format": "markdown",
+    "max_lines": 50
+  }
+}

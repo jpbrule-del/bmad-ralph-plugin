@@ -144,6 +144,17 @@
       "enabled": true
     },
     {
+      "type": "plugin-load",
+      "name": "auto-update-check",
+      "description": "Check for available plugin updates on startup",
+      "script": "../scripts/auto-update-check.sh",
+      "timeout": 10000,
+      "required": false,
+      "on_failure": "warn",
+      "execution_order": 5,
+      "enabled": true
+    },
+    {
       "type": "pre-commit",
       "name": "pre-commit-quality-gates",
       "description": "Run quality gates before committing changes",
