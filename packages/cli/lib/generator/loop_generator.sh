@@ -53,13 +53,8 @@ generate_loop_sh() {
     fi
   fi
 
-  # Get current branch
-  local branch_name
-  if git rev-parse --git-dir >/dev/null 2>&1; then
-    branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
-  else
-    branch_name="main"
-  fi
+  # Use expected loop branch name (ralph/<loop_name>)
+  local branch_name="ralph/$loop_name"
 
   # Read quality gate commands from ralph/config.yaml or use defaults
   local typecheck_cmd=""

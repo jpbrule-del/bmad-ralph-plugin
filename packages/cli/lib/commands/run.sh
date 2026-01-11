@@ -71,18 +71,18 @@ cmd_run() {
     exit 1
   fi
 
-  # Validate prd.json exists
-  local prd_file="$loop_path/prd.json"
+  # Validate config.json exists
+  local prd_file="$loop_path/config.json"
   if [[ ! -f "$prd_file" ]]; then
-    error "Invalid loop: prd.json not found"
+    error "Invalid loop: config.json not found"
     exit 1
   fi
 
-  # Get branch name from prd.json
+  # Get branch name from config.json
   local branch_name
   branch_name=$(jq -r '.branchName // ""' "$prd_file")
   if [[ -z "$branch_name" ]]; then
-    error "Invalid loop: branchName not found in prd.json"
+    error "Invalid loop: branchName not found in config.json"
     exit 1
   fi
 
@@ -122,7 +122,7 @@ cmd_run() {
     if ! branch_exists "$branch_name"; then
       error "Branch does not exist: $branch_name"
       echo "The loop configuration references a branch that doesn't exist."
-      echo "You may need to create it manually or update prd.json"
+      echo "You may need to create it manually or update config.json"
       exit 1
     fi
 
@@ -166,8 +166,8 @@ cmd_run() {
     # Dry run mode - show what would be executed without actually running
     perform_dry_run "$loop_path" "$prd_file"
   else
-    # Execute the loop
-    exec "$loop_script" "${loop_args[@]}"
+    # Execute the loop (use safe array expansion for empty arrays with set -u)
+    exec "$loop_script" ${loop_args[@]+"${loop_args[@]}"}
   fi
 }
 
@@ -194,7 +194,7 @@ perform_dry_run() {
   # 1. Validate and display configuration
   echo -e "${BOLD}Configuration Validation:${NC}"
 
-  # Validate prd.json structure
+  # Validate config.json structure
   local required_fields=("project" "branchName" "sprintStatusPath" "config.maxIterations" "config.stuckThreshold" "config.qualityGates")
   local validation_passed=true
 
@@ -286,9 +286,9 @@ perform_dry_run() {
   if [[ ! -f "$sprint_status_path" ]]; then
     echo -e "  ${YELLOW}⚠${NC}  Cannot read sprint status file"
   else
-    # Extract pending stories (status != "completed")
+    # Extract pending stories (not completed - support both hyphen and underscore status values)
     local pending_stories
-    pending_stories=$(yq eval -o json '.epics[].stories[] | select(.status != "completed") | {id: .id, title: .title, status: .status, points: .points}' "$sprint_status_path" 2>/dev/null | jq -s '.')
+    pending_stories=$(yq eval -o json '[.epics[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")]' "$sprint_status_path" 2>/dev/null | jq '[.[] | {id: .id, title: .title, status: .status, points: .points}]')
 
     local story_count
     story_count=$(echo "$pending_stories" | jq 'length')
@@ -312,9 +312,9 @@ perform_dry_run() {
         story_status=$(echo "$pending_stories" | jq -r ".[$i].status")
         story_points=$(echo "$pending_stories" | jq -r ".[$i].points")
 
-        # Color code by status
+        # Color code by status (support both hyphen and underscore)
         local status_indicator
-        if [[ "$story_status" == "in-progress" ]]; then
+        if [[ "$story_status" == "in-progress" || "$story_status" == "in_progress" ]]; then
           status_indicator="${YELLOW}●${NC}"
         else
           status_indicator="${DIM}○${NC}"

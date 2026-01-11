@@ -36,7 +36,7 @@ BUILD_CMD="{{BUILD_CMD}}"
 
 # Paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/config.json"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
@@ -170,24 +170,71 @@ log_warning() {
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE FUNCTIONS (Read from sprint-status.yaml - single source of truth)
+# Supports both BMAD formats: .epics[].stories[] and .sprints[].stories[]
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# Detect sprint-status format (cached for performance)
+_SPRINT_FORMAT=""
+detect_sprint_format() {
+  if [ -z "$_SPRINT_FORMAT" ]; then
+    local has_epics has_sprints
+    has_epics=$(yq '.epics | length' "$SPRINT_STATUS" 2>/dev/null)
+    has_sprints=$(yq '.sprints | length' "$SPRINT_STATUS" 2>/dev/null)
+    if [ "$has_epics" != "0" ] && [ "$has_epics" != "null" ] && [ -n "$has_epics" ]; then
+      _SPRINT_FORMAT="epics"
+    elif [ "$has_sprints" != "0" ] && [ "$has_sprints" != "null" ] && [ -n "$has_sprints" ]; then
+      _SPRINT_FORMAT="sprints"
+    else
+      _SPRINT_FORMAT="unknown"
+    fi
+  fi
+  echo "$_SPRINT_FORMAT"
+}
+
 get_pending_count() {
-  yq '[.epics[].stories[] | select(.status != "completed")] | length' "$SPRINT_STATUS"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq '[.epics[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | length' "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq '[.sprints[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | length' "$SPRINT_STATUS"
+  else
+    echo "0"
+  fi
 }
 
 get_completed_count() {
-  yq '[.epics[].stories[] | select(.status == "completed")] | length' "$SPRINT_STATUS"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq '[.epics[].stories[] | select(.status == "completed")] | length' "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq '[.sprints[].stories[] | select(.status == "completed" or .status == "done")] | length' "$SPRINT_STATUS"
+  else
+    echo "0"
+  fi
 }
 
 get_total_count() {
-  yq '[.epics[].stories[]] | length' "$SPRINT_STATUS"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq '[.epics[].stories[]] | length' "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq '[.sprints[].stories[]] | length' "$SPRINT_STATUS"
+  else
+    echo "0"
+  fi
 }
 
 get_next_story() {
-  # Get first story that is not completed, ordered by epic then position
+  # Get first story that is not completed, ordered by epic/sprint then position
+  local format=$(detect_sprint_format)
   local result
-  result=$(yq -r '[.epics[] | .stories[] | select(.status != "completed")] | .[0].id' "$SPRINT_STATUS")
+  if [ "$format" = "epics" ]; then
+    result=$(yq -r '[.epics[] | .stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | .[0].id' "$SPRINT_STATUS")
+  elif [ "$format" = "sprints" ]; then
+    result=$(yq -r '[.sprints[] | .stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | .[0] | (.story_id // .id)' "$SPRINT_STATUS")
+  else
+    result=""
+  fi
   # Return empty string if result is "null" or empty
   if [ "$result" = "null" ] || [ -z "$result" ]; then
     echo ""
@@ -198,7 +245,12 @@ get_next_story() {
 
 get_story_title() {
   local story_id="$1"
-  yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].title" "$SPRINT_STATUS"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].title" "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq -r "[.sprints[].stories[] | select(.story_id == \"$story_id\" or .id == \"$story_id\")] | .[0].title" "$SPRINT_STATUS"
+  fi
 }
 
 get_story_attempts() {
@@ -208,12 +260,22 @@ get_story_attempts() {
 
 get_story_points() {
   local story_id="$1"
-  yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].points" "$SPRINT_STATUS"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].points" "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq -r "[.sprints[].stories[] | select(.story_id == \"$story_id\" or .id == \"$story_id\")] | .[0].points" "$SPRINT_STATUS"
+  fi
 }
 
 get_story_epic_id() {
   local story_id="$1"
-  yq -r ".epics[] | select(.stories[].id == \"$story_id\") | .id" "$SPRINT_STATUS"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq -r ".epics[] | select(.stories[].id == \"$story_id\") | .id" "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq -r ".sprints[] | select(.stories[].story_id == \"$story_id\" or .stories[].id == \"$story_id\") | .sprint_number" "$SPRINT_STATUS"
+  fi
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -85,7 +85,7 @@ cmd_status() {
     fi
   fi
 
-  local prd_file="$loop_path/prd.json"
+  local prd_file="$loop_path/config.json"
   if [[ ! -f "$prd_file" ]]; then
     error "Loop configuration file not found: $prd_file"
     exit 1
@@ -96,28 +96,85 @@ cmd_status() {
     display_status "$loop_path" "$prd_file" "$is_archived"
   else
     # Real-time watch mode
-    # Set up trap to handle Ctrl+C gracefully
-    trap 'echo ""; info "Exiting status monitor"; exit 0' INT TERM
+    # Set up trap to handle Ctrl+C gracefully and restore terminal
+    local old_stty=""
+    if [[ -t 0 ]]; then
+      old_stty=$(stty -g 2>/dev/null)
+    fi
+
+    cleanup_status() {
+      # Show cursor and restore terminal settings
+      printf '\033[?25h'  # Show cursor
+      if [[ -n "$old_stty" ]]; then
+        stty "$old_stty" 2>/dev/null
+      fi
+      echo ""
+      info "Exiting status monitor"
+      exit 0
+    }
+
+    trap cleanup_status INT TERM EXIT
 
     info "Monitoring loop: $loop_name (Press q to quit, r to refresh)"
     echo ""
 
-    while true; do
-      clear
-      display_status "$loop_path" "$prd_file" "$is_archived"
-      echo ""
-      echo -e "${COLOR_DIM}Refreshing every ${refresh_rate}s... (Press 'q' to quit, 'r' to refresh now, 'l' to view full log)${COLOR_RESET}"
+    # ANSI escape sequences for live dashboard
+    local ESC=$'\033'
+    local CURSOR_HOME="${ESC}[H"
+    local CURSOR_HIDE="${ESC}[?25l"
+    local CURSOR_SHOW="${ESC}[?25h"
+    local CLEAR_SCREEN="${ESC}[2J"
+    local CLEAR_LINE="${ESC}[K"
 
-      # Use read with timeout to allow keypress during wait
+    # First display: clear screen completely
+    local first_display=true
+
+    while true; do
+      # Hide cursor during update to prevent flickering
+      printf '%s' "$CURSOR_HIDE"
+
+      if [[ "$first_display" == "true" ]]; then
+        # First time: clear screen and move home
+        printf '%s%s' "$CLEAR_SCREEN" "$CURSOR_HOME"
+        first_display=false
+      else
+        # Subsequent updates: just move cursor home (no flash!)
+        printf '%s' "$CURSOR_HOME"
+      fi
+
+      # Display status with line clearing for clean updates
+      display_status_live "$loop_path" "$prd_file" "$is_archived" "$CLEAR_LINE"
+
+      # Footer with instructions
+      printf '%s\n' "$CLEAR_LINE"
+      printf '%s%s\n' "${COLOR_DIM}Refreshing every ${refresh_rate}s... (Press 'q' to quit, 'r' to refresh now, 'l' to view full log)${COLOR_RESET}" "$CLEAR_LINE"
+
+      # Show cursor again
+      printf '%s' "$CURSOR_SHOW"
+
+      # Handle keypress with timeout
       local key=""
-      read -t "$refresh_rate" -n 1 key 2>/dev/null
+
+      # Check if we have a terminal for interactive input
+      if [[ -t 0 ]]; then
+        # Set terminal to raw mode for single keypress
+        stty -echo -icanon min 0 time $((refresh_rate * 10)) 2>/dev/null
+        key=$(dd bs=1 count=1 2>/dev/null)
+        # Restore terminal
+        if [[ -n "$old_stty" ]]; then
+          stty "$old_stty" 2>/dev/null
+        fi
+      else
+        # No terminal, just sleep
+        sleep "$refresh_rate"
+      fi
 
       # Handle keypresses
       case "$key" in
         q|Q)
-          echo ""
-          info "Exiting status monitor"
-          exit 0
+          # Remove EXIT trap to avoid double message
+          trap - EXIT
+          cleanup_status
           ;;
         r|R)
           # Refresh immediately by continuing loop
@@ -127,7 +184,7 @@ cmd_status() {
           # Show full log
           local progress_file="$loop_path/progress.txt"
           if [[ -f "$progress_file" ]]; then
-            clear
+            printf '\033[2J\033[H'  # Clear screen for log view
             echo -e "${COLOR_CYAN}════════════════════════════════════════════════════════════════${COLOR_RESET}"
             echo -e "${COLOR_CYAN}  Full Log: $loop_name${COLOR_RESET}"
             echo -e "${COLOR_CYAN}════════════════════════════════════════════════════════════════${COLOR_RESET}"
@@ -142,6 +199,8 @@ cmd_status() {
               echo -e "${COLOR_DIM}Press any key to continue...${COLOR_RESET}"
               read -n 1 -s -r
             fi
+            # Reset first_display to clear screen when returning to dashboard
+            first_display=true
           else
             echo ""
             warn "No log file found: $progress_file"
@@ -150,9 +209,27 @@ cmd_status() {
           # Continue the loop to refresh display
           continue
           ;;
+        *)
+          # Empty or unrecognized key - just continue loop
+          continue
+          ;;
       esac
     done
   fi
+}
+
+# Display status for live dashboard (clears each line to prevent artifacts)
+display_status_live() {
+  local loop_path="$1"
+  local prd_file="$2"
+  local is_archived="$3"
+  local clear_line="$4"
+
+  # Capture display_status output and add clear-to-end-of-line for each line
+  # This prevents screen artifacts when line lengths change
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    printf '%s%s\n' "$line" "$clear_line"
+  done < <(display_status "$loop_path" "$prd_file" "$is_archived")
 }
 
 # Display status for a loop
@@ -161,7 +238,7 @@ display_status() {
   local prd_file="$2"
   local is_archived="$3"
 
-  # Extract data from prd.json
+  # Extract data from config.json
   local project=$(jq -r '.project // "Unknown"' "$prd_file")
   local branch=$(jq -r '.branchName // "Unknown"' "$prd_file")
   local sprint_status_path=$(jq -r '.sprintStatusPath // "docs/sprint-status.yaml"' "$prd_file")
@@ -181,8 +258,26 @@ display_status() {
   local stories_completed=$(jq -r '.stats.storiesCompleted // 0' "$prd_file")
   local avg_iterations=$(jq -r '.stats.averageIterationsPerStory // 0' "$prd_file")
 
-  # Story attempts
-  local total_stories=$(jq -r '.storyAttempts | length' "$prd_file")
+  # Story counts - read from sprint-status.yaml for accurate totals
+  local total_stories=0
+  local pending_stories=0
+
+  if [[ -f "$sprint_status_path" ]]; then
+    # Count total stories from sprint-status.yaml (support both epics and sprints formats)
+    total_stories=$(yq eval '[.epics[].stories[] // .sprints[].stories[]] | length' "$sprint_status_path" 2>/dev/null || echo "0")
+    # Count pending stories (not_started or in_progress, support both underscore and hyphen)
+    pending_stories=$(yq eval '[.epics[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | length' "$sprint_status_path" 2>/dev/null || echo "0")
+    # Fallback for sprints format
+    if [[ "$total_stories" == "0" ]] || [[ "$total_stories" == "null" ]]; then
+      total_stories=$(yq eval '[.sprints[].stories[]] | length' "$sprint_status_path" 2>/dev/null || echo "0")
+      pending_stories=$(yq eval '[.sprints[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | length' "$sprint_status_path" 2>/dev/null || echo "0")
+    fi
+  fi
+
+  # Fallback to storyAttempts length if sprint-status not available
+  if [[ "$total_stories" == "0" ]] || [[ "$total_stories" == "null" ]]; then
+    total_stories=$(jq -r '.storyAttempts | length' "$prd_file")
+  fi
 
   # Check if loop is currently running
   local lock_file="$loop_path/.lock"

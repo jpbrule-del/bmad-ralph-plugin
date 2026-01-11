@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# prd_generator.sh - Generate prd.json loop configuration file
+# prd_generator.sh - Generate config.json loop configuration file
 
 # Get LIB_DIR from main script or fallback to relative path
 readonly PRD_GEN_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
@@ -8,21 +8,23 @@ readonly PRD_GEN_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" &
 # shellcheck source=lib/core/bmad_config.sh
 source "$PRD_GEN_LIB_DIR/core/bmad_config.sh"
 
-# Generate prd.json for a given loop
+# Generate config.json for a given loop
 # Arguments:
 #   $1: loop_name - Name of the loop
 #   $2: loop_dir - Full path to loop directory
 #   $3: epic_filter - Optional epic filter (or empty string for "all")
 #   $4: max_iterations - Max iterations (default: 50)
 #   $5: stuck_threshold - Stuck threshold (default: 3)
+#   $6: branch_name - Optional explicit branch name (if not provided, uses ralph/<loop_name>)
 generate_prd_json() {
   local loop_name="$1"
   local loop_dir="$2"
   local epic_filter="${3:-}"
   local max_iterations="${4:-50}"
   local stuck_threshold="${5:-3}"
+  local explicit_branch="${6:-}"
 
-  local output_file="$loop_dir/prd.json"
+  local output_file="$loop_dir/config.json"
 
   # Get project info from BMAD config
   local project_name
@@ -32,12 +34,13 @@ generate_prd_json() {
   project_name=$(get_bmad_project_name)
   sprint_status_path=$(get_bmad_sprint_status_path || echo "docs/sprint-status.yaml")
 
-  # Get current branch
+  # Determine branch name: explicit > expected loop branch > current branch > main
   local branch_name
-  if git rev-parse --git-dir >/dev/null 2>&1; then
-    branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+  if [[ -n "$explicit_branch" ]]; then
+    branch_name="$explicit_branch"
   else
-    branch_name="main"
+    # Use the expected loop branch naming convention
+    branch_name="ralph/$loop_name"
   fi
 
   # Read quality gate commands from ralph/config.yaml or ralph/config.json
@@ -82,7 +85,7 @@ generate_prd_json() {
     epic_filter_json="\"$epic_filter\""
   fi
 
-  # Generate prd.json content
+  # Generate config.json content
   local prd_content
   read -r -d '' prd_content <<EOF || true
 {
@@ -117,7 +120,7 @@ EOF
 
   # Validate JSON before writing
   if ! echo "$prd_content" | jq . >/dev/null 2>&1; then
-    error "Generated invalid JSON for prd.json"
+    error "Generated invalid JSON for config.json"
     return 1
   fi
 
@@ -129,7 +132,7 @@ EOF
   # Validate the temp file
   if ! jq . "$temp_file" >/dev/null 2>&1; then
     rm -f "$temp_file"
-    error "Failed to validate generated prd.json"
+    error "Failed to validate generated config.json"
     return 1
   fi
 
