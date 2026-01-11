@@ -18,11 +18,11 @@
     "customInstructions": null
   },
   "stats": {
-    "iterationsRun": 19,
-    "storiesCompleted": 10,
+    "iterationsRun": 21,
+    "storiesCompleted": 11,
     "startedAt": "2026-01-11T07:43:57Z",
     "completedAt": null,
-    "averageIterationsPerStory": 1.9
+    "averageIterationsPerStory": 1.91
   },
   "storyAttempts": {},
   "storyNotes": {
@@ -103,8 +103,16 @@
       "points": 3,
       "epic": "EPIC-002",
       "attempts": 0,
-      "completedAt": "2026-01-11T08:18:00Z",
-      "commit": "e1a059d"
+      "completedAt": "2026-01-11T08:18:42Z",
+      "commit": "52a6604"
+    },
+    "STORY-011": {
+      "title": "Migrate Show Command",
+      "points": 5,
+      "epic": "EPIC-002",
+      "attempts": 0,
+      "completedAt": "2026-01-11T08:23:00Z",
+      "commit": "86b22da"
     }
   }
 }
