@@ -50,6 +50,10 @@ route_command() {
       source "$LIB_DIR/commands/archive.sh"
       cmd_archive "$@"
       ;;
+    unarchive)
+      source "$LIB_DIR/commands/unarchive.sh"
+      cmd_unarchive "$@"
+      ;;
     delete)
       source "$LIB_DIR/commands/delete.sh"
       cmd_delete "$@"
@@ -167,6 +171,14 @@ COMMANDS:
 
         Options:
           --skip-feedback Skip feedback collection (not recommended)
+
+    unarchive <loop-name> [--reset-stats] [--no-branch]
+        Restore a loop from archive back to active loops. Preserves
+        feedback.json for historical record.
+
+        Options:
+          --reset-stats   Reset execution statistics to zero
+          --no-branch     Don't create git branch
 
   Loop Execution:
     run <loop-name> [--dry-run] [--restart]
