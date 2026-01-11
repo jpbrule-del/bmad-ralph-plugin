@@ -1640,3 +1640,19 @@ Story: Migrate Delete Command
 Attempts: 0/3
 Claude Output:
 Invalid API key · Fix external API key
+
+## Iteration 56 - STORY-014 (COMPLETED)
+Timestamp: 2026-01-11T13:19:52Z
+Story: Migrate Delete Command
+Epic: EPIC-002
+Points: 3
+Attempts: 0
+Quality gates: All passed
+Commit: e953f7c
+
+## Iteration 55 - STORY-015 - STARTED
+Timestamp: 2026-01-11T13:19:55Z
+Story: Migrate Archive Command
+Attempts: 0/3
+Claude Output:
+Invalid API key · Fix external API key
