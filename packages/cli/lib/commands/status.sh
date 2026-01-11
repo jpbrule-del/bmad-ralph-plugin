@@ -403,30 +403,147 @@ display_status() {
   section "Quality Gates"
   local gates_enabled=0
 
+  # Parse most recent quality gate execution from progress.txt
+  local last_gate_result=""
+  local last_gate_time=""
+  local failed_gates=()
+
+  if [[ -f "$progress_file" ]]; then
+    # Search backwards for the most recent quality gate result
+    local in_gate_section=false
+    local found_result=false
+
+    # Read file backwards (tail gives us recent lines first)
+    while IFS= read -r line; do
+      # Found a gate result section
+      if [[ "$line" =~ "Quality gates: All passed" ]]; then
+        last_gate_result="passed"
+        found_result=true
+        break
+      elif [[ "$line" =~ "QUALITY GATES FAILED" ]]; then
+        last_gate_result="failed"
+        in_gate_section=true
+      elif [[ $in_gate_section == true ]]; then
+        # Collect failed gates
+        if [[ "$line" =~ "Failed gates:" ]]; then
+          continue
+        elif [[ "$line" =~ "Timestamp: "* ]]; then
+          last_gate_time="${line#Timestamp: }"
+          found_result=true
+          break
+        elif [[ -n "$line" ]] && [[ ! "$line" =~ ^## ]]; then
+          # This is a failed gate line
+          failed_gates+=("$line")
+        fi
+      fi
+
+      # Extract timestamp from completion or failure section
+      if [[ $found_result == false ]] && [[ "$line" =~ "Timestamp: "* ]]; then
+        last_gate_time="${line#Timestamp: }"
+      fi
+    done < <(tac "$progress_file" 2>/dev/null || tail -r "$progress_file" 2>/dev/null || tail -100 "$progress_file")
+  fi
+
+  # Format last execution time
+  local time_ago=""
+  if [[ -n "$last_gate_time" ]]; then
+    local gate_seconds=$(date -jf "%Y-%m-%dT%H:%M:%SZ" "$last_gate_time" "+%s" 2>/dev/null || date -d "$last_gate_time" "+%s" 2>/dev/null)
+    local now_seconds=$(date "+%s")
+    local time_diff=$((now_seconds - gate_seconds))
+
+    if [[ $time_diff -lt 60 ]]; then
+      time_ago="${time_diff}s ago"
+    elif [[ $time_diff -lt 3600 ]]; then
+      time_ago="$((time_diff / 60))m ago"
+    elif [[ $time_diff -lt 86400 ]]; then
+      time_ago="$((time_diff / 3600))h ago"
+    else
+      time_ago="$((time_diff / 86400))d ago"
+    fi
+  fi
+
+  # Display gates with status
   if [[ "$typecheck" != "null" ]]; then
-    echo "${COLOR_GREEN}✓${COLOR_RESET} Typecheck:  $typecheck"
     ((gates_enabled++))
+    if [[ "$last_gate_result" == "passed" ]]; then
+      echo "${COLOR_GREEN}✓${COLOR_RESET} Typecheck:  ${COLOR_GREEN}PASS${COLOR_RESET}"
+    elif [[ "$last_gate_result" == "failed" ]]; then
+      # Check if typecheck was in failed gates
+      local failed=false
+      for gate in "${failed_gates[@]}"; do
+        [[ "$gate" =~ [Tt]ypecheck ]] && failed=true && break
+      done
+      if [[ $failed == true ]]; then
+        echo "${COLOR_RED}✗${COLOR_RESET} Typecheck:  ${COLOR_RED}FAIL${COLOR_RESET}"
+      else
+        echo "${COLOR_GREEN}✓${COLOR_RESET} Typecheck:  ${COLOR_GREEN}PASS${COLOR_RESET}"
+      fi
+    else
+      echo "${COLOR_DIM}○${COLOR_RESET} Typecheck:  ${COLOR_DIM}NO DATA${COLOR_RESET}"
+    fi
   else
     echo "${COLOR_DIM}○ Typecheck:  (disabled)${COLOR_RESET}"
   fi
 
   if [[ "$test" != "null" ]]; then
-    echo "${COLOR_GREEN}✓${COLOR_RESET} Test:       $test"
     ((gates_enabled++))
+    if [[ "$last_gate_result" == "passed" ]]; then
+      echo "${COLOR_GREEN}✓${COLOR_RESET} Test:       ${COLOR_GREEN}PASS${COLOR_RESET}"
+    elif [[ "$last_gate_result" == "failed" ]]; then
+      local failed=false
+      for gate in "${failed_gates[@]}"; do
+        [[ "$gate" =~ [Tt]est ]] && failed=true && break
+      done
+      if [[ $failed == true ]]; then
+        echo "${COLOR_RED}✗${COLOR_RESET} Test:       ${COLOR_RED}FAIL${COLOR_RESET}"
+      else
+        echo "${COLOR_GREEN}✓${COLOR_RESET} Test:       ${COLOR_GREEN}PASS${COLOR_RESET}"
+      fi
+    else
+      echo "${COLOR_DIM}○${COLOR_RESET} Test:       ${COLOR_DIM}NO DATA${COLOR_RESET}"
+    fi
   else
     echo "${COLOR_DIM}○ Test:       (disabled)${COLOR_RESET}"
   fi
 
   if [[ "$lint" != "null" ]]; then
-    echo "${COLOR_GREEN}✓${COLOR_RESET} Lint:       $lint"
     ((gates_enabled++))
+    if [[ "$last_gate_result" == "passed" ]]; then
+      echo "${COLOR_GREEN}✓${COLOR_RESET} Lint:       ${COLOR_GREEN}PASS${COLOR_RESET}"
+    elif [[ "$last_gate_result" == "failed" ]]; then
+      local failed=false
+      for gate in "${failed_gates[@]}"; do
+        [[ "$gate" =~ [Ll]int ]] && failed=true && break
+      done
+      if [[ $failed == true ]]; then
+        echo "${COLOR_RED}✗${COLOR_RESET} Lint:       ${COLOR_RED}FAIL${COLOR_RESET}"
+      else
+        echo "${COLOR_GREEN}✓${COLOR_RESET} Lint:       ${COLOR_GREEN}PASS${COLOR_RESET}"
+      fi
+    else
+      echo "${COLOR_DIM}○${COLOR_RESET} Lint:       ${COLOR_DIM}NO DATA${COLOR_RESET}"
+    fi
   else
     echo "${COLOR_DIM}○ Lint:       (disabled)${COLOR_RESET}"
   fi
 
   if [[ "$build" != "null" ]]; then
-    echo "${COLOR_GREEN}✓${COLOR_RESET} Build:      $build"
     ((gates_enabled++))
+    if [[ "$last_gate_result" == "passed" ]]; then
+      echo "${COLOR_GREEN}✓${COLOR_RESET} Build:      ${COLOR_GREEN}PASS${COLOR_RESET}"
+    elif [[ "$last_gate_result" == "failed" ]]; then
+      local failed=false
+      for gate in "${failed_gates[@]}"; do
+        [[ "$gate" =~ [Bb]uild ]] && failed=true && break
+      done
+      if [[ $failed == true ]]; then
+        echo "${COLOR_RED}✗${COLOR_RESET} Build:      ${COLOR_RED}FAIL${COLOR_RESET}"
+      else
+        echo "${COLOR_GREEN}✓${COLOR_RESET} Build:      ${COLOR_GREEN}PASS${COLOR_RESET}"
+      fi
+    else
+      echo "${COLOR_DIM}○${COLOR_RESET} Build:      ${COLOR_DIM}NO DATA${COLOR_RESET}"
+    fi
   else
     echo "${COLOR_DIM}○ Build:      (disabled)${COLOR_RESET}"
   fi
@@ -434,6 +551,9 @@ display_status() {
   if [[ $gates_enabled -eq 0 ]]; then
     echo ""
     warn "No quality gates enabled"
+  elif [[ -n "$time_ago" ]]; then
+    echo ""
+    echo "${COLOR_DIM}Last run: $time_ago${COLOR_RESET}"
   fi
   echo ""
 
