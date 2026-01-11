@@ -19,3 +19,4 @@ dist/
 .claude-plugin/.cache/
 .claude-plugin/*.log
 .claude-plugin/temp/
+.ralph-cache/
