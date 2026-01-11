@@ -5,6 +5,7 @@
 # Use the LIB_DIR variable from main script, or fallback to relative path
 readonly CREATE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
+source "$CREATE_LIB_DIR/core/git.sh"
 source "$CREATE_LIB_DIR/generator/loop_generator.sh"
 source "$CREATE_LIB_DIR/generator/prd_generator.sh"
 source "$CREATE_LIB_DIR/generator/prompt_generator.sh"
@@ -200,6 +201,22 @@ cmd_create() {
   else
     error "Failed to generate progress.txt"
     exit 1
+  fi
+
+  # Create git branch unless --no-branch flag was provided
+  if [[ "$no_branch" == false ]]; then
+    echo ""
+    info "Creating git branch..."
+    if create_loop_branch "$loop_name"; then
+      # Branch creation succeeded or user is already on the branch
+      :
+    else
+      # Branch creation failed or was cancelled
+      warning "Continuing without branch creation"
+      echo ""
+      echo "You can manually create a branch later with:"
+      echo "  git checkout -b ralph/$loop_name"
+    fi
   fi
 
   echo ""
