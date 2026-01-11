@@ -20,3 +20,4 @@ dist/
 .claude-plugin/*.log
 .claude-plugin/temp/
 .ralph-cache/
+test-project
