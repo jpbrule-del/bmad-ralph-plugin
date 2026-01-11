@@ -146,6 +146,100 @@ Add to custom instructions:
 - Definition of "done"
 ```
 
+### 6. MCP Usage Analysis
+
+**NEW:** Analyze MCP (Model Context Protocol) usage patterns to optimize external research:
+
+**Metrics to Check:**
+- MCP request count from `ralph/logs/mcp-usage.log`
+- MCP usage by story type (check which stories needed research)
+- MCP success/error rates
+- Cache hit rates for repeated queries
+
+**Knowledge Gap Detection:**
+
+**Indicators that MCP could help:**
+- Story stuck on unfamiliar technology or library
+- Multiple iterations on same story (knowledge gap)
+- Quality gate failures with unfamiliar error messages
+- Story description mentions technology not used in existing codebase
+
+**Suggested Actions:**
+
+**If story mentions unfamiliar technology:**
+```
+💡 MCP Research Suggestion:
+
+This story involves [library/technology] which appears unfamiliar.
+Consider using MCP to research:
+- Best practices for [technology]
+- Integration patterns
+- Common pitfalls to avoid
+
+Run: Use mcp__perplexity__perplexity_search tool
+Query: "[technology] best practices for [use case]"
+```
+
+**If stuck on same story 3+ times:**
+```
+🔍 MCP Research Suggestion:
+
+Story has been attempted 3 times without completion.
+Consider using MCP to investigate:
+1. Research the specific technical challenge
+2. Look up error messages or troubleshooting steps
+3. Find alternative implementation approaches
+
+Run: Use mcp__perplexity__perplexity_research tool
+Query: "[specific technical challenge]"
+```
+
+**If excessive MCP usage detected:**
+```
+⚠️  MCP Optimization Suggestion:
+
+Detected high MCP usage (15 requests this loop).
+Consider:
+1. Adding findings to project documentation for reuse
+2. Updating prompt with learned patterns
+3. Using cache for repeated queries (5-minute TTL)
+
+MCP is most effective for one-time research, not repeated lookups.
+```
+
+**MCP Configuration Recommendations:**
+
+**Healthy MCP Usage Pattern:**
+- 0-2 MCP requests per story (research unfamiliar tech)
+- Cache hit rate > 20% (reusing research)
+- Success rate > 90% (effective queries)
+
+**Warning Signs:**
+- No MCP usage but multiple stuck stories (underutilizing)
+- >5 MCP requests per story (over-reliance, knowledge gaps)
+- Low cache hit rate (not reusing research)
+- High error rate (API key or connectivity issues)
+
+**Suggested Actions:**
+
+**If no MCP usage but stories stuck:**
+```
+Suggest: "Consider using MCP to research [unfamiliar technology mentioned in stuck story]"
+Reference: .claude-plugin/mcp/AGENT-INTEGRATION.md
+```
+
+**If excessive MCP usage:**
+```
+Suggest: "Consider adding learned patterns to custom instructions to reduce MCP dependency"
+Action: Document common patterns in prompt.md
+```
+
+**If MCP errors detected:**
+```
+Suggest: "Run MCP health check: .claude-plugin/mcp/mcp-health-check.sh"
+Check: PERPLEXITY_API_KEY environment variable
+```
+
 ## Proactive Suggestions
 
 Offer suggestions automatically when these conditions are met:
@@ -191,6 +285,39 @@ The [gate name] quality gate has failed 4 times. Consider:
 Recent failures:
 - STORY-XXX: [failure reason]
 - STORY-YYY: [failure reason]
+```
+
+**Trigger:** Story involves unfamiliar technology
+```
+💡 MCP Research Suggestion:
+
+This story mentions [technology] which isn't in the existing codebase.
+Consider using MCP to research before implementation:
+
+Suggested queries:
+- "[technology] integration with [existing framework]"
+- "[technology] best practices 2024"
+- "Common pitfalls with [technology]"
+
+MCP tools available:
+- mcp__perplexity__perplexity_search (quick lookup)
+- mcp__perplexity__perplexity_research (deep dive)
+
+Guide: .claude-plugin/mcp/AGENT-INTEGRATION.md
+```
+
+**Trigger:** Multiple iterations on knowledge-intensive story
+```
+🔍 MCP Research Suggestion:
+
+Story on iteration 3 - appears to be knowledge-intensive.
+Consider using MCP to:
+1. Research best practices for this implementation
+2. Look up error messages encountered
+3. Find architectural patterns others have used
+
+This could help break through the stuck pattern.
+Check usage: .claude-plugin/mcp/mcp-usage-stats.sh
 ```
 
 ### After Loop Completion

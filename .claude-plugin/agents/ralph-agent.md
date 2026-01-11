@@ -106,6 +106,15 @@ This agent is automatically invoked by Ralph during loop execution when:
 - Update documentation (if documentation in acceptance criteria)
 - Follow code style guidelines
 - Implement all acceptance criteria completely
+- **Use MCP for research when encountering unfamiliar technologies or patterns**
+
+**MCP Integration:**
+When implementing stories, the agent can leverage MCP for:
+- Researching unfamiliar libraries or frameworks
+- Looking up current API syntax and best practices
+- Investigating error messages or troubleshooting issues
+- Understanding architectural patterns for new features
+- See `.claude-plugin/mcp/AGENT-INTEGRATION.md` for detailed MCP usage guide
 
 **Output:** Working implementation of story requirements
 
@@ -228,6 +237,9 @@ co_author: string            # Co-author attribution line
 ✓ Follow BMAD method conventions
 ✓ Handle quality gate failures with intelligent fixes
 ✓ Detect when story is too complex (approaching stuck threshold)
+✓ **Access external research via MCP (Model Context Protocol)**
+✓ **Search for current best practices and documentation**
+✓ **Research unfamiliar technologies during implementation**
 
 ### What This Agent Cannot Do
 
@@ -391,6 +403,59 @@ loop.sh
 - Verify no untracked files leak into commit
 - Confirm no merge conflicts exist
 - Validate working directory clean after commit
+
+### 4. MCP (Model Context Protocol) Integration
+
+**External Research Capabilities:**
+
+The Ralph agent has access to Perplexity AI through MCP for external research during story implementation.
+
+**Available MCP Tools:**
+- `mcp__perplexity__perplexity_search` - Quick web search with AI synthesis
+- `mcp__perplexity__perplexity_research` - Deep research with comprehensive analysis
+- `mcp__perplexity__perplexity_ask` - Conversational AI assistance
+- `mcp__perplexity__perplexity_reason` - Step-by-step reasoning for complex problems
+
+**When to Use MCP:**
+- ✓ Story requires unfamiliar library or framework
+- ✓ Need current best practices for implementation approach
+- ✓ Troubleshooting complex errors not in documentation
+- ✓ Architectural decision requires research (e.g., caching strategies)
+- ✓ API syntax unclear or documentation not in codebase
+
+**When NOT to Use MCP:**
+- ✗ Information already in project documentation
+- ✗ Patterns demonstrated in existing codebase
+- ✗ Basic programming concepts in agent knowledge
+- ✗ Project-specific business logic
+
+**MCP Best Practices:**
+1. **Check codebase first** - Use Grep/Read tools before MCP
+2. **Be specific** - "React useEffect cleanup for WebSocket" not just "React hooks"
+3. **Choose right tool** - Use search for quick lookups, research for deep analysis
+4. **Respect rate limits** - 10 requests/minute, combine related questions
+5. **Document usage** - Note significant MCP assistance in progress.txt
+
+**MCP Configuration:**
+- Configuration: `.claude-plugin/.mcp.json`
+- Usage logs: `ralph/logs/mcp-usage.log`
+- Health check: `.claude-plugin/mcp/mcp-health-check.sh`
+- Usage stats: `.claude-plugin/mcp/mcp-usage-stats.sh`
+- Integration guide: `.claude-plugin/mcp/AGENT-INTEGRATION.md`
+
+**Example MCP Usage:**
+```markdown
+Story: Implement rate limiting for API endpoints
+Scenario: No existing rate limiting in codebase
+
+Agent Workflow:
+1. Check codebase for rate limiting patterns (Grep) → None found
+2. Use MCP to research:
+   mcp__perplexity__perplexity_research("Express.js rate limiting best practices for REST APIs")
+3. Analyze research results, choose express-rate-limit package
+4. Implement rate limiting based on researched patterns
+5. Log in progress.txt: "Used MCP to research rate limiting patterns"
+```
 
 ---
 
