@@ -14,3 +14,8 @@ progress.txt
 
 # Build outputs
 dist/
+
+# Plugin artifacts
+.claude-plugin/.cache/
+.claude-plugin/*.log
+.claude-plugin/temp/
