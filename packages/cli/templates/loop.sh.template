@@ -5,6 +5,22 @@
 
 set -e
 
+# Parse command-line arguments
+RESTART_FLAG=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --restart)
+      RESTART_FLAG=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--restart]"
+      exit 1
+      ;;
+  esac
+done
+
 # Configuration
 PROJECT_NAME="{{PROJECT_NAME}}"
 BRANCH_NAME="{{BRANCH_NAME}}"
@@ -314,8 +330,9 @@ handle_stuck_exit() {
   echo "Suggestions:"
   echo "  1. Review the story - it may need to be split into smaller pieces"
   echo "  2. Check $GATE_LOG for error details"
-  echo "  3. Manually fix the issue and run: ./loop.sh"
+  echo "  3. Manually fix the issue and run: ./loop.sh (will preserve attempt counts)"
   echo "  4. Skip this story by manually updating sprint-status.yaml"
+  echo "  5. Reset and start fresh with: ./loop.sh --restart"
   echo ""
 
   log_warning "State preserved in config.json for debugging"
@@ -325,7 +342,9 @@ handle_interrupt() {
   echo ""
   print_final_summary "INTERRUPTED"
   echo ""
-  log_warning "Loop interrupted. State saved - run ./loop.sh to resume."
+  log_warning "Loop interrupted. State saved - run ./loop.sh to resume from iteration $((iteration))."
+  echo ""
+  echo "Or run ./loop.sh --restart to start fresh."
   exit 130
 }
 
@@ -347,14 +366,37 @@ command -v git >/dev/null 2>&1 || { log_error "git is required but not installed
 [ -f "$PROMPT_FILE" ] || { log_error "prompt.md not found at $PROMPT_FILE"; exit 1; }
 [ -f "$SPRINT_STATUS" ] || { log_error "sprint-status.yaml not found at $SPRINT_STATUS"; exit 1; }
 
+# Handle --restart flag
+if $RESTART_FLAG; then
+  log_warning "Restarting loop from beginning (resetting stats)..."
+  jq '
+    .stats.iterationsRun = 0 |
+    .stats.storiesCompleted = 0 |
+    .stats.startedAt = null |
+    .stats.completedAt = null |
+    .storyAttempts = {}
+  ' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+  echo ""
+fi
+
 # Initialize or update start time
 jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.startedAt //= $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+
+# Calculate starting iteration (resume from last run)
+ITERATIONS_RUN=$(jq '.stats.iterationsRun // 0' "$CONFIG_FILE")
+START_ITERATION=$((ITERATIONS_RUN + 1))
+END_ITERATION=$MAX_ITERATIONS
+
+if [ $START_ITERATION -gt 1 ]; then
+  log_success "Resuming from iteration $START_ITERATION (completed $ITERATIONS_RUN iterations previously)"
+  echo ""
+fi
 
 # Print startup header
 print_header_bar
 
 # Main loop
-for iteration in $(seq 1 $MAX_ITERATIONS); do
+for iteration in $(seq $START_ITERATION $END_ITERATION); do
   STORY_ID=$(get_next_story)
 
   # Check if all stories complete
@@ -440,5 +482,7 @@ print_final_summary "MAX_ITERATIONS"
 echo ""
 log_warning "Reached maximum iterations ($MAX_ITERATIONS)."
 echo "Completed $(get_completed_count)/$(get_total_count) stories."
-echo "Run ./loop.sh to continue."
+echo ""
+echo "To continue where you left off: ./loop.sh"
+echo "To start fresh: ./loop.sh --restart"
 exit 2
