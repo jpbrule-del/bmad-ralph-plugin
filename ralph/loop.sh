@@ -329,8 +329,9 @@ mark_story_complete() {
   # Log completion to progress.txt
   {
     echo ""
-    echo "## Iteration $iteration - $story_id"
-    echo "Completed: $story_title"
+    echo "## Iteration $iteration - $story_id (COMPLETED)"
+    echo "Timestamp: $timestamp"
+    echo "Story: $story_title"
     echo "Epic: $epic_id"
     echo "Points: $story_points"
     echo "Attempts: $attempts"
@@ -391,6 +392,49 @@ handle_interrupt() {
   echo ""
   echo "Or run ./ralph/loop.sh --restart to start fresh."
   exit 130
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ITERATION LOGGING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+log_iteration_start() {
+  local iteration="$1"
+  local story_id="$2"
+  local story_title="$3"
+  local attempts="$4"
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  {
+    echo ""
+    echo "## Iteration $iteration - $story_id - STARTED"
+    echo "Timestamp: $timestamp"
+    echo "Story: $story_title"
+    echo "Attempts: $attempts/$STUCK_THRESHOLD"
+  } >> "$PROGRESS_FILE"
+}
+
+log_claude_output() {
+  local iteration="$1"
+  local story_id="$2"
+  local output="$3"
+
+  # Extract first and last few lines as summary (avoid logging full output)
+  local output_lines=$(echo "$output" | wc -l | tr -d ' ')
+  local summary=""
+
+  if [ "$output_lines" -gt 10 ]; then
+    local first_lines=$(echo "$output" | head -n 3)
+    local last_lines=$(echo "$output" | tail -n 3)
+    summary="Output summary (${output_lines} lines total):"$'\n'"${first_lines}"$'\n'"..."$'\n'"${last_lines}"
+  else
+    summary="$output"
+  fi
+
+  {
+    echo "Claude Output:"
+    echo "$summary"
+  } >> "$PROGRESS_FILE"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -463,10 +507,16 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
   # Print iteration header
   print_iteration_header "$iteration" "$STORY_ID" "$STORY_TITLE" "$ATTEMPTS"
 
+  # Log iteration start to progress.txt
+  log_iteration_start "$iteration" "$STORY_ID" "$STORY_TITLE" "$ATTEMPTS"
+
   # Invoke Claude
   echo ""
   echo -e "${DIM}Invoking Claude...${NC}"
   OUTPUT=$(claude --print --dangerously-skip-permissions -p "$(cat "$PROMPT_FILE")" 2>&1) || true
+
+  # Log Claude output summary
+  log_claude_output "$iteration" "$STORY_ID" "$OUTPUT"
 
   # Check for explicit completion signal
   if echo "$OUTPUT" | grep -q "<complete>ALL_STORIES_PASSED</complete>"; then
@@ -481,10 +531,13 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
     log_warning "Claude signaled stuck: $STUCK_REASON"
     increment_story_attempts "$STORY_ID"
 
-    echo "" >> "$PROGRESS_FILE"
-    echo "## Iteration $iteration - $STORY_ID (STUCK)" >> "$PROGRESS_FILE"
-    echo "Reason: $STUCK_REASON" >> "$PROGRESS_FILE"
-    echo "Attempts: $((ATTEMPTS + 1))/$STUCK_THRESHOLD" >> "$PROGRESS_FILE"
+    {
+      echo ""
+      echo "## Iteration $iteration - $STORY_ID (STUCK)"
+      echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+      echo "Reason: $STUCK_REASON"
+      echo "Attempts: $((ATTEMPTS + 1))/$STUCK_THRESHOLD"
+    } >> "$PROGRESS_FILE"
 
     continue
   fi
@@ -517,8 +570,8 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
     # Log gate failure to progress.txt
     {
       echo ""
-      echo "## Iteration $iteration - $STORY_ID"
-      echo "Status: Quality gates failed"
+      echo "## Iteration $iteration - $STORY_ID (QUALITY GATES FAILED)"
+      echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
       echo "Attempts: $((ATTEMPTS + 1))/$STUCK_THRESHOLD"
       echo "Failed gates:"
       grep "FAILED" "$GATE_LOG" 2>/dev/null || echo "  See $GATE_LOG for details"
