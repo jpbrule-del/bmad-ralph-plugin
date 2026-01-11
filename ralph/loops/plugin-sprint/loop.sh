@@ -24,7 +24,7 @@ done
 # Configuration
 PROJECT_NAME="bmad-ralph-plugin"
 BRANCH_NAME="ralph/plugin-sprint"
-MAX_ITERATIONS=50
+MAX_ITERATIONS=100
 STUCK_THRESHOLD=3
 SPRINT_STATUS_FILE="docs/sprint-status.yaml"
 
