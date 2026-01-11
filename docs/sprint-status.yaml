@@ -659,7 +659,7 @@ epics:
     status: "in-progress"
     priority: "should-have"
     total_points: 26
-    completed_points: 17
+    completed_points: 19
     stories:
       - id: "STORY-040"
         title: "Implement status command basic structure"
@@ -775,7 +775,7 @@ epics:
 
           As a developer, I want gate status so that I know which
           checks are passing.
-        status: "not-started"
+        status: "completed"
         points: 2
         priority: "should-have"
         functional_requirements:
