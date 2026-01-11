@@ -656,10 +656,10 @@ epics:
   - id: "EPIC-005"
     name: "Monitoring Dashboard"
     description: "Real-time terminal UI for monitoring loop execution with progress visualization"
-    status: "in-progress"
+    status: "completed"
     priority: "should-have"
     total_points: 26
-    completed_points: 23
+    completed_points: 26
     stories:
       - id: "STORY-040"
         title: "Implement status command basic structure"
@@ -824,7 +824,7 @@ epics:
 
           As a developer, I want keyboard controls so that I can
           interact without leaving terminal.
-        status: "not-started"
+        status: "completed"
         points: 3
         priority: "could-have"
         functional_requirements:
@@ -1113,10 +1113,10 @@ metrics:
   total_epics: 7
   total_stories: 49
   total_points: 166
-  stories_completed: 37
+  stories_completed: 38
   stories_in_progress: 0
-  stories_not_started: 16
-  points_completed: 105
+  stories_not_started: 15
+  points_completed: 108
 # Priority Distribution
 priority_summary:
   must_have:
