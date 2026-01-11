@@ -908,3 +908,33 @@ Perfect! I've successfully completed **STORY-024: Implement Pre-Commit Hook**. H
 
 ### Next Story
 **STORY-025: Implement Post-Story Hook** (5 points, should-have) - Create post-story-update.sh script that triggers after story completion to update progress.txt, send optional notifications, trigger next story pickup, and log completion metrics.
+
+## Iteration 24 - STORY-024 (COMPLETED)
+Timestamp: 2026-01-11T09:12:27Z
+Story: Implement Pre-Commit Hook
+Epic: EPIC-004
+Points: 5
+Attempts: 0
+Quality gates: All passed
+Commit: 4e7371c
+
+## Iteration 25 - STORY-025 - STARTED
+Timestamp: 2026-01-11T09:12:29Z
+Story: Implement Post-Story Hook
+Attempts: 0/3
+
+## Iteration 25 - STORY-025 (COMPLETED)
+Timestamp: 2026-01-11T09:20:00Z
+Story: Implement Post-Story Hook
+Epic: EPIC-004
+Points: 5
+Attempts: 0
+Quality gates: All passed
+Commit: e79ce29
+
+Completed: Created post-story-update.sh hook script that triggers after story completion to update progress.txt with completion summary, send optional notifications via webhook, support auto-pickup of next story with RALPH_AUTO_PICKUP_NEXT flag, and log completion metrics. Enabled the post-story hook in hooks.json by setting enabled: true.
+
+Learning: Post-story hooks provide valuable automation for follow-up actions after story completion. The hook script follows best practices with optional notification support via webhook (RALPH_NOTIFICATION_WEBHOOK), auto-pickup next story capability (RALPH_AUTO_PICKUP_NEXT), comprehensive logging for debugging and analytics, clear colored output for user feedback, and proper error handling with fallbacks. The script updates progress.txt with detailed completion summary (story metadata, completion metrics, iterations, average), sends structured JSON notifications with event payload, and can automatically identify the next not_started story using yq. Hook execution order matters - post-story-update runs first (execution_order: 1) before skill invocation (execution_order: 2).
+
+Note for next: STORY-026 (Implement Loop Lifecycle Hooks) requires creating hook scripts for loop-start, loop-pause, loop-resume, and loop-complete events with custom script support per hook, loop context passing, and lifecycle event logging. This is a 5-point "could-have" story involving four separate hook implementations.
+
