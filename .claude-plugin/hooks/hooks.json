@@ -1,0 +1,14 @@
+{
+  "$schema": "https://claude.ai/schemas/plugin-hooks-v1.json",
+  "hooks": [
+    {
+      "type": "plugin-load",
+      "name": "verify-dependencies",
+      "description": "Verify required system dependencies are installed",
+      "script": "./verify-dependencies.sh",
+      "timeout": 5000,
+      "required": true,
+      "on_failure": "block"
+    }
+  ]
+}
