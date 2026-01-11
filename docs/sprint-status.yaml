@@ -126,7 +126,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 34
-    completed_points: 13
+    completed_points: 16
     stories:
       - id: "STORY-010"
         title: "Implement create command basic structure"
@@ -193,7 +193,7 @@ epics:
 
           As a developer, I want loop configuration in a structured format
           so that settings are clear and modifiable.
-        status: "not-started"
+        status: "completed"
         points: 3
         priority: "must-have"
         functional_requirements:
@@ -1113,10 +1113,10 @@ metrics:
   total_epics: 7
   total_stories: 49
   total_points: 166
-  stories_completed: 8
+  stories_completed: 9
   stories_in_progress: 0
-  stories_not_started: 41
-  points_completed: 26
+  stories_not_started: 40
+  points_completed: 29
 # Priority Distribution
 priority_summary:
   must_have:
