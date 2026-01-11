@@ -1576,3 +1576,19 @@ Story: Migrate List Command
 Attempts: 0/3
 Claude Output:
 Invalid API key · Fix external API key
+
+## Iteration 60 - STORY-010 (COMPLETED)
+Timestamp: 2026-01-11T13:19:26Z
+Story: Migrate List Command
+Epic: EPIC-002
+Points: 3
+Attempts: 0
+Quality gates: All passed
+Commit: 0f919e7
+
+## Iteration 59 - STORY-011 - STARTED
+Timestamp: 2026-01-11T13:19:28Z
+Story: Migrate Show Command
+Attempts: 0/3
+Claude Output:
+Invalid API key · Fix external API key

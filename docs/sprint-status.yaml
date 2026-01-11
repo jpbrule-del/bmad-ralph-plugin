@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver BMAD Ralph Plugin with full Claude Code integration"
 sprint_start_date: "2026-01-11"
 sprint_end_date: "2026-01-15"
-last_updated: "2026-01-11T08:19:19Z"
+last_updated: "2026-01-11T08:19:26Z"
 sprint_status: "not_started"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8, 13)
 # 1 = Trivial (< 1 hour)
@@ -132,7 +132,7 @@ epics:
     status: "not_started"
     priority: "must-have"
     total_points: 68
-    completed_points: 31
+    completed_points: 34
     stories:
       - id: "STORY-006"
         title: "Migrate Init Command"
@@ -224,7 +224,7 @@ epics:
           Create the /bmad-ralph:list command to see all loops.
 
           As a user, I want `/bmad-ralph:list` command so that I can see all my loops.
-        status: "not_started"
+        status: "completed"
         points: 3
         priority: "should-have"
         functional_requirements:
