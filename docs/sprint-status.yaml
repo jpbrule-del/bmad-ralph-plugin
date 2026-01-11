@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-11T03:16:10Z"
+last_updated: "2026-01-11T03:18:50Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -445,7 +445,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 39
-    completed_points: 22
+    completed_points: 25
     stories:
       - id: "STORY-030"
         title: "Implement run command basic structure"
@@ -585,7 +585,7 @@ epics:
 
           As a developer, I want execution stats so that I can measure
           loop effectiveness.
-        status: "not-started"
+        status: "completed"
         points: 3
         priority: "must-have"
         functional_requirements:
