@@ -6,6 +6,7 @@
 readonly CREATE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
 source "$CREATE_LIB_DIR/core/git.sh"
+source "$CREATE_LIB_DIR/core/interactive.sh"
 source "$CREATE_LIB_DIR/generator/loop_generator.sh"
 source "$CREATE_LIB_DIR/generator/prd_generator.sh"
 source "$CREATE_LIB_DIR/generator/prompt_generator.sh"
@@ -162,6 +163,90 @@ cmd_create() {
 
   echo ""
 
+  # Interactive configuration (unless --yes flag is set)
+  local max_iterations=50
+  local stuck_threshold=3
+  local quality_gates_json
+
+  if [[ "$yes_mode" == true ]]; then
+    # Use defaults when --yes flag is provided
+    info "Using default configuration (--yes flag)"
+
+    # Get default quality gates from ralph config
+    quality_gates_json=$(get_default_quality_gates)
+
+    # Epic filter already set from --epic flag or empty
+  else
+    # Interactive prompts
+    header "Loop Configuration"
+
+    # Prompt for epic filter if not already specified
+    if [[ -z "$epic_filter" ]]; then
+      epic_filter=$(prompt_epic_filter "$epic_filter")
+    fi
+
+    # Prompt for max iterations
+    max_iterations=$(prompt_max_iterations 50)
+
+    # Prompt for stuck threshold
+    stuck_threshold=$(prompt_stuck_threshold 3)
+
+    # Prompt for quality gates
+    quality_gates_json=$(prompt_quality_gates)
+
+    # Display configuration summary
+    display_config_summary "$epic_filter" "$max_iterations" "$stuck_threshold" "$quality_gates_json"
+
+    # Confirm configuration
+    echo ""
+    read -rp "Create loop with this configuration? [Y/n]: " confirm
+    confirm="${confirm:-Y}"
+
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+      warning "Loop creation cancelled"
+      exit 0
+    fi
+  fi
+
+  # Update ralph config with quality gates (if not using defaults)
+  if [[ "$yes_mode" == false ]]; then
+    # Update quality gates in ralph/config.json (or config.yaml if it exists)
+    if [[ -f "ralph/config.json" ]]; then
+      info "Updating quality gates configuration..."
+
+      # Parse quality gates from collected JSON
+      local typecheck test lint build
+      typecheck=$(echo "$quality_gates_json" | jq -r '.typecheck')
+      test=$(echo "$quality_gates_json" | jq -r '.test')
+      lint=$(echo "$quality_gates_json" | jq -r '.lint')
+      build=$(echo "$quality_gates_json" | jq -r '.build')
+
+      # Update config using jq (atomic write pattern)
+      local temp_file
+      temp_file=$(mktemp)
+
+      jq --arg typecheck "$typecheck" \
+         --arg test "$test" \
+         --arg lint "$lint" \
+         --arg build "$build" \
+         '.config.qualityGates.typecheck = (if $typecheck == "null" then null else $typecheck end) |
+          .config.qualityGates.test = (if $test == "null" then null else $test end) |
+          .config.qualityGates.lint = (if $lint == "null" then null else $lint end) |
+          .config.qualityGates.build = (if $build == "null" then null else $build end)' \
+         ralph/config.json > "$temp_file"
+
+      if jq . "$temp_file" >/dev/null 2>&1; then
+        mv "$temp_file" ralph/config.json
+        success "Updated quality gates configuration"
+      else
+        rm -f "$temp_file"
+        warning "Failed to update quality gates, using existing configuration"
+      fi
+    fi
+  fi
+
+  echo ""
+
   # Create loop directory
   info "Creating loop: $loop_name"
   mkdir -p "$loop_dir"
@@ -169,7 +254,7 @@ cmd_create() {
 
   # Generate loop.sh
   info "Generating loop.sh orchestration script..."
-  if generate_loop_sh "$loop_name" "$loop_dir" "$epic_filter"; then
+  if generate_loop_sh "$loop_name" "$loop_dir" "$epic_filter" "$max_iterations" "$stuck_threshold"; then
     success "Generated loop.sh"
   else
     error "Failed to generate loop.sh"
@@ -178,7 +263,7 @@ cmd_create() {
 
   # Generate prd.json
   info "Generating prd.json configuration file..."
-  if generate_prd_json "$loop_name" "$loop_dir" "$epic_filter"; then
+  if generate_prd_json "$loop_name" "$loop_dir" "$epic_filter" "$max_iterations" "$stuck_threshold"; then
     success "Generated prd.json"
   else
     error "Failed to generate prd.json"
