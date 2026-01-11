@@ -18,11 +18,11 @@
     "customInstructions": null
   },
   "stats": {
-    "iterationsRun": 3,
-    "storiesCompleted": 2,
+    "iterationsRun": 5,
+    "storiesCompleted": 3,
     "startedAt": "2026-01-11T07:43:57Z",
     "completedAt": null,
-    "averageIterationsPerStory": 1
+    "averageIterationsPerStory": 1.67
   },
   "storyAttempts": {},
   "storyNotes": {
@@ -39,8 +39,16 @@
       "points": 2,
       "epic": "EPIC-001",
       "attempts": 0,
-      "completedAt": "2026-01-11T07:49:58Z",
-      "commit": "13307e0"
+      "completedAt": "2026-01-11T07:50:30Z",
+      "commit": "edd3693"
+    },
+    "STORY-003": {
+      "title": "Implement Plugin Dependency System",
+      "points": 5,
+      "epic": "EPIC-001",
+      "attempts": 0,
+      "completedAt": "2026-01-11T08:20:00Z",
+      "commit": "a55cbb9"
     }
   }
 }
