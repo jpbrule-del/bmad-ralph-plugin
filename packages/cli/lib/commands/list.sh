@@ -68,7 +68,8 @@ cmd_list() {
           # Count total stories from storyAttempts
           local total_stories=$(jq -r '.storyAttempts | length' "$prd_file")
 
-          loop_data+=("active|$loop_name|$created_at|$stories_completed|$total_stories|$iterations")
+          # Active loops don't have archive date or feedback
+          loop_data+=("active|$loop_name|$created_at|$stories_completed|$total_stories|$iterations|N/A|N/A")
           ((loops_found++))
         fi
       fi
@@ -81,6 +82,7 @@ cmd_list() {
       if [[ -d "$loop_dir" ]]; then
         local loop_name=$(basename "$loop_dir")
         local prd_file="$loop_dir/prd.json"
+        local feedback_file="$loop_dir/feedback.json"
 
         if [[ -f "$prd_file" ]]; then
           local created_at=$(jq -r '.generatedAt // "Unknown"' "$prd_file")
@@ -90,7 +92,19 @@ cmd_list() {
           # Count total stories from storyAttempts
           local total_stories=$(jq -r '.storyAttempts | length' "$prd_file")
 
-          loop_data+=("archived|$loop_name|$created_at|$stories_completed|$total_stories|$iterations")
+          # Extract archive date from directory name (YYYY-MM-DD prefix)
+          local archive_date="Unknown"
+          if [[ "$loop_name" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2})- ]]; then
+            archive_date="${BASH_REMATCH[1]}"
+          fi
+
+          # Extract feedback score if feedback.json exists
+          local feedback_score="N/A"
+          if [[ -f "$feedback_file" ]]; then
+            feedback_score=$(jq -r '.responses.overallSatisfaction // "N/A"' "$feedback_file")
+          fi
+
+          loop_data+=("archived|$loop_name|$created_at|$stories_completed|$total_stories|$iterations|$archive_date|$feedback_score")
           ((loops_found++))
         fi
       fi
@@ -105,7 +119,7 @@ cmd_list() {
 
     local first=true
     for data in "${loop_data[@]}"; do
-      IFS='|' read -r status name created stories_completed total_stories iterations <<< "$data"
+      IFS='|' read -r status name created stories_completed total_stories iterations archive_date feedback_score <<< "$data"
 
       if [[ "$first" == "true" ]]; then
         first=false
@@ -119,7 +133,21 @@ cmd_list() {
       echo "      \"createdAt\": \"$created\","
       echo "      \"storiesCompleted\": $stories_completed,"
       echo "      \"totalStories\": $total_stories,"
-      echo "      \"iterations\": $iterations"
+      echo "      \"iterations\": $iterations,"
+
+      # Add archiveDate and feedbackScore for archived loops
+      if [[ "$status" == "archived" ]]; then
+        echo "      \"archiveDate\": \"$archive_date\","
+        # Handle numeric vs N/A feedback scores in JSON
+        if [[ "$feedback_score" == "N/A" ]]; then
+          echo "      \"feedbackScore\": null"
+        else
+          echo "      \"feedbackScore\": $feedback_score"
+        fi
+      else
+        echo "      \"archiveDate\": null,"
+        echo "      \"feedbackScore\": null"
+      fi
       echo -n "    }"
     done
 
@@ -140,13 +168,20 @@ cmd_list() {
     header "Ralph Loops"
     echo ""
 
-    # Print table header
-    printf "%-20s %-10s %-20s %-15s %-12s\n" "NAME" "STATUS" "CREATED" "STORIES" "ITERATIONS"
-    printf "%-20s %-10s %-20s %-15s %-12s\n" "----" "------" "-------" "-------" "----------"
+    # Determine if we're showing only archived loops to adjust table format
+    if [[ "$show_active" == "false" ]] && [[ "$show_archived" == "true" ]]; then
+      # Show additional columns for archived-only view
+      printf "%-25s %-10s %-13s %-15s %-12s %-10s\n" "NAME" "STATUS" "ARCHIVED" "STORIES" "ITERATIONS" "FEEDBACK"
+      printf "%-25s %-10s %-13s %-15s %-12s %-10s\n" "----" "------" "--------" "-------" "----------" "--------"
+    else
+      # Standard view (active or mixed)
+      printf "%-20s %-10s %-20s %-15s %-12s\n" "NAME" "STATUS" "CREATED" "STORIES" "ITERATIONS"
+      printf "%-20s %-10s %-20s %-15s %-12s\n" "----" "------" "-------" "-------" "----------"
+    fi
 
     # Print loop data
     for data in "${loop_data[@]}"; do
-      IFS='|' read -r status name created stories_completed total_stories iterations <<< "$data"
+      IFS='|' read -r status name created stories_completed total_stories iterations archive_date feedback_score <<< "$data"
 
       # Format created date (extract date part only)
       local created_date="${created%%T*}"
@@ -162,12 +197,38 @@ cmd_list() {
         status_display="${COLOR_YELLOW}archived${COLOR_RESET}"
       fi
 
-      printf "%-20s %-10b %-20s %-15s %-12s\n" \
-        "$name" \
-        "$status_display" \
-        "$created_date" \
-        "$stories_str" \
-        "$iterations"
+      # Format feedback score with color coding
+      local feedback_display="$feedback_score"
+      if [[ "$feedback_score" != "N/A" ]]; then
+        # Color code feedback: 1-2 red, 3 yellow, 4-5 green
+        if [[ "$feedback_score" -le 2 ]]; then
+          feedback_display="${COLOR_RED}${feedback_score}/5${COLOR_RESET}"
+        elif [[ "$feedback_score" -eq 3 ]]; then
+          feedback_display="${COLOR_YELLOW}${feedback_score}/5${COLOR_RESET}"
+        else
+          feedback_display="${COLOR_GREEN}${feedback_score}/5${COLOR_RESET}"
+        fi
+      fi
+
+      # Output format depends on view mode
+      if [[ "$show_active" == "false" ]] && [[ "$show_archived" == "true" ]]; then
+        # Archived-only view shows archive date and feedback
+        printf "%-25s %-10b %-13s %-15s %-12s %-10b\n" \
+          "$name" \
+          "$status_display" \
+          "$archive_date" \
+          "$stories_str" \
+          "$iterations" \
+          "$feedback_display"
+      else
+        # Standard view shows created date
+        printf "%-20s %-10b %-20s %-15s %-12s\n" \
+          "$name" \
+          "$status_display" \
+          "$created_date" \
+          "$stories_str" \
+          "$iterations"
+      fi
     done
 
     echo ""
