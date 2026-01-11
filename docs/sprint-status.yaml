@@ -26,7 +26,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 13
-    completed_points: 3
+    completed_points: 5
     stories:
       - id: "STORY-001"
         title: "Set up project structure and entry point"
@@ -55,7 +55,7 @@ epics:
 
           As a developer, I want clear help documentation so that I can learn
           available commands without reading source code.
-        status: "not-started"
+        status: "completed"
         points: 2
         priority: "must-have"
         functional_requirements:
@@ -1171,10 +1171,10 @@ metrics:
   total_epics: 7
   total_stories: 49
   total_points: 166
-  stories_completed: 1
+  stories_completed: 2
   stories_in_progress: 0
-  stories_not_started: 48
-  points_completed: 3
+  stories_not_started: 47
+  points_completed: 5
 
 # Priority Distribution
 priority_summary:

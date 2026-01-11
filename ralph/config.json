@@ -16,12 +16,13 @@
     "customInstructions": null
   },
   "stats": {
-    "iterationsRun": 1,
-    "storiesCompleted": 1,
+    "iterationsRun": 2,
+    "storiesCompleted": 2,
     "startedAt": "2026-01-11T01:13:59Z",
     "completedAt": null
   },
   "storyAttempts": {
-    "STORY-001": 1
+    "STORY-001": 1,
+    "STORY-002": 1
   }
 }
