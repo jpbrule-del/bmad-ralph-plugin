@@ -61,5 +61,28 @@ workflows:
         status: "in_progress"
         description: "Story implementation"
 
-current_phase: 4
-last_updated: "2026-01-10T22:30:00Z"
+  # Phase 5: Autonomous Execution
+  phase_5:
+    name: "Autonomous Execution"
+    workflows:
+      ralph:
+        status: "bmad/agents/ralph.md"
+        description: "Autonomous loop execution for story implementation"
+        inputs:
+          - "docs/sprint-status.yaml (stories and acceptance criteria)"
+          - "docs/prd-*.md (requirements and context)"
+          - "docs/architecture-*.md (patterns and tech stack)"
+        outputs:
+          - "Implemented stories with passing quality gates"
+          - "Updated docs/sprint-status.yaml (story completion)"
+          - "ralph/progress.txt (iteration log)"
+          - "Git commits (one per completed story)"
+        invocation: "/ralph"
+        phase_position: "5"
+        prerequisites:
+          - "Phase 4 sprint planning completed"
+          - "Quality gates configured"
+          - "Stories have acceptance criteria"
+
+current_phase: 5
+last_updated: "2026-01-11T04:47:00Z"
