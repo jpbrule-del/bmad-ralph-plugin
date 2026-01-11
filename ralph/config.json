@@ -16,8 +16,8 @@
     "customInstructions": null
   },
   "stats": {
-    "iterationsRun": 45,
-    "storiesCompleted": 27,
+    "iterationsRun": 46,
+    "storiesCompleted": 28,
     "startedAt": "2026-01-11T01:13:59Z",
     "completedAt": null
   },
@@ -46,7 +46,8 @@
     "STORY-030": 1,
     "STORY-031": 2,
     "STORY-033": 1,
-    "STORY-035": 1
+    "STORY-035": 1,
+    "STORY-036": 1
   },
   "storyNotes": {
     "STORY-035": {
@@ -56,6 +57,14 @@
       "attempts": 1,
       "completedAt": "2026-01-11T03:11:46Z",
       "commit": "f2529bc"
+    },
+    "STORY-036": {
+      "title": "Implement graceful interrupt handling",
+      "points": 3,
+      "epic": "EPIC-004",
+      "attempts": 1,
+      "completedAt": "2026-01-11T03:16:21Z",
+      "commit": "cedbe7e"
     }
   }
 }
