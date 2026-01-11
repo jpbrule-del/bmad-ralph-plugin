@@ -1,17 +1,17 @@
-# System Architecture: Ralph
+# System Architecture: ralph
 
 **Date:** 2026-01-10
-**Architect:** jean-philippebrule
+**Architect:** Jean-Philippe Brule
 **Version:** 1.0
-**Project Type:** library (BMAD workflow)
-**Project Level:** 3
+**Project Type:** cli-tool
+**Project Level:** 3 (Complex, 12-40 stories)
 **Status:** Draft
 
 ---
 
 ## Document Overview
 
-This document defines the system architecture for Ralph - the autonomous execution workflow for BMAD Method (Phase 5). It provides the technical blueprint for implementation, addressing all functional and non-functional requirements from the PRD.
+This document defines the system architecture for ralph, a BMAD Phase 4/5 autonomous execution CLI tool. It provides the technical blueprint for implementation, addressing all 41 functional and 21 non-functional requirements from the PRD.
 
 **Related Documents:**
 - Product Requirements Document: `docs/prd-ralph-2026-01-10.md`
@@ -21,35 +21,27 @@ This document defines the system architecture for Ralph - the autonomous executi
 
 ## Executive Summary
 
-Ralph is a BMAD workflow that enables autonomous code implementation using Claude Code. After completing product brief, PRD, architecture, and sprint planning (Phases 1-4), developers run `/ralph` to automatically implement all stories.
+Ralph is a modular bash CLI tool that automates story implementation after BMAD sprint planning. The architecture follows a command-router pattern with clear separation between commands, core utilities, and external tool integrations. All state is file-based using YAML and JSON, with atomic write operations ensuring reliability. The system integrates with BMAD's sprint-status.yaml and executes stories autonomously via Claude Code CLI.
 
-The architecture follows a **Pipeline Pattern with State Machine** design:
-1. **Ingestion Layer** - Reads all BMAD documentation
-2. **Interview Layer** - Gathers loop configuration from user
-3. **Generation Layer** - Creates prd.json, prompt.md, loop.sh
-4. **Execution Engine** - Runs autonomous loop until complete
-
-All state is persisted in files (no database), enabling resumability and human inspection.
+**Key Architectural Decisions:**
+- **Pattern:** Modular Bash CLI with command routing
+- **Storage:** File-based (YAML/JSON, no database)
+- **Dependencies:** jq, yq, git, claude CLI
+- **Platforms:** macOS 12+, Linux (Ubuntu 20.04+, Debian 11+)
 
 ---
 
 ## Architectural Drivers
 
-These NFRs most heavily influence design decisions:
+These NFRs heavily influence architectural decisions:
 
-| NFR | Requirement | Architectural Impact |
-|-----|-------------|---------------------|
-| NFR-001 | Error Handling | Atomic file writes, graceful degradation, signal traps |
-| NFR-002 | Stuck Detection | Attempt tracking per story, configurable threshold |
-| NFR-004 | Resumability | All state in files, idempotent operations |
-| NFR-005 | Claude CLI Compat | Must use exact CLI flags and parse output |
-| NFR-006 | Shell Compat | Portable bash, common tools only |
-| NFR-007 | BMAD Patterns | Standard workflow structure, helper usage |
-
-**Primary Design Principles:**
-1. **Reliability through simplicity** - Bash + files, no complex dependencies
-2. **State persistence** - All state in human-readable files
-3. **BMAD integration** - Native workflow that fits the ecosystem
+| Driver | NFR | Architectural Impact |
+|--------|-----|----------------------|
+| **State Persistence** | NFR-010, NFR-011 | Atomic file operations, crash recovery |
+| **Cross-Platform** | NFR-030, NFR-031 | POSIX-compliant bash, no OS-specific commands |
+| **External Tool Integration** | NFR-033, NFR-034 | Abstraction layer for jq, yq, git, claude |
+| **Terminal UI** | NFR-002, NFR-021 | ANSI escapes, tput, terminal dimension handling |
+| **File I/O Efficiency** | NFR-003, NFR-011 | Append-only logging, temp-file-rename pattern |
 
 ---
 
@@ -57,589 +49,785 @@ These NFRs most heavily influence design decisions:
 
 ### High-Level Architecture
 
+Ralph follows a **Modular Bash CLI** architecture with clear component boundaries:
+
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           /ralph WORKFLOW                                │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐               │
-│  │   INGESTION  │───▶│  INTERVIEW   │───▶│  GENERATION  │               │
-│  │    LAYER     │    │    LAYER     │    │    LAYER     │               │
-│  └──────────────┘    └──────────────┘    └──────────────┘               │
-│         │                   │                   │                        │
-│         ▼                   ▼                   ▼                        │
-│  ┌─────────────────────────────────────────────────────┐                │
-│  │                   STATE FILES                        │                │
-│  │  docs/*.md  │  ralph/prd.json  │  ralph/progress.txt │                │
-│  └─────────────────────────────────────────────────────┘                │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                           ralph (entry point)                        │
+│                                                                      │
+│  ┌─────────────┐   ┌──────────────┐   ┌──────────────────────────┐ │
+│  │   Commands   │   │    Core      │   │       External Tools     │ │
+│  │             │   │              │   │                          │ │
+│  │ init        │   │ config.sh    │   │  ┌─────┐  ┌─────┐       │ │
+│  │ create      │──▶│ state.sh     │──▶│  │ jq  │  │ yq  │       │ │
+│  │ list        │   │ utils.sh     │   │  └─────┘  └─────┘       │ │
+│  │ run         │   │ validation.sh│   │                          │ │
+│  │ status      │   │              │   │  ┌─────┐  ┌───────────┐ │ │
+│  │ archive     │   └──────────────┘   │  │ git │  │ claude    │ │ │
+│  │ delete      │                      │  └─────┘  └───────────┘ │ │
+│  └─────────────┘                      └──────────────────────────┘ │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                        Data Layer                             │   │
+│  │                                                               │   │
+│  │  ralph/config.yaml    ralph/loops/<name>/    docs/sprint-    │   │
+│  │  (global config)      prd.json, loop.sh      status.yaml     │   │
+│  │                       prompt.md, progress    (BMAD source)   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Architecture Diagram
+
+```
+                              ┌──────────────────┐
+                              │   User Terminal  │
+                              └────────┬─────────┘
+                                       │
+                                       ▼
+                              ┌──────────────────┐
+                              │   bin/ralph      │
+                              │  (Entry Point)   │
+                              └────────┬─────────┘
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    │                  │                  │
+                    ▼                  ▼                  ▼
+           ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+           │  lib/commands │  │   lib/core    │  │  lib/engine   │
+           │               │  │               │  │               │
+           │ init.sh       │  │ config.sh     │  │ executor.sh   │
+           │ create.sh     │  │ state.sh      │  │ detector.sh   │
+           │ list.sh       │  │ validation.sh │  │ gates.sh      │
+           │ run.sh        │  │ output.sh     │  │ stats.sh      │
+           │ status.sh     │  │ prompts.sh    │  └───────┬───────┘
+           │ archive.sh    │  │ progress.sh   │          │
+           │ delete.sh     │  └───────────────┘          │
+           └───────────────┘                             │
+                    │                                    │
+                    └──────────────┬─────────────────────┘
                                    │
                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         EXECUTION ENGINE                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                        loop.sh                                   │    │
-│  │  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐         │    │
-│  │  │  PICK   │──▶│  INVOKE │──▶│  VERIFY │──▶│ UPDATE  │──┐      │    │
-│  │  │  STORY  │   │  CLAUDE │   │  GATES  │   │  STATE  │  │      │    │
-│  │  └─────────┘   └─────────┘   └─────────┘   └─────────┘  │      │    │
-│  │       ▲                                                  │      │    │
-│  │       └──────────────────────────────────────────────────┘      │    │
-│  │                         (loop until done/stuck/max)              │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                   │                                      │
-│                                   ▼                                      │
-│                          ┌──────────────┐                               │
-│                          │ Claude CLI   │                               │
-│                          │ --print      │                               │
-│                          │ --dangerously│                               │
-│                          └──────────────┘                               │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
+                          ┌───────────────┐
+                          │  lib/tools    │
+                          │               │
+                          │ json.sh (jq)  │
+                          │ yaml.sh (yq)  │
+                          │ git.sh        │
+                          │ claude.sh     │
+                          └───────┬───────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+              ┌──────────┐  ┌──────────┐  ┌──────────┐
+              │   jq     │  │   yq     │  │  claude  │
+              │          │  │          │  │   CLI    │
+              └──────────┘  └──────────┘  └──────────┘
 ```
 
 ### Architectural Pattern
 
-**Pattern:** Pipeline Architecture with State Machine
+**Pattern:** Modular Bash CLI with Command Routing
 
 **Rationale:**
-- Pipeline pattern suits sequential processing (ingest → interview → generate → execute)
-- State machine handles loop control (pick → invoke → verify → update → repeat)
-- File-based state enables resumability without databases
-- Separation allows testing each layer independently
+- Bash is mandated by PRD constraints
+- Modular structure enables testability and maintainability
+- Command routing pattern is standard for CLI tools (git-style subcommands)
+- Single entry point with sourced modules keeps things organized
+- Clear separation between commands, core utilities, and external integrations
 
 ---
 
 ## Technology Stack
 
-| Layer | Technology | Rationale |
-|-------|------------|-----------|
-| **Workflow Definition** | Markdown (BMAD workflow.md) | Consistent with BMAD patterns, Claude Code native |
-| **Script Runtime** | Bash | Universal, no dependencies, portable |
-| **JSON Processing** | jq | Standard CLI tool, powerful queries |
-| **Version Control** | Git | Required for commits, already present |
-| **AI Runtime** | Claude CLI | `claude --print --dangerously-skip-permissions` |
-| **File Format (State)** | JSON (prd.json) | Structured, jq-parseable |
-| **File Format (Context)** | Markdown | Human-readable, Claude-friendly |
+### Shell / Runtime
 
-**No additional dependencies required** - uses tools developers already have.
+**Choice:** Bash 4.0+ (POSIX-compatible subset)
+
+**Rationale:**
+- Mandated by PRD (bash-only constraint)
+- Available on macOS 12+ and all Linux distributions
+- POSIX subset ensures macOS/Linux compatibility
+
+**Trade-offs:**
+- ✓ No compilation, universal availability, easy distribution
+- ✗ Limited data structures, no native JSON/YAML, performance ceiling
+
+---
+
+### Data Processing
+
+**Choice:** jq 1.6+ (JSON) + yq 4.x (YAML, Mike Farah's version)
+
+**Rationale:**
+- Standard tools for JSON/YAML manipulation in shell scripts
+- Both support complex queries needed for sprint-status.yaml parsing
+- Available via Homebrew (macOS) and apt/yum (Linux)
+
+**Trade-offs:**
+- ✓ Powerful querying, standard tools, well-documented
+- ✗ Two external dependencies
+
+---
+
+### Version Control
+
+**Choice:** Git 2.x
+
+**Rationale:** Required for branch creation (FR-016), already present in target environments.
+
+---
+
+### AI Execution Engine
+
+**Choice:** Claude Code CLI
+
+**Rationale:**
+- Mandated by PRD (core execution dependency)
+- Provides autonomous execution capability via `claude --print --dangerously-skip-permissions`
+
+---
+
+### Terminal UI
+
+**Choice:** ANSI Escape Sequences + tput
+
+**Rationale:**
+- tput provides terminal-agnostic cursor control
+- ANSI escapes work in 99% of modern terminals
+- No additional dependencies
+
+---
+
+### Testing Framework
+
+**Choice:** Bats (Bash Automated Testing System)
+
+**Rationale:** Standard testing framework for bash scripts, TAP-compliant output, simple syntax.
+
+---
+
+### Development Tools
+
+| Tool | Purpose |
+|------|---------|
+| ShellCheck | Static analysis / linting |
+| Bats | Unit and integration testing |
+| Git | Version control |
+| Make | Build orchestration |
 
 ---
 
 ## System Components
 
-### Component 1: Workflow Orchestrator
+### Component: Entry Point (bin/ralph)
 
-**File:** `~/.claude/config/bmad/modules/bmm/workflows/ralph.md`
-
-**Purpose:** BMAD workflow file that Claude Code loads when user runs `/ralph`
+**Purpose:** Single entry point, command routing, global initialization
 
 **Responsibilities:**
-- Define workflow steps and interview questions
-- Orchestrate document ingestion
-- Guide user through configuration
-- Trigger file generation
-- Launch execution engine
+- Parse command-line arguments
+- Route to appropriate command handler
+- Check dependencies (jq, yq, git, claude)
+- Set global variables (colors, paths)
+- Handle `--help` and `--version` flags
 
-**Interfaces:**
-- Input: User invokes `/ralph` in Claude Code
-- Output: Generated files in `ralph/` directory
-
-**FRs Addressed:** FR-001, FR-002, FR-006
+**FRs Addressed:** FR-002, FR-003
 
 ---
 
-### Component 2: Document Ingester
+### Component: Commands Module (lib/commands/)
 
-**Purpose:** Read and parse all BMAD documentation
+**Purpose:** Individual command implementations
 
-**Responsibilities:**
-- Locate BMAD files using glob patterns
-- Parse markdown documents (extract sections)
-- Parse YAML files (sprint-status.yaml)
-- Build unified project context
-
-**File Patterns:**
-```
-docs/product-brief-*.md
-docs/prd-*.md
-docs/architecture-*.md
-docs/sprint-status.yaml
-docs/stories/**/*.md
-```
-
-**FRs Addressed:** FR-001
+| File | Command | FRs |
+|------|---------|-----|
+| init.sh | `ralph init` | FR-001 |
+| create.sh | `ralph create <name>` | FR-010 - FR-019 |
+| list.sh | `ralph list` | FR-020, FR-054 |
+| show.sh | `ralph show <name>` | FR-022, FR-055 |
+| run.sh | `ralph run <name>` | FR-030 - FR-039 |
+| status.sh | `ralph status <name>` | FR-040 - FR-049 |
+| archive.sh | `ralph archive <name>` | FR-050 - FR-058 |
+| delete.sh | `ralph delete <name>` | FR-021 |
 
 ---
 
-### Component 3: Configuration Interviewer
+### Component: Core Utilities (lib/core/)
 
-**Purpose:** Gather loop configuration from user
+**Purpose:** Shared functionality across all commands
 
-**Responsibilities:**
-- Display found documentation summary
-- Ask scope questions (which stories)
-- Ask quality gate questions (commands)
-- Ask loop parameter questions (limits)
-- Collect custom instructions
-
-**Interview Steps:**
-1. Document Summary
-2. Scope Selection (all/epic/stories)
-3. Quality Gates (typecheck, test, lint, build)
-4. Loop Parameters (max iterations, stuck threshold)
-5. Custom Instructions (optional)
-
-**FRs Addressed:** FR-002
+| File | Purpose | Key NFRs |
+|------|---------|----------|
+| config.sh | Load/save configuration | FR-065 |
+| state.sh | Atomic state management | NFR-010, NFR-011 |
+| validation.sh | Input validation | NFR-012, NFR-013 |
+| output.sh | Colored output, formatting | NFR-021, NFR-022 |
+| prompts.sh | User prompts, confirmations | NFR-024 |
+| progress.sh | Progress indicators | NFR-023 |
 
 ---
 
-### Component 4: File Generator
+### Component: External Tools Wrapper (lib/tools/)
 
-**Purpose:** Generate all loop execution files
+**Purpose:** Abstraction layer for external dependencies
 
-**Outputs:**
-| File | Purpose |
-|------|---------|
-| `ralph/prd.json` | Loop state and story tracking |
-| `ralph/prompt.md` | Context for each Claude iteration |
-| `ralph/loop.sh` | Bash execution script |
-| `ralph/progress.txt` | Append-only iteration log |
+| File | Tool | Functions |
+|------|------|-----------|
+| json.sh | jq | json_get, json_set, json_query |
+| yaml.sh | yq | yaml_get, yaml_set, yaml_query |
+| git.sh | git | git_branch, git_checkout, git_status |
+| claude.sh | claude | claude_run |
 
-**FRs Addressed:** FR-003, FR-004, FR-005, FR-009
-
----
-
-### Component 5: Execution Engine
-
-**File:** `ralph/loop.sh`
-
-**Purpose:** Run autonomous loop until completion
-
-**State Machine:**
-```
-PICK_STORY → INVOKE_CLAUDE → VERIFY_GATES → UPDATE_STATE → (repeat)
-                                    │
-                                    ├── PASS → commit, next story
-                                    └── FAIL → increment attempts, check stuck
-```
-
-**Exit Conditions:**
-| Condition | Exit Code | Message |
-|-----------|-----------|---------|
-| All stories pass | 0 | COMPLETE |
-| Story stuck (N failures) | 1 | STUCK |
-| Max iterations reached | 2 | MAX_ITERATIONS |
-| User interrupt (Ctrl+C) | 130 | INTERRUPTED |
-
-**FRs Addressed:** FR-006, FR-007
+**FRs Addressed:** FR-011, FR-031, FR-016
 
 ---
 
-### Component 6: State Manager
+### Component: Loop Engine (lib/engine/)
 
-**Purpose:** Manage persistent state across runs
+**Purpose:** Core execution logic for running loops
 
-**Responsibilities:**
-- Atomic file updates (temp + mv)
-- Archive previous runs
-- Track iteration history
-- Enable resume capability
+| File | Purpose | FRs |
+|------|---------|-----|
+| executor.sh | Main iteration loop | FR-030, FR-031 |
+| detector.sh | Story completion/stuck detection | FR-032, FR-033 |
+| gates.sh | Quality gate runner | FR-034 |
+| stats.sh | Statistics tracking | FR-037 |
 
-**Archive Structure:**
-```
-ralph/archive/
-└── 2026-01-10-feature-name/
-    ├── prd.json
-    ├── prompt.md
-    └── progress.txt
-```
+---
 
-**FRs Addressed:** FR-008, FR-009
+### Component: Dashboard (lib/dashboard/)
+
+**Purpose:** Real-time monitoring terminal UI
+
+| File | Purpose | FRs |
+|------|---------|-----|
+| render.sh | Screen rendering | FR-040, FR-041 |
+| widgets.sh | Progress bars, counters | FR-042, FR-044, FR-045 |
+| tail.sh | Log tail display | FR-047 |
+| input.sh | Keyboard handling | FR-049 |
+
+**FRs Addressed:** FR-040 - FR-049
+
+---
+
+### Component: Feedback System (lib/feedback/)
+
+**Purpose:** Mandatory feedback collection and storage
+
+| File | Purpose | FRs |
+|------|---------|-----|
+| questionnaire.sh | Interactive questionnaire | FR-051 |
+| storage.sh | Feedback file management | FR-052 |
+| report.sh | Feedback analytics | FR-057 |
+
+**FRs Addressed:** FR-051 - FR-057
+
+---
+
+### Component: Generator (lib/generator/)
+
+**Purpose:** Loop file generation
+
+| File | Purpose | FRs |
+|------|---------|-----|
+| loop_sh.sh | Generate loop.sh | FR-012 |
+| prd_json.sh | Generate prd.json | FR-013 |
+| prompt_md.sh | Generate prompt.md | FR-014 |
+| progress_txt.sh | Generate progress.txt | FR-015 |
+
+**FRs Addressed:** FR-012 - FR-015
 
 ---
 
 ## Data Architecture
 
-### prd.json Schema
+### Data Model
 
+Ralph uses **file-based storage** with structured YAML and JSON files.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Data Entities                               │
+├─────────────────────────────────────────────────────────────────────┤
+│  Global Config (1:1 per project)                                    │
+│  └── ralph/config.yaml                                              │
+│                                                                      │
+│  Loop (1:N per project)                                             │
+│  └── ralph/loops/<loop-name>/                                       │
+│      ├── prd.json         (config + execution metadata)             │
+│      ├── loop.sh          (orchestration script)                    │
+│      ├── prompt.md        (Claude context)                          │
+│      └── progress.txt     (iteration log)                           │
+│                                                                      │
+│  Archived Loop (1:N per project)                                    │
+│  └── ralph/archive/<date>-<loop-name>/                              │
+│      └── (same files + feedback.json)                               │
+│                                                                      │
+│  Sprint Status (BMAD-owned, read/write)                             │
+│  └── docs/sprint-status.yaml                                        │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Database Design
+
+**config.yaml Schema:**
+```yaml
+version: "1.0"
+project_name: "my-project"
+initialized_at: "2026-01-10T20:00:00Z"
+
+bmad:
+  sprint_status_path: "docs/sprint-status.yaml"
+  config_path: "bmad/config.yaml"
+
+defaults:
+  max_iterations: 50
+  stuck_threshold: 3
+  quality_gates:
+    typecheck: true
+    test: true
+    lint: false
+    build: true
+
+commands:
+  typecheck: "npm run typecheck"
+  test: "npm test"
+  lint: "npm run lint"
+  build: "npm run build"
+```
+
+**prd.json Schema:**
 ```json
 {
-  "project": "string",
-  "branchName": "string (ralph/feature-name)",
-  "description": "string",
-  "generatedAt": "ISO timestamp",
+  "version": "1.0",
+  "loopName": "feature-auth",
+  "createdAt": "2026-01-10T20:00:00Z",
+  "branchName": "ralph/feature-auth",
+
+  "scope": {
+    "epicFilter": "EPIC-001",
+    "storyIds": ["STORY-001", "STORY-002"]
+  },
+
   "config": {
     "maxIterations": 50,
     "stuckThreshold": 3,
     "qualityGates": {
-      "typecheck": "string | null",
-      "test": "string | null",
-      "lint": "string | null",
-      "build": "string | null"
+      "typecheck": true,
+      "test": true,
+      "build": true
     }
   },
+
   "stats": {
+    "startedAt": null,
+    "completedAt": null,
     "iterationsRun": 0,
-    "storiesCompleted": 0,
-    "startedAt": "ISO timestamp | null",
-    "completedAt": "ISO timestamp | null"
+    "storiesCompleted": 0
   },
-  "userStories": [
-    {
-      "id": "US-001",
-      "epicId": "EPIC-001",
-      "title": "string",
-      "description": "string",
-      "acceptanceCriteria": ["string"],
-      "priority": 1,
-      "passes": false,
-      "attempts": 0,
-      "notes": "",
-      "completedAt": null
-    }
-  ]
+
+  "storyNotes": {},
+  "status": "active"
 }
 ```
 
-### progress.txt Format
+**feedback.json Schema:**
+```json
+{
+  "version": "1.0",
+  "loopName": "feature-auth",
+  "archivedAt": "2026-01-11T15:00:00Z",
 
-```markdown
-# Ralph Progress Log
-# Project: {project_name}
-# Feature: {branch_name}
-# Started: {timestamp}
+  "questionnaire": {
+    "satisfaction": 4,
+    "manualInterventions": 1,
+    "whatWorkedWell": "Quality gates caught issues early",
+    "whatToImprove": "Better stuck detection",
+    "runAgain": true
+  },
 
----
-
-## Iteration 1 - US-001: Story Title
-**Status:** PASSED | FAILED
-**Completed:** {timestamp}
-**Learning:** {discovered pattern or gotcha}
-**Note for next:** {1-line context for next iteration}
-
----
-```
-
-### prompt.md Structure
-
-```markdown
-# Ralph Loop Context
-
-## Project Overview
-{From product brief - 3-5 sentences}
-
-## Architecture Patterns
-{From architecture - tech stack, patterns, file structure}
-
-## Quality Gates
-{Commands that must pass}
-
-## Current Sprint
-{Epic and story context}
-
-## Your Task
-{Step-by-step instructions}
-
-## Rules
-{Execution rules and signals}
-
-## Progress Context
-{Last 3 entries from progress.txt}
+  "summary": {
+    "storiesCompleted": 3,
+    "iterationsUsed": 12
+  }
+}
 ```
 
 ### Data Flow
 
 ```
-INPUT (Read Only)              GENERATED (Read/Write)         PROJECT (Modified)
-─────────────────              ─────────────────────         ─────────────────
-docs/product-brief-*.md   ──┐
-docs/prd-*.md             ──┼──▶  ralph/prd.json      ──┐
-docs/architecture-*.md    ──┤     ralph/prompt.md       ├──▶  src/**/*
-docs/sprint-status.yaml   ──┤     ralph/loop.sh         │     AGENTS.md
-docs/stories/**/*.md      ──┘     ralph/progress.txt  ──┘     sprint-status.yaml
+1. CREATE FLOW:
+   sprint-status.yaml ──[read]──▶ analyze stories
+                                        │
+                                        ▼
+                               generate loop files
+                                        │
+                                        ▼
+   prd.json ◀──[write]──────────────────┘
+   loop.sh  ◀──[write]──────────────────┘
+   prompt.md ◀──[write]─────────────────┘
+
+2. RUN FLOW:
+   prd.json ──[read]──▶ get current story
+                              │
+                              ▼
+   prompt.md ──[read]──▶ claude CLI ──▶ code changes
+                                              │
+                                              ▼
+   sprint-status.yaml ◀──[write]──── update story status
+   prd.json ◀──[write]────────────── update stats
+   progress.txt ◀──[append]───────── log iteration
+
+3. ARCHIVE FLOW:
+   loops/<name>/ ──[move]──▶ archive/<date>-<name>/
+   feedback ──[collect]──▶ feedback.json
 ```
 
 ---
 
-## Interface Design
+## CLI Interface Design
 
-### Claude CLI Invocation
+### Interface Architecture
 
-```bash
-claude --print --dangerously-skip-permissions -p "$(cat ralph/prompt.md)"
+**Pattern:** Git-style subcommand routing
+```
+ralph <command> [arguments] [flags]
 ```
 
-| Flag | Purpose |
-|------|---------|
-| `--print` | Output to stdout (non-interactive) |
-| `--dangerously-skip-permissions` | Skip permission prompts |
-| `-p` | Pass prompt content directly |
+**Global Flags:**
+| Flag | Description |
+|------|-------------|
+| `--help`, `-h` | Show help |
+| `--version`, `-v` | Show version |
+| `--verbose` | Enable verbose output |
+| `--quiet`, `-q` | Suppress non-error output |
+| `--no-color` | Disable colored output |
 
-### Output Signals
+### Command Reference
 
-Claude outputs special signals for loop control:
+| Command | Description | Key Flags |
+|---------|-------------|-----------|
+| `ralph init` | Initialize ralph | `--force` |
+| `ralph create <name>` | Create new loop | `--epic`, `--yes`, `--no-branch` |
+| `ralph list` | List all loops | `--active`, `--archived`, `--json` |
+| `ralph show <name>` | Show loop details | `--json` |
+| `ralph run <name>` | Execute loop | `--dry-run`, `--restart` |
+| `ralph status <name>` | Monitoring dashboard | `--refresh`, `--once` |
+| `ralph archive <name>` | Archive with feedback | (feedback required) |
+| `ralph delete <name>` | Delete loop | `--force` |
 
-| Signal | Meaning | Loop Action |
-|--------|---------|-------------|
-| `<complete>ALL_STORIES_PASSED</complete>` | All done | Exit success |
-| `<stuck>STORY_ID: reason</stuck>` | Cannot complete | Increment attempts |
-
-### Quality Gate Interface
-
-```bash
-run_quality_gate() {
-  local name="$1"
-  local cmd="$2"
-
-  [ -z "$cmd" ] && return 0  # Skip if not configured
-
-  echo "[$name] Running: $cmd"
-  if eval "$cmd"; then
-    echo "[$name] PASSED"
-    return 0
-  else
-    echo "[$name] FAILED"
-    return 1
-  fi
-}
-```
-
-### Progress Display
+### Error Message Format
 
 ```
-╔══════════════════════════════════════════════════════════════════╗
-║ Project: Ralph                    Branch: ralph/bmad-workflow     ║
-║ Stories: 5/24 complete            Iteration: 8/50                 ║
-╚══════════════════════════════════════════════════════════════════╝
+ERROR: <What went wrong>
+<Why it went wrong>
 
-=== Iteration 8: US-006 - Add notification dropdown ===
-[Claude] Implementing story...
-[Claude] Done (38 seconds)
-[Typecheck] PASSED
-[Tests] PASSED
-[Git] Committed: abc1234
-[Progress] Updated
+To fix:
+  - <Recovery option 1>
+  - <Recovery option 2>
 ```
 
 ---
 
 ## Non-Functional Requirements Coverage
 
-### NFR-001: Error Handling
+### NFR-001: CLI Response Time
+
+**Requirement:** Non-execution commands < 2s, help/version < 0.5s
 
 **Solution:**
-- Atomic file writes (temp + rename)
-- Signal traps for Ctrl+C
-- Try/catch wrappers for critical operations
-- State preserved on any failure
+- Lazy loading: Only source modules needed for specific command
+- No external tool calls for help/version (pure bash)
+- Cache dependency checks in session
 
-**Validation:** Kill mid-iteration, verify state preserved and resumable
+**Validation:** `time ralph --help` < 0.5s
 
 ---
 
-### NFR-002: Stuck Detection
+### NFR-010: State Persistence
+
+**Requirement:** State survives crashes, no data loss
 
 **Solution:**
-- Track `attempts` per story in prd.json
-- Reset to 0 on success
-- Exit with STUCK when attempts >= threshold
+- Atomic file writes (temp + rename pattern)
+- Write state after every significant action
+- Lock files prevent concurrent corruption
 
-**Validation:** Fail story 3x, verify clean exit with actionable message
+**Implementation:**
+```bash
+atomic_write() {
+    local file="$1" content="$2"
+    local tmp="${file}.tmp.$$"
+    echo "$content" > "$tmp" && mv "$tmp" "$file"
+}
+```
 
 ---
 
-### NFR-003: Clear Output
+### NFR-011: Atomic File Updates
+
+**Requirement:** No partial writes
 
 **Solution:**
-- Structured output with consistent formatting
-- Progress fraction visible at all times
-- Clear PASS/FAIL indicators
-- Summary on completion
-
-**Validation:** Visual inspection of output readability
+- All writes go through atomic_write function
+- Use jq/yq to modify in memory, then atomic write
+- Never write directly to target file
 
 ---
 
-### NFR-004: Resumability
+### NFR-021: Colored Terminal Output
+
+**Requirement:** Color-coded output
 
 **Solution:**
-- All state in files (prd.json, progress.txt)
-- Resume detection on `/ralph` invocation
-- Idempotent operations
+- ANSI escape sequences for colors
+- Respect NO_COLOR environment variable
+- tput for terminal-safe colors
 
-**Validation:** Stop loop, run `/ralph`, verify continues from next story
+**Implementation:**
+```bash
+setup_colors() {
+    if [[ -n "${NO_COLOR:-}" ]] || [[ ! -t 1 ]]; then
+        RED='' GREEN='' YELLOW='' BLUE='' NC=''
+    else
+        RED='\033[0;31m' GREEN='\033[0;32m' # etc
+    fi
+}
+```
 
 ---
 
-### NFR-005: Claude CLI Compatibility
+### NFR-030/031: macOS and Linux Support
+
+**Requirement:** Works on macOS 12+ and Linux (Ubuntu 20.04+)
 
 **Solution:**
-- Exact flag usage documented and tested
-- Version check on startup
-- Clear error if CLI missing
-
-**Validation:** Test on fresh Claude Code installation
+- POSIX-compliant bash subset
+- Use GNU-compatible options
+- No OS-specific commands
+- Test on both platforms in CI
 
 ---
 
-### NFR-006: Shell Compatibility
+### NFR-034: Claude CLI Compatibility
+
+**Requirement:** Works with Claude Code CLI v1.x
 
 **Solution:**
-- Portable bash (avoid bashisms)
-- Dependency check on startup
-- Works with common tools only
+- Wrap Claude calls in abstraction layer
+- Use stable flags only (--print, -p)
+- Document minimum version
 
-**Validation:** Test on macOS, Linux, WSL
-
----
-
-### NFR-007: BMAD Patterns
-
-**Solution:**
-- Standard workflow file structure
-- Uses helpers.md functions
-- Integrates with workflow-status.yaml
-
-**Validation:** `/workflow-status` shows Ralph as Phase 5
+**Implementation:**
+```bash
+claude_run() {
+    local prompt="$1"
+    claude --print --dangerously-skip-permissions -p "$prompt"
+}
+```
 
 ---
 
 ## Security Architecture
 
-### Execution Security
+### Threat Model
 
-| Consideration | Approach |
-|---------------|----------|
-| `--dangerously-skip-permissions` | User explicitly opts in; their environment |
-| Destructive operations | Quality gates catch broken code before commit |
-| Secrets exposure | Don't read .env into prompts; respect .gitignore |
+| Threat | Risk | Mitigation |
+|--------|------|------------|
+| Command injection | High | Input validation, quoting |
+| Sensitive data exposure | Medium | No secrets in logs |
+| Path traversal | Low | Validate loop names |
 
-### File Safety
+### Input Validation
 
-- Only write to `ralph/` directory
-- Atomic writes prevent corruption
-- Archive previous runs (don't delete)
+```bash
+validate_loop_name() {
+    local name="$1"
+    # Only alphanumeric and hyphens
+    if [[ ! "$name" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*$ ]]; then
+        error "Invalid loop name"
+    fi
+    # Prevent path traversal
+    if [[ "$name" == *".."* ]] || [[ "$name" == *"/"* ]]; then
+        error "Path components not allowed"
+    fi
+}
+```
 
-### Git Safety
+### Safe Command Execution
 
-- Verify clean working tree before start
-- Only commit after quality gates pass
-- Branch isolation for changes
+- All variable expansions double-quoted (enforced by ShellCheck)
+- Never use eval with user input
+- Use arrays for dynamic commands
+
+---
+
+## Scalability & Performance
+
+### Performance Optimizations
+
+| Optimization | Benefit |
+|--------------|---------|
+| Lazy module loading | Fast startup for simple commands |
+| YAML/JSON caching | Avoid re-parsing large files |
+| Append-only logging | O(1) writes regardless of log size |
+| Stream processing | Handle 100MB+ files |
+
+### Capacity Limits
+
+| Resource | Soft Limit | Hard Limit |
+|----------|------------|------------|
+| Active loops | 10 | 100 |
+| Stories per loop | 50 | 200 |
+| Progress.txt size | 10MB | 100MB |
+
+---
+
+## Reliability & Availability
+
+### Crash Recovery
+
+- Atomic file writes ensure no partial state
+- Lock files detect stale processes
+- Resume from prd.json state on next run
+
+### Signal Handling
+
+```bash
+setup_signal_handlers() {
+    trap 'handle_interrupt' INT TERM
+    trap 'handle_exit' EXIT
+}
+
+handle_interrupt() {
+    warn "Interrupt received, saving state..."
+    save_current_state
+    cleanup_lock
+    exit 130
+}
+```
+
+### Stale Lock Detection
+
+- Check if PID in lock file still exists
+- Timeout locks older than 24 hours
 
 ---
 
 ## Development Architecture
 
-### File Structure
+### Code Organization
 
 ```
-~/.claude/config/bmad/
-├── modules/
-│   └── bmm/
-│       └── workflows/
-│           └── ralph.md              # Main workflow definition
-└── templates/
-    └── ralph/
-        ├── prompt.template.md        # Prompt template
-        ├── loop.template.sh          # Loop script template
-        └── progress.template.txt     # Progress header template
-```
-
-### Project Output Structure
-
-```
-{project}/
-├── ralph/
-│   ├── prd.json                      # Loop state
-│   ├── prompt.md                     # Generated prompt
-│   ├── loop.sh                       # Generated script
-│   ├── progress.txt                  # Iteration log
-│   └── archive/                      # Previous runs
-│       └── 2026-01-10-feature/
-└── docs/
-    └── sprint-status.yaml            # Updated on completion
+ralph/
+├── bin/ralph              # Entry point
+├── lib/
+│   ├── commands/          # Command implementations
+│   ├── core/              # Shared utilities
+│   ├── engine/            # Loop execution
+│   ├── dashboard/         # Terminal UI
+│   ├── feedback/          # Feedback system
+│   ├── generator/         # File generation
+│   └── tools/             # External tool wrappers
+├── templates/             # Loop file templates
+├── tests/                 # Bats tests
+├── Makefile               # Build orchestration
+└── install.sh             # Installation script
 ```
 
 ### Testing Strategy
 
-| Test Type | Approach |
-|-----------|----------|
-| Unit | Test jq queries, bash functions in isolation |
-| Integration | Full workflow with mock Claude output |
-| E2E | Real loop execution on sample project |
+| Type | Framework | Coverage Target |
+|------|-----------|-----------------|
+| Unit | Bats | 90% (core), 80% (commands) |
+| Integration | Bats | Full loop lifecycle |
+| Linting | ShellCheck | 100% pass |
+
+### CI/CD Pipeline
+
+```yaml
+jobs:
+  lint:
+    - ShellCheck on all .sh files
+  test:
+    matrix: [ubuntu-latest, macos-latest]
+    - Install dependencies
+    - Run bats tests
+  release:
+    - Tag-triggered
+    - Create GitHub release
+```
 
 ---
 
 ## Requirements Traceability
 
-### Functional Requirements
+### Functional Requirements Coverage
 
-| FR ID | FR Name | Component | Status |
-|-------|---------|-----------|--------|
-| FR-001 | Document Ingestion | Document Ingester | Designed |
-| FR-002 | User Interview | Configuration Interviewer | Designed |
-| FR-003 | Story Conversion | File Generator | Designed |
-| FR-004 | Prompt Generation | File Generator | Designed |
-| FR-005 | Loop Script Generation | File Generator | Designed |
-| FR-006 | Loop Execution | Execution Engine | Designed |
-| FR-007 | Sprint Status Updates | State Manager | Designed |
-| FR-008 | Archive Previous Runs | State Manager | Designed |
-| FR-009 | Progress File Init | File Generator | Designed |
-| FR-010 | AGENTS.md Integration | Prompt Instructions | Designed |
+| Epic | FRs | Components |
+|------|-----|------------|
+| EPIC-001: CLI Foundation | FR-001, FR-002, FR-003 | bin/ralph, lib/commands/init.sh |
+| EPIC-002: Loop Creation | FR-010 - FR-019 | lib/commands/create.sh, lib/generator/ |
+| EPIC-003: Loop Management | FR-020 - FR-025 | lib/commands/{list,show,delete,edit}.sh |
+| EPIC-004: Loop Execution | FR-030 - FR-039 | lib/commands/run.sh, lib/engine/ |
+| EPIC-005: Monitoring | FR-040 - FR-049 | lib/commands/status.sh, lib/dashboard/ |
+| EPIC-006: Archive & Feedback | FR-050 - FR-058 | lib/commands/archive.sh, lib/feedback/ |
+| EPIC-007: BMAD Integration | FR-060 - FR-065 | lib/core/config.sh, external BMAD files |
 
-### Non-Functional Requirements
+### Non-Functional Requirements Coverage
 
-| NFR ID | NFR Name | Solution | Status |
-|--------|----------|----------|--------|
-| NFR-001 | Error Handling | Atomic writes, signal traps | Designed |
-| NFR-002 | Stuck Detection | Attempt counter, threshold | Designed |
-| NFR-003 | Clear Output | Structured formatting | Designed |
-| NFR-004 | Resumability | File-based state | Designed |
-| NFR-005 | Claude CLI Compat | Exact flags, version check | Designed |
-| NFR-006 | Shell Compat | Portable bash | Designed |
-| NFR-007 | BMAD Patterns | Standard structure | Designed |
+| Category | NFRs | Primary Solution |
+|----------|------|------------------|
+| Performance | NFR-001, NFR-002, NFR-003 | Lazy loading, caching, streaming |
+| Reliability | NFR-010 - NFR-014 | Atomic writes, locks, validation |
+| Usability | NFR-020 - NFR-025 | Consistent CLI, colors, confirmations |
+| Compatibility | NFR-030 - NFR-034 | POSIX bash, abstraction layers |
+| Maintainability | NFR-040 - NFR-043 | Modular structure, tests, docs |
 
 ---
 
 ## Trade-offs & Decision Log
 
-### Decision 1: Bash over Node.js/Python
+### Decision 1: Bash vs. Compiled Language
 
-- **Choice:** Bash
-- **Trade-off:** ✓ Zero dependencies, works everywhere | ✗ Limited error handling
-- **Rationale:** Simplicity wins for orchestration tool
+- ✓ **Gain:** No build step, universal availability, readable source
+- ✗ **Lose:** Performance ceiling, limited data structures
+- **Rationale:** PRD mandates bash-only
 
-### Decision 2: File-based state over SQLite
+### Decision 2: File-Based Storage vs. SQLite
 
-- **Choice:** JSON/Markdown files
-- **Trade-off:** ✓ Human-readable, easy debugging | ✗ Complex queries harder
-- **Rationale:** State is simple, files sufficient
+- ✓ **Gain:** Human-readable, easy debugging, no deps
+- ✗ **Lose:** No transactions, manual atomicity
+- **Rationale:** Aligns with BMAD's YAML/JSON patterns
 
-### Decision 3: Single-threaded execution
+### Decision 3: External Tools (jq, yq) vs. Pure Bash
 
-- **Choice:** Sequential story execution
-- **Trade-off:** ✓ No conflicts, simple logic | ✗ Cannot parallelize
-- **Rationale:** Correctness > speed; parallel is future consideration
+- ✓ **Gain:** Powerful JSON/YAML processing, standard tools
+- ✗ **Lose:** External dependencies
+- **Rationale:** Pure bash parsing is fragile and unmaintainable
 
-### Decision 4: Full context each iteration
+### Decision 4: Rich Dashboard vs. Simple Output
 
-- **Choice:** Complete prompt every time
-- **Trade-off:** ✓ Consistent context | ✗ Higher token usage
-- **Rationale:** Fresh context is Ralph's core pattern
+- ✓ **Gain:** Better UX, real-time visibility
+- ✗ **Lose:** Terminal compatibility concerns
+- **Rationale:** Key differentiator, fallbacks mitigate issues
+
+### Decision 5: Mandatory Feedback vs. Optional
+
+- ✓ **Gain:** Guaranteed data collection, drives improvement
+- ✗ **Lose:** User friction
+- **Rationale:** PRD requirement, core to improvement cycle
 
 ---
 
 ## Open Issues & Risks
 
-| Issue | Risk | Mitigation |
-|-------|------|------------|
-| Claude CLI output parsing | Medium | Test with real CLI, adjust regex |
-| Large story exceeds context | High | Document sizing guidelines, stuck detection |
-| YAML parsing in bash | Low | Use yq or skip sprint-status sync |
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Claude CLI API changes | Medium | High | Abstraction layer, version pinning |
+| Loops get stuck frequently | Medium | Medium | Configurable threshold, clear errors |
+| Poor quality output | Medium | High | Quality gates, good prompts |
 
 ---
 
@@ -647,39 +835,38 @@ run_quality_gate() {
 
 ### Assumptions
 
-1. Claude CLI `--print` outputs to stdout reliably
-2. `jq` is available on target systems
-3. Users run Ralph in git repositories
-4. Stories are pre-sized to fit one context window
-5. Quality gate commands are idempotent
+1. Users have Claude Code CLI installed and authenticated
+2. Users have BMAD-initialized project with sprint-status.yaml
+3. Users have jq/yq installed (or willing to install)
+4. Git configured with appropriate permissions
+5. One loop runs at a time per project
 
 ### Constraints
 
-1. Must use Claude Code CLI (subscription required)
-2. Bash-only (no Python/Node runtime)
-3. Sequential execution (no parallelism)
-4. Single machine (no distributed execution)
+1. Bash-only implementation (no compiled languages)
+2. macOS/Linux only (no Windows support)
+3. Must use Claude Code CLI as execution engine
+4. Must follow BMAD method protocols
+5. CLI-only interface (no GUI for v1)
 
 ---
 
 ## Future Considerations
 
-| Feature | Priority | Complexity |
-|---------|----------|------------|
-| Parallel story execution | Future | High |
-| Web monitoring dashboard | Future | High |
-| Auto story splitting | Future | High |
-| BMAD sprint-status sync | v1.1 | Low |
-| Custom LLM providers | Future | Medium |
+1. **Web Dashboard:** Team visibility for shared projects
+2. **CI/CD Integration:** Automated loop triggering
+3. **Auto PR Creation:** Create PRs from completed loops
+4. **Parallel Execution:** Run multiple loops simultaneously
+5. **Multi-Model Support:** Integration with other AI models
+6. **Log Rotation:** Automatic rotation for large progress files
 
 ---
 
 ## Approval & Sign-off
 
 **Review Status:**
-- [x] Technical Lead (self)
-- [x] Product Owner (self)
-- [ ] Security Architect
+- [ ] Technical Lead
+- [ ] Product Owner
 - [ ] DevOps Lead
 
 ---
@@ -688,7 +875,7 @@ run_quality_gate() {
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-01-10 | jean-philippebrule | Initial architecture |
+| 1.0 | 2026-01-10 | Jean-Philippe Brule | Initial architecture |
 
 ---
 
@@ -705,9 +892,9 @@ Run `/sprint-planning` to:
 **Key Implementation Principles:**
 1. Follow component boundaries defined in this document
 2. Implement NFR solutions as specified
-3. Use file schemas exactly as defined
-4. Follow interface contracts
-5. Adhere to security and error handling guidelines
+3. Use technology stack as defined
+4. Follow CLI contracts exactly
+5. Adhere to security and performance guidelines
 
 ---
 
@@ -717,93 +904,91 @@ Run `/sprint-planning` to:
 
 ---
 
-## Appendix A: Template File Contents
+## Appendix A: Full FR Traceability Matrix
 
-### prompt.template.md
-
-```markdown
-# Ralph Loop Context
-
-## Project Overview
-{{project_overview}}
-
-## Architecture Patterns
-{{architecture_patterns}}
-
-## Quality Gates
-Before committing, ALL must pass:
-{{quality_gates}}
-
-## Current Sprint
-Epic: {{epic_name}}
-Stories remaining: {{stories_remaining}}
-
-## Your Task
-1. Read prd.json, find highest priority story where passes=false
-2. Read progress.txt for context from previous iterations
-3. Implement the story following architecture patterns
-4. Run quality gates
-5. If all pass: commit with message "feat: {{story_title}}"
-6. Update prd.json: set passes=true, add notes
-7. Append to progress.txt with learning and note for next
-8. Update relevant AGENTS.md with discovered patterns
-
-## Rules
-- ONE story per iteration
-- Small, atomic commits
-- ALL quality gates must pass before commit
-- If stuck (can't complete), output: <stuck>STORY_ID: reason</stuck>
-- If all stories done, output: <complete>ALL_STORIES_PASSED</complete>
-
-## Progress Context
-{{progress_context}}
-```
-
-### loop.template.sh
-
-```bash
-#!/bin/bash
-# Ralph Loop - Generated {{timestamp}}
-set -e
-
-# Configuration
-PROJECT_NAME="{{project}}"
-BRANCH_NAME="{{branchName}}"
-MAX_ITERATIONS={{maxIterations}}
-STUCK_THRESHOLD={{stuckThreshold}}
-
-# Quality Gates
-TYPECHECK_CMD="{{typecheck}}"
-TEST_CMD="{{test}}"
-LINT_CMD="{{lint}}"
-BUILD_CMD="{{build}}"
-
-# Paths
-PRD_FILE="ralph/prd.json"
-PROMPT_FILE="ralph/prompt.md"
-PROGRESS_FILE="ralph/progress.txt"
-
-# ... (full implementation)
-```
+| FR ID | FR Name | Component(s) |
+|-------|---------|--------------|
+| FR-001 | Initialize Ralph | lib/commands/init.sh |
+| FR-002 | Help Command | bin/ralph |
+| FR-003 | Version Command | bin/ralph |
+| FR-010 | Create Loop | lib/commands/create.sh |
+| FR-011 | Sprint Analysis | lib/tools/yaml.sh |
+| FR-012 | Generate loop.sh | lib/generator/loop_sh.sh |
+| FR-013 | Generate prd.json | lib/generator/prd_json.sh |
+| FR-014 | Generate prompt.md | lib/generator/prompt_md.sh |
+| FR-015 | Generate progress.txt | lib/generator/progress_txt.sh |
+| FR-016 | Git Branch | lib/tools/git.sh |
+| FR-017 | Interactive Config | lib/core/prompts.sh |
+| FR-018 | Quality Gates Config | lib/engine/gates.sh |
+| FR-019 | Template Customization | lib/generator/ |
+| FR-020 | List Loops | lib/commands/list.sh |
+| FR-021 | Delete Loop | lib/commands/delete.sh |
+| FR-022 | Show Loop Details | lib/commands/show.sh |
+| FR-023 | Edit Loop | lib/commands/edit.sh |
+| FR-024 | Clone Loop | lib/commands/clone.sh |
+| FR-025 | Resume Loop | lib/core/state.sh |
+| FR-030 | Run Loop | lib/commands/run.sh |
+| FR-031 | Claude Integration | lib/tools/claude.sh |
+| FR-032 | Completion Detection | lib/engine/detector.sh |
+| FR-033 | Stuck Detection | lib/engine/detector.sh |
+| FR-034 | Quality Gates | lib/engine/gates.sh |
+| FR-035 | Iteration Logging | lib/core/state.sh |
+| FR-036 | Graceful Interrupt | lib/commands/run.sh |
+| FR-037 | Statistics | lib/engine/stats.sh |
+| FR-038 | Concurrent Prevention | lib/core/state.sh |
+| FR-039 | Dry Run | lib/commands/run.sh |
+| FR-040 | Status Dashboard | lib/dashboard/render.sh |
+| FR-041 | Progress Visualization | lib/dashboard/widgets.sh |
+| FR-042 | Current Story Display | lib/dashboard/render.sh |
+| FR-043 | ETA Calculation | lib/dashboard/widgets.sh |
+| FR-044 | Iteration Counter | lib/dashboard/widgets.sh |
+| FR-045 | Stuck Warning | lib/dashboard/widgets.sh |
+| FR-046 | Gate Status | lib/dashboard/widgets.sh |
+| FR-047 | Log Tail | lib/dashboard/tail.sh |
+| FR-048 | Refresh Rate | lib/dashboard/render.sh |
+| FR-049 | Keyboard Controls | lib/dashboard/input.sh |
+| FR-050 | Archive Loop | lib/commands/archive.sh |
+| FR-051 | Feedback Questionnaire | lib/feedback/questionnaire.sh |
+| FR-052 | Feedback Storage | lib/feedback/storage.sh |
+| FR-053 | Archive Structure | lib/commands/archive.sh |
+| FR-054 | List Archived | lib/commands/list.sh |
+| FR-055 | Show Archived | lib/commands/show.sh |
+| FR-056 | Unarchive | lib/commands/unarchive.sh |
+| FR-057 | Feedback Analytics | lib/feedback/report.sh |
+| FR-058 | Auto-Archive Prompt | lib/commands/run.sh |
+| FR-060 | Agent Definition | BMAD agent file |
+| FR-061 | Workflow Registration | BMAD workflow |
+| FR-062 | SKILL.md Integration | SKILL.md |
+| FR-063 | Auto-Install | lib/commands/init.sh |
+| FR-064 | Sprint Status Integration | lib/tools/yaml.sh |
+| FR-065 | BMAD Config Detection | lib/core/config.sh |
 
 ---
 
-## Appendix B: Distribution Package
+## Appendix B: Full NFR Traceability Matrix
 
-```
-bmad-ralph/
-├── README.md
-├── install.sh
-└── bmad/
-    ├── modules/bmm/workflows/ralph.md
-    └── templates/ralph/
-        ├── prompt.template.md
-        ├── loop.template.sh
-        └── progress.template.txt
-```
-
-**Installation:**
-```bash
-git clone https://github.com/user/bmad-ralph
-cd bmad-ralph && ./install.sh
-```
+| NFR ID | NFR Name | Solution |
+|--------|----------|----------|
+| NFR-001 | CLI Response Time | Lazy loading |
+| NFR-002 | Dashboard Refresh | tput, sleep |
+| NFR-003 | File I/O Efficiency | Append-only, streaming |
+| NFR-010 | State Persistence | Atomic writes |
+| NFR-011 | Atomic Updates | temp + rename |
+| NFR-012 | Error Recovery | Error template |
+| NFR-013 | Dependency Validation | check_deps |
+| NFR-014 | Idempotent Operations | State checks |
+| NFR-020 | Intuitive Commands | Git-style |
+| NFR-021 | Colored Output | ANSI + NO_COLOR |
+| NFR-022 | Clear Errors | What/why/fix |
+| NFR-023 | Progress Feedback | Spinners |
+| NFR-024 | Confirmations | Default no |
+| NFR-025 | Helpful Defaults | Embedded defaults |
+| NFR-030 | macOS Support | POSIX bash |
+| NFR-031 | Linux Support | POSIX bash |
+| NFR-032 | Terminal Compat | tput fallbacks |
+| NFR-033 | BMAD Compat | Follow schema |
+| NFR-034 | Claude Compat | Stable flags |
+| NFR-040 | Code Organization | Modules |
+| NFR-041 | Documentation | Function headers |
+| NFR-042 | Testing | Bats |
+| NFR-043 | Debug Logging | RALPH_DEBUG |

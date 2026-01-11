@@ -240,12 +240,19 @@ function App() {
     return [...stepNodes, ...noteNodes];
   };
 
-  const [nodes, setNodes] = useNodesState(() => getNodes(1));
-  const [edges, setEdges] = useEdgesState(() =>
-    edgeConnections.map((conn, index) =>
-      createEdge(conn, index < 0)
-    )
+  // Initial nodes computed without refs to avoid accessing refs during render
+  const initialNodes: Node[] = allSteps.map((step, index) =>
+    createNode(step, index < 1, positions[step.id])
+  ).concat(notes.map(note => {
+    const noteVisible = 1 >= note.appearsWithStep;
+    return createNoteNode(note, noteVisible, positions[note.id]);
+  }));
+
+  const initialEdges: Edge[] = edgeConnections.map((conn, index) =>
+    createEdge(conn, index < 0)
   );
+  const [nodes, setNodes] = useNodesState(initialNodes);
+  const [edges, setEdges] = useEdgesState(initialEdges);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {

@@ -1,16 +1,16 @@
-# Product Brief: Ralph
+# Product Brief: ralph
 
 **Date:** 2026-01-10
-**Author:** jean-philippebrule
+**Author:** Jean-Philippe Brule
 **Version:** 1.0
-**Project Type:** library
-**Project Level:** 3
+**Project Type:** cli-tool
+**Project Level:** 3 (Complex, 12-40 stories)
 
 ---
 
 ## Executive Summary
 
-Ralph is an autonomous AI agent loop template for Claude Code. It enables developers to run Claude Code repeatedly until all PRD items are complete, with memory persisting via git history and status files. This implementation shifts the developer's focus from real-time supervision to designing quality gates.
+Ralph is a BMAD Phase 4 autonomous execution workflow and CLI tool that automates story implementation after sprint planning. It reads sprint-status.yaml, creates custom automation loops, and executes stories autonomously using Claude Code CLI. The CLI enables developers to create, manage, and run different ralph loops within a project, transforming backlogs into ready-to-review PRs without manual coding.
 
 ---
 
@@ -18,15 +18,15 @@ Ralph is an autonomous AI agent loop template for Claude Code. It enables develo
 
 ### The Problem
 
-Developers using AI coding assistants spend too much time in a reactive loop - answering questions, correcting mistakes, and supervising in real-time. This limits productivity and keeps the human bottlenecked on AI babysitting rather than higher-value work.
+Developers spend significant time on manual coding when they'd rather be reviewing PRs and focusing on higher-level work. After sprint planning in BMAD, there's no automated way to execute through a backlog of stories - each story requires manual implementation, creating bottlenecks and slowing delivery.
 
 ### Why Now?
 
-Claude Code subscriptions are widely available, but there's no standardized autonomous loop pattern for it. The original Ralph pattern (by Geoffrey Huntley) proved the concept works - now Ralph provides a Claude Code implementation.
+Claude Opus 4.5 is a game-changer. AI agent capability is finally mature enough to autonomously implement stories with high quality when combined with the BMAD method's structured approach. The combination of structured sprint planning (BMAD) + powerful AI execution (Claude) + automation orchestration (ralph) creates a viable autonomous development pipeline.
 
 ### Impact if Unsolved
 
-Developers remain bottlenecked by real-time supervision, limiting how much AI can accomplish independently. The focus stays on "fixing AI mistakes" rather than "designing quality gates that prevent mistakes."
+Precious time lost on manual implementation. Customers lost to competitors due to slow delivery from growing backlogs. Developer frustration from repetitive coding tasks that AI can handle.
 
 ---
 
@@ -34,18 +34,23 @@ Developers remain bottlenecked by real-time supervision, limiting how much AI ca
 
 ### Primary Users
 
-Intermediate to senior developers with Claude Code subscriptions who want to maximize autonomous AI productivity. They understand git workflows, testing practices, and are comfortable with CLI tools.
+Solo developers using BMAD who work exclusively in Claude Code CLI. These are highly technical users who:
+- Prefer CLI-first workflows
+- Already use BMAD method for project planning
+- Have Claude Code CLI installed and configured
+- Want to maximize automation and minimize manual coding
+- Value efficiency and are comfortable with autonomous AI execution
 
 ### Secondary Users
 
-Open source contributors who want to extend or adapt the template for their own workflows or share improvements with the community.
+None - ralph is a personal developer tool installed on individual machines.
 
 ### User Needs
 
-- Run Claude Code autonomously without constant supervision
-- Persist context across multiple iterations via git and status files
-- Enforce quality gates (tests, typechecks) before accepting AI work
-- Shift from reactive supervision to proactive quality design
+1. Automated story execution after sprint planning
+2. Real-time visibility into loop progress
+3. Easy management of multiple loops per project
+4. Feedback mechanism to improve the tool over time
 
 ---
 
@@ -53,21 +58,39 @@ Open source contributors who want to extend or adapt the template for their own 
 
 ### Proposed Solution
 
-A self-contained template repository that Claude Code agents can read and understand to create and execute autonomous loops. Uses `claude` CLI with `--print` and `--dangerously-skip-permissions` flags for headless execution. Integrates with BMAD documentation for automatic loop setup.
+A bash CLI tool that integrates with BMAD method to automate Phase 4 (Implementation). Ralph analyzes sprint-status.yaml, generates custom loop configurations, and orchestrates Claude Code CLI to execute stories autonomously.
 
 ### Key Features
 
-- Self-documenting structure (AGENTS.md, README) that AI agents can parse
-- Bash loop script adapted for `claude` CLI
-- `/ralph` skill that reads BMAD docs and auto-generates loop files
-- PRD-to-JSON workflow for task tracking
-- Progress persistence via git history and status files
-- Quality gate enforcement (tests, typechecks) before commits
-- Max iteration limits and stuck detection
+- **CLI Commands:** Full CRUD operations on loops plus execution and monitoring
+  - `ralph init` - Initialize ralph in a BMAD project
+  - `ralph create <loop-name>` - Analyze sprint-status, create loop files, create git branch
+  - `ralph list` - List all loops (active + archived)
+  - `ralph run <loop-name>` - Execute a loop
+  - `ralph status <loop-name>` - Live monitoring dashboard
+  - `ralph archive <loop-name>` - Archive with mandatory feedback
+  - `ralph delete <loop-name>` - Remove a loop
+
+- **Loop File Generation:** Auto-generates all files needed for autonomous execution
+  - `loop.sh` - Orchestration script
+  - `prd.json` - Configuration + execution metadata
+  - `prompt.md` - Context for Claude
+  - `progress.txt` - Iteration log
+
+- **Real-Time Monitoring Dashboard:** Rich terminal UI with:
+  - Progress bars and color-coded output
+  - Current story being worked on
+  - ETA for completion
+  - Iteration count and stuck detection
+  - Quality gate results
+
+- **Mandatory Feedback System:** Required questionnaire before archiving loops to drive continuous improvement
+
+- **BMAD Compliance:** Reads sprint-status.yaml, follows commit policies, integrates with existing BMAD workflows
 
 ### Value Proposition
 
-Type `/ralph`, Claude reads your BMAD documentation, creates all loop files, and asks if you want to start. Press yes - the loop runs autonomously until all stories pass. You focus on designing quality gates, not babysitting the AI.
+Developers review PRs instead of writing code. Ralph transforms a planned sprint into implemented, committed code ready for review - reducing manual coding time by 80% and clearing backlogs 3x faster.
 
 ---
 
@@ -75,21 +98,24 @@ Type `/ralph`, Claude reads your BMAD documentation, creates all loop files, and
 
 ### Goals
 
-- Create a `/ralph` skill that automates loop creation from launch to execution
-- Achieve flawless Claude Code integration with zero manual setup steps
-- Enable "define PRD → run skill → autonomous execution" workflow
-- Produce a clean template suitable for public sharing
+- Reduce manual coding time by 80% for routine story implementation
+- Clear backlogs 3x faster through automated execution
+- Standardize autonomous execution across the team via shared monorepo
+- Collect user feedback to continuously improve ralph
 
 ### Success Metrics
 
-- Skill successfully creates all required files (loop script, prompt, prd.json)
-- Loop executes without manual intervention until completion or max iterations
-- Quality gates (tests, typechecks) are enforced automatically
-- End-to-end time from `/ralph` to loop start < 2 minutes
+- User feedback scores collected via mandatory questionnaire
+- Average feedback score > 4/5
+- Percentage of loops completing without manual intervention (target: 70%+)
+- Team adoption rate (target: 100% of team using ralph)
 
 ### Business Value
 
-Personal productivity tool that demonstrates autonomous AI coding patterns. Can be shared with the Claude Code community as a reference implementation for the Ralph pattern.
+- Faster time-to-market for features
+- Reduced developer fatigue on repetitive tasks
+- Consistent implementation quality through structured automation
+- Competitive advantage through AI-augmented development velocity
 
 ---
 
@@ -97,34 +123,39 @@ Personal productivity tool that demonstrates autonomous AI coding patterns. Can 
 
 ### In Scope
 
-- Refactor `ralph.sh` for `claude` CLI (`--print`, `--dangerously-skip-permissions`)
-- Update `prompt.md` for Claude Code context
-- Refactor `/skills/ralph` to:
-  - Search and read BMAD documentation from project folder
-  - Auto-construct loop files (prd.json, prompt, script) from BMAD docs
-- Update docs (README, AGENTS.md) for Claude Code usage
-- Optimized for Claude Code CLI
-- Keep flowchart visualization
+- CLI commands: init, create, list, run, status, archive, delete
+- Loop file generation (loop.sh, prd.json, prompt.md, progress.txt)
+- Auto git branch creation on `ralph create`
+- Real-time monitoring dashboard with `ralph status`
+- Mandatory feedback questionnaire before archive
+- BMAD method compliance (reads sprint-status.yaml, follows commit policies)
+- Archive system with date-based naming
+- Storage structure: `ralph/loops/<loop-name>/`
+- macOS and Linux support
+- Bash implementation with jq/yq dependencies
 
 ### Out of Scope
 
-- `/skills/prd` changes - BMAD `/prd` workflow handles PRD creation
-- Backward compatibility with other AI coding tools
-- Changes to BMAD core workflows
-- Multi-platform installers or packaging
+- GUI/web interface
+- Multi-machine distributed execution
+- CI/CD pipeline integration
+- Auto PR creation (commits only for v1)
+- Windows support
 
 ### Future Considerations
 
-- Integration with BMAD sprint-status.yaml for story tracking
-- Multi-agent orchestration (multiple Claude instances in parallel)
-- Web UI for loop monitoring
-- Integration with other AI coding tools
+- Web dashboard for team visibility
+- CI/CD integration for automated loop triggering
+- Auto PR creation with review assignments
+- Parallel loop execution
+- Integration with other AI models beyond Claude
 
 ---
 
 ## Key Stakeholders
 
-- **jean-philippebrule (Owner)** - High influence. Sole decision-maker, primary developer, and target user.
+- **Project Lead** - High influence. Defines requirements, approves design, drives adoption.
+- **Team Developers** - High influence. Primary users, contributors to shared monorepo.
 
 ---
 
@@ -132,63 +163,109 @@ Personal productivity tool that demonstrates autonomous AI coding patterns. Can 
 
 ### Constraints
 
-- Must use `claude` CLI (Claude Code subscription required)
-- Bash-based implementation (macOS/Linux, WSL on Windows)
-- Depends on `jq` for JSON processing
-- Limited by Claude's context window size
+- Bash-only implementation (no compiled languages)
+- macOS/Linux only (no Windows support)
+- Must use Claude Code CLI as execution engine
+- Must follow BMAD method protocols exactly
+- CLI-only interface (no GUI for v1)
+- Dependencies: jq, yq, git, claude CLI
 
 ### Assumptions
 
 - Users have Claude Code CLI installed and authenticated
-- Users have git initialized in their project
-- BMAD is installed (`~/.claude/config/bmad/` exists)
-- Project has BMAD documentation (PRD, tech-spec, or similar) to read from
-- Users understand basic git and CLI workflows
+- Users have BMAD-initialized project with sprint-status.yaml
+- Users have jq/yq installed (or willing to install)
+- Git configured with appropriate permissions
+- One loop runs at a time per project
+- Users are comfortable with autonomous AI execution
 
 ---
 
 ## Success Criteria
 
-1. User types `/ralph`
-2. Claude reads all BMAD documentation from project folder
-3. Claude creates all necessary loop files (prd.json, prompt.md, loop script)
-4. Claude asks: "Ready to start the loop and monitor?"
-5. User confirms
-6. Loop executes autonomously until ALL stories are complete, tested, and validated
-7. No manual intervention required during execution
-8. Template is clean enough to clone and reuse in other projects
+- Team adopts ralph for all sprint execution
+- Average feedback score > 4/5
+- Loops complete without manual intervention 70%+ of the time
+- Backlog velocity measurably increases
+- All team members successfully install and use ralph
+- Zero critical bugs in production use
 
 ---
 
 ## Timeline and Milestones
 
-### Target Launch
-
-No fixed deadline - complete when working correctly.
-
 ### Key Milestones
 
-1. Core loop script (`ralph.sh`) refactored for `claude` CLI
-2. `/ralph` skill reads BMAD documentation
-3. Skill auto-generates loop files from docs
-4. End-to-end flow working (launch → monitor → completion)
-5. Template cleaned and ready for reuse
+| Milestone | Description |
+|-----------|-------------|
+| M1 | Core CLI structure (init, create, list, delete) |
+| M2 | Loop execution (run command working) |
+| M3 | Monitoring dashboard (status command) |
+| M4 | Feedback system + archive flow |
+| M5 | Documentation + team rollout |
 
 ---
 
 ## Risks and Mitigation
 
-- **Risk:** Context limits - large stories exceed Claude's context window
-  - **Likelihood:** Medium-High
-  - **Mitigation:** Enforce small, atomic stories in PRD (one feature per story). Document story sizing guidelines in AGENTS.md. Loop script detects incomplete work and flags for story splitting.
-
-- **Risk:** Claude CLI behavior changes
-  - **Likelihood:** Low
-  - **Mitigation:** Pin to known-working CLI patterns. Document version requirements in README.
-
-- **Risk:** Quality gate failures cause infinite loops
+- **Risk:** Claude CLI API changes break ralph
   - **Likelihood:** Medium
-  - **Mitigation:** Max iteration limit. Stuck detection (same story failing 3+ times triggers exit).
+  - **Impact:** High
+  - **Mitigation:** Pin to stable CLI version, monitor releases, abstract CLI calls
+
+- **Risk:** Loops get stuck frequently
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Stuck detection with configurable threshold, manual intervention hooks, clear error reporting
+
+- **Risk:** Poor quality output requiring heavy review
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation:** Quality gates (analyze, test, build), consensus validation step, good prompt engineering
+
+- **Risk:** Team adoption resistance
+  - **Likelihood:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Good documentation, demo sessions, mandatory feedback loop for continuous improvement
+
+---
+
+## Technical Context
+
+### Directory Structure
+
+```
+project/
+├── ralph/
+│   ├── config.yaml           # Ralph global config
+│   └── loops/
+│       ├── feature-auth/
+│       │   ├── loop.sh
+│       │   ├── prd.json
+│       │   ├── prompt.md
+│       │   └── progress.txt
+│       └── bugfix-api/
+│           └── ...
+├── docs/
+│   └── sprint-status.yaml    # BMAD sprint status (read-only)
+└── bmad/
+    └── config.yaml           # BMAD config
+```
+
+### Integration Points
+
+- **BMAD sprint-status.yaml:** Source of truth for stories (read-only)
+- **Claude Code CLI:** Execution engine (`claude` command)
+- **Git:** Branch creation, commits following BMAD policies
+- **Quality Gates:** Project-specific commands (flutter analyze, npm test, etc.)
+
+### Feedback Questionnaire Fields
+
+1. Overall satisfaction (1-5 scale)
+2. Stories requiring manual intervention (count)
+3. What worked well? (free text)
+4. What should be improved? (free text)
+5. Would you run this configuration again? (yes/no)
 
 ---
 
@@ -196,7 +273,7 @@ No fixed deadline - complete when working correctly.
 
 1. Create Product Requirements Document (PRD) - `/prd`
 2. Design system architecture - `/architecture`
-3. Begin implementation via sprint planning - `/sprint-planning`
+3. Sprint planning - `/sprint-planning`
 
 ---
 

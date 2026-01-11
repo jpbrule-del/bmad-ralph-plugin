@@ -85,30 +85,115 @@ show_help() {
   cat <<EOF
 Ralph - BMAD Phase 5 Autonomous Execution CLI
 
-Usage: ralph <command> [options]
+Automates story implementation after BMAD sprint planning. Reads BMAD
+documentation, configures autonomous loops, and executes Claude Code CLI
+iterations until all stories pass quality gates.
 
-Commands:
-  init              Initialize ralph in a BMAD project
-  create <name>     Create a new loop
-  list              List all loops
-  run <name>        Run a loop
-  status <name>     Show loop status
-  archive <name>    Archive a loop (with feedback)
-  delete <name>     Delete a loop
-  show <name>       Show loop details
-  edit <name>       Edit loop configuration
-  clone <src> <dst> Clone a loop
+USAGE:
+  ralph <command> [options]
 
-Options:
+COMMANDS:
+
+  Project Initialization:
+    init [--force]
+        Initialize ralph in a BMAD project by creating ralph/ directory
+        structure and config.yaml. Detects BMAD project automatically.
+
+        Options:
+          --force    Reinitialize even if already initialized
+
+  Loop Management:
+    create <loop-name> [--epic <id>] [--yes] [--no-branch]
+        Create a new loop with configuration for autonomous execution.
+
+        Options:
+          --epic <id>     Filter to a specific epic (e.g., EPIC-001)
+          --yes           Skip interactive prompts, use defaults
+          --no-branch     Don't create git branch
+
+    list [--active] [--archived] [--json]
+        List all loops in the project with their status and progress.
+
+        Options:
+          --active        Show only active loops
+          --archived      Show only archived loops
+          --json          Output in JSON format
+
+    show <loop-name> [--json]
+        Display detailed information about a specific loop including
+        configuration, execution statistics, and story progress.
+
+        Options:
+          --json          Output in JSON format
+
+    edit <loop-name>
+        Open loop configuration in your default editor (\$EDITOR).
+        Validates JSON after editing.
+
+    clone <source> <destination>
+        Copy an existing loop to a new loop with reset statistics.
+        Useful for reusing configurations.
+
+    delete <loop-name> [--force]
+        Remove a loop and its files (does not delete git branch).
+
+        Options:
+          --force         Skip confirmation prompt
+
+  Loop Execution:
+    run <loop-name> [--dry-run] [--restart]
+        Execute a loop to implement stories automatically via Claude.
+
+        Options:
+          --dry-run       Simulate execution without running Claude
+          --restart       Start from beginning (ignore resume state)
+
+    status <loop-name> [--once] [--refresh <seconds>]
+        Monitor loop execution with real-time terminal dashboard.
+
+        Options:
+          --once              Show single snapshot, don't refresh
+          --refresh <n>       Set refresh rate in seconds (default: 2)
+
+  Loop Archival:
+    archive <loop-name>
+        Archive a completed loop after collecting mandatory feedback.
+        Moves loop to ralph/archive/ for historical record.
+
+GLOBAL OPTIONS:
   --help, -h        Show this help message
   --version, -v     Show version number
 
-Examples:
+EXAMPLES:
+  # Initialize ralph in your BMAD project
   ralph init
-  ralph create my-feature
-  ralph run my-feature
-  ralph status my-feature
-  ralph archive my-feature
+
+  # Create a loop for a specific epic
+  ralph create feature-auth --epic EPIC-002
+
+  # Run the loop with default settings
+  ralph run feature-auth
+
+  # Monitor loop progress in real-time
+  ralph status feature-auth
+
+  # Archive the loop when done
+  ralph archive feature-auth
+
+  # List all loops
+  ralph list
+
+  # Clone a successful configuration
+  ralph clone feature-auth feature-payments
+
+QUALITY GATES:
+  Ralph runs configurable quality gates after each story:
+    - typecheck: Type checking (if configured)
+    - test: Test suite execution (if configured)
+    - lint: Code linting
+    - build: Project build
+
+  Configure quality gates during 'ralph create' or edit prd.json later.
 
 For more information, visit: https://github.com/snarktank/ralph
 EOF

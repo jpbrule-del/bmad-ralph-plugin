@@ -1,80 +1,65 @@
-# BMAD Method Workflow Status
+# BMM Workflow Status - ralph
 # Generated: 2026-01-10T00:00:00Z
-# Project: Ralph
+# Project Level: 3 (Complex, 12-40 stories)
 
-project_name: "Ralph"
-project_type: "library"
+project_name: "ralph"
+project_type: "cli-tool"
 project_level: 3
-communication_language: "English"
-output_language: "English"
-last_updated: "2026-01-10"
+initialized: "2026-01-10"
 
 # Workflow Status Tracking
 # Status values:
-#   - "required" - Must be completed
-#   - "optional" - Can be skipped
-#   - "recommended" - Strongly suggested
-#   - "conditional" - Required based on project level
-#   - "{file-path}" - Completed (path to output file)
-#   - "skipped" - Explicitly skipped
+#   - "required" = Must complete before next phase
+#   - "recommended" = Strongly suggested
+#   - "optional" = Can skip
+#   - "skipped" = Explicitly skipped
+#   - "<file-path>" = Completed (path to output)
 
-workflow_status:
-  # Phase 1: Analysis (Optional but recommended)
-  - name: product-brief
-    phase: 1
-    status: "docs/product-brief-ralph-2026-01-10.md"
-    description: "Create comprehensive product brief"
+workflows:
+  # Phase 1: Analysis
+  phase_1:
+    name: "Analysis"
+    workflows:
+      product-brief:
+        status: "docs/product-brief-ralph-2026-01-10.md"
+        description: "Define project vision and scope"
+      research:
+        status: "optional"
+        description: "Market/technical research"
 
-  - name: brainstorm-project
-    phase: 1
-    status: "optional"
-    description: "Structured brainstorming session"
+  # Phase 2: Planning
+  phase_2:
+    name: "Planning"
+    workflows:
+      prd:
+        status: "docs/prd-ralph-2026-01-10.md"
+        description: "Product Requirements Document"
+      tech-spec:
+        status: "optional"
+        description: "Technical Specification"
 
-  - name: research
-    phase: 1
-    status: "optional"
-    description: "Market and competitive research"
+  # Phase 3: Solutioning
+  phase_3:
+    name: "Solutioning"
+    workflows:
+      architecture:
+        status: "docs/architecture-ralph-2026-01-10.md"
+        description: "System architecture design"
+      ux-design:
+        status: "optional"
+        description: "UX/UI design"
 
-  # Phase 2: Planning (Required - choose one based on project level)
-  - name: prd
-    phase: 2
-    status: "docs/prd-ralph-2026-01-10.md"
-    description: "Product Requirements Document"
+  # Phase 4: Implementation
+  phase_4:
+    name: "Implementation"
+    tracked_in: "docs/sprint-status.yaml"
+    workflows:
+      sprint-planning:
+        status: "docs/sprint-status.yaml"
+        description: "Sprint planning and story breakdown"
+      stories:
+        status: "in_progress"
+        description: "Story implementation"
 
-  - name: tech-spec
-    phase: 2
-    status: "optional"  # required for level 0-1, optional for 2+
-    description: "Technical Specification"
-
-  - name: create-ux-design
-    phase: 2
-    status: "optional"
-    description: "UX/UI design workflow"
-
-  # Phase 3: Solutioning (Conditional on project level)
-  - name: architecture
-    phase: 3
-    status: "docs/architecture-ralph-2026-01-10.md"
-    description: "System architecture design"
-
-  - name: solutioning-gate-check
-    phase: 3
-    status: "optional"
-    description: "Validate architecture against requirements"
-
-  # Phase 4: Implementation (Required)
-  - name: sprint-planning
-    phase: 4
-    status: "docs/sprint-plan-ralph-2026-01-10.md"
-    description: "Sprint planning and story breakdown"
-
-  - name: sprint-status
-    phase: 4
-    status: "docs/sprint-status.yaml"
-    description: "Implementation tracking"
-
-  # Phase 5: Autonomous Execution (Ralph)
-  - name: ralph
-    phase: 5
-    status: "skills/ralph/SKILL.md"
-    description: "Autonomous loop execution"
+current_phase: 4
+last_updated: "2026-01-10T22:30:00Z"

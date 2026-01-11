@@ -1,0 +1,27 @@
+{
+  "project": "ralph",
+  "branchName": "ralph/sprint-1",
+  "description": "Ralph - A BMAD Phase 5 autonomous execution CLI tool that automates story implementation after BMAD sprint planning",
+  "generatedAt": "2026-01-10T22:00:00Z",
+  "sprintStatusPath": "docs/sprint-status.yaml",
+  "config": {
+    "maxIterations": 50,
+    "stuckThreshold": 3,
+    "qualityGates": {
+      "typecheck": null,
+      "test": null,
+      "lint": "npm run lint",
+      "build": "npm run build"
+    },
+    "customInstructions": null
+  },
+  "stats": {
+    "iterationsRun": 1,
+    "storiesCompleted": 1,
+    "startedAt": "2026-01-11T01:13:59Z",
+    "completedAt": null
+  },
+  "storyAttempts": {
+    "STORY-001": 1
+  }
+}
