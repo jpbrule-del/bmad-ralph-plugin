@@ -19,8 +19,17 @@ generate_loop_sh() {
   local max_iterations="${4:-50}"
   local stuck_threshold="${5:-3}"
 
-  local template_file="$LOOP_GEN_TEMPLATES_DIR/loop.sh.template"
   local output_file="$loop_dir/loop.sh"
+
+  # Check for custom template in ralph/templates/ first, fall back to default
+  local custom_template="ralph/templates/loop.sh.template"
+  local default_template="$LOOP_GEN_TEMPLATES_DIR/loop.sh.template"
+  local template_file="$default_template"
+
+  if [[ -f "$custom_template" ]]; then
+    template_file="$custom_template"
+    info "Using custom template: $custom_template"
+  fi
 
   # Check template exists
   if [[ ! -f "$template_file" ]]; then

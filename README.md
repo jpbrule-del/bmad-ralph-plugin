@@ -156,6 +156,46 @@ Configure quality gates in your `prd.json`:
 
 All gates must pass before a commit is made.
 
+### Template Customization
+
+Ralph uses templates to generate loop files (`loop.sh` and `prompt.md`). You can customize these templates by creating your own versions:
+
+1. Create a `ralph/templates/` directory in your project
+2. Add custom templates with these filenames:
+   - `loop.sh.template` - Custom loop orchestration script template
+   - `prompt.md.template` - Custom Claude Code context prompt template
+
+Ralph will automatically use your custom templates if they exist, falling back to the defaults if not.
+
+**Template Variables:**
+
+Templates use `{{VARIABLE_NAME}}` placeholders that get replaced during generation:
+
+**loop.sh.template:**
+- `{{TIMESTAMP}}` - ISO 8601 timestamp
+- `{{PROJECT_NAME}}` - Project name from sprint-status.yaml
+- `{{BRANCH_NAME}}` - Current git branch
+- `{{MAX_ITERATIONS}}` - Maximum iterations configured
+- `{{STUCK_THRESHOLD}}` - Stuck detection threshold
+- `{{SPRINT_STATUS_FILE}}` - Path to sprint-status.yaml
+- `{{TYPECHECK_CMD}}`, `{{TEST_CMD}}`, `{{LINT_CMD}}`, `{{BUILD_CMD}}` - Quality gate commands
+
+**prompt.md.template:**
+- `{{PROJECT_NAME}}` - Project name
+- `{{SPRINT_GOAL}}` - Sprint goal from sprint-status.yaml
+- `{{BRANCH_NAME}}` - Current git branch
+- `{{SPRINT_STATUS_PATH}}` - Path to sprint-status.yaml
+- `{{ARCHITECTURE_PATTERNS}}` - Auto-detected architecture docs reference
+- `{{QUALITY_GATES}}` - Formatted quality gates list
+- `{{EPIC_CONTEXT}}` - Epic filter context
+
+Example:
+```bash
+mkdir -p ralph/templates
+cp packages/cli/templates/prompt.md.template ralph/templates/
+# Edit ralph/templates/prompt.md.template with your customizations
+```
+
 ### AGENTS.md Updates
 
 After each iteration, Ralph updates `AGENTS.md` with discovered patterns. Claude Code automatically reads these files, so future iterations benefit from learnings.

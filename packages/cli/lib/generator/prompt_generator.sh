@@ -15,8 +15,17 @@ generate_prompt_md() {
   local loop_dir="$2"
   local epic_filter="${3:-}"
 
-  local template_file="$PROMPT_GEN_TEMPLATES_DIR/prompt.md.template"
   local output_file="$loop_dir/prompt.md"
+
+  # Check for custom template in ralph/templates/ first, fall back to default
+  local custom_template="ralph/templates/prompt.md.template"
+  local default_template="$PROMPT_GEN_TEMPLATES_DIR/prompt.md.template"
+  local template_file="$default_template"
+
+  if [[ -f "$custom_template" ]]; then
+    template_file="$custom_template"
+    info "Using custom template: $custom_template"
+  fi
 
   # Check template exists
   if [[ ! -f "$template_file" ]]; then
