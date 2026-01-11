@@ -13,6 +13,7 @@ readonly VERSION="1.0.0"
 
 # Source core utilities
 source "$LIB_DIR/core/output.sh"
+source "$LIB_DIR/core/dependencies.sh"
 
 # Command routing function
 route_command() {
@@ -201,6 +202,17 @@ EOF
 
 # Main execution
 main() {
+  local cmd="${1:-}"
+
+  # Allow --version and --help to work without dependency check
+  if [[ "$cmd" == "--version" ]] || [[ "$cmd" == "-v" ]] || [[ "$cmd" == "help" ]] || [[ "$cmd" == "--help" ]] || [[ "$cmd" == "-h" ]]; then
+    route_command "$@"
+    return
+  fi
+
+  # Validate dependencies for all other commands
+  validate_dependencies || exit 1
+
   route_command "$@"
 }
 
