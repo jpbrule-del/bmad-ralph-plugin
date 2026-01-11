@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # ralph clone - Clone a loop
 
-# Source git utilities
+# Source utilities
 readonly CLONE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 source "$CLONE_LIB_DIR/core/git.sh"
+source "$CLONE_LIB_DIR/core/utils.sh"
 
 cmd_clone() {
   local source_name=""
@@ -140,7 +141,7 @@ cmd_clone() {
     warn "prd.json not found in source loop"
   fi
 
-  # Reset progress.txt with new header
+  # Reset progress.txt with new header (using atomic write pattern)
   local progress_file="$dest_path/progress.txt"
   if [[ -f "$progress_file" ]]; then
     local project_name branch_name
@@ -157,7 +158,8 @@ cmd_clone() {
     local timestamp
     timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    cat > "$progress_file" <<EOF
+    local progress_content
+    read -r -d '' progress_content <<EOF || true
 # Ralph Progress Log
 # Loop: $dest_name
 # Project: $project_name
@@ -176,6 +178,9 @@ cmd_clone() {
 <!-- Each iteration appends here -->
 
 EOF
+
+    # Use atomic write to prevent partial writes on failure
+    atomic_write "$progress_file" "$progress_content"
   fi
 
   success "Loop cloned successfully: $source_name → $dest_name"
