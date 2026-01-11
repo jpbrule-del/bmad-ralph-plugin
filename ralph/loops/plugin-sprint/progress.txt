@@ -938,3 +938,12 @@ Learning: Post-story hooks provide valuable automation for follow-up actions aft
 
 Note for next: STORY-026 (Implement Loop Lifecycle Hooks) requires creating hook scripts for loop-start, loop-pause, loop-resume, and loop-complete events with custom script support per hook, loop context passing, and lifecycle event logging. This is a 5-point "could-have" story involving four separate hook implementations.
 
+Claude Output:
+Output summary (38 lines total):
+Successfully completed **STORY-025: Implement Post-Story Hook** for the BMAD Ralph Plugin sprint.
+
+## Summary
+...
+
+### Next Story
+**STORY-026: Implement Loop Lifecycle Hooks** (5 points, could-have) - Create hook scripts for loop-start, loop-pause, loop-resume, and loop-complete events with custom script support per hook, loop context passing, and lifecycle event logging. This story requires implementing four separate hooks for complete loop lifecycle management.
