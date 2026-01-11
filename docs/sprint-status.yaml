@@ -7,15 +7,13 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-10T21:30:00Z"
-
+last_updated: "2026-01-10T20:28:09Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
 # 3 = Medium (half day)
 # 5 = Large (full day)
 # 8 = Extra Large (2+ days)
-
 epics:
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-001: CLI Foundation
@@ -46,7 +44,6 @@ epics:
           - "lib/ directory structure matches architecture"
           - "Command routing dispatches to correct handlers"
           - "Unrecognized commands show helpful error"
-
       - id: "STORY-002"
         title: "Implement help command"
         description: |
@@ -65,7 +62,6 @@ epics:
           - "`ralph --help` and `ralph -h` work identically"
           - "Each command shows usage syntax"
           - "No external dependencies required for help"
-
       - id: "STORY-003"
         title: "Implement version command"
         description: |
@@ -82,7 +78,6 @@ epics:
           - "`ralph --version` outputs version number (e.g., 1.0.0)"
           - "`ralph -v` works as alias"
           - "Works without project initialization"
-
       - id: "STORY-004"
         title: "Implement dependency validation"
         description: |
@@ -101,7 +96,6 @@ epics:
           - "Missing deps show installation instructions"
           - "Version checks where applicable"
           - "Clear error messages with brew/apt commands"
-
       - id: "STORY-005"
         title: "Implement init command"
         description: |
@@ -123,7 +117,6 @@ epics:
           - "Fails gracefully if not a BMAD project"
           - "Idempotent (safe to run multiple times)"
           - "--force flag allows reinitialization"
-
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-002: Loop Creation
   # ═══════════════════════════════════════════════════════════════════════════
@@ -153,7 +146,6 @@ epics:
           - "Validates loop name (alphanumeric + hyphens)"
           - "Checks if loop already exists"
           - "Creates ralph/loops/<name>/ directory"
-
       - id: "STORY-011"
         title: "Implement sprint-status.yaml analysis"
         description: |
@@ -173,7 +165,6 @@ epics:
           - "Extracts story IDs, titles, points, acceptance criteria"
           - "Supports --epic flag for filtering to single epic"
           - "Handles malformed YAML with clear errors"
-
       - id: "STORY-012"
         title: "Generate loop.sh file"
         description: |
@@ -194,7 +185,6 @@ epics:
           - "Handles story completion detection"
           - "Updates sprint-status.yaml on completion"
           - "Logs progress to progress.txt"
-
       - id: "STORY-013"
         title: "Generate prd.json file"
         description: |
@@ -214,7 +204,6 @@ epics:
           - "Includes configuration (max iterations, stuck threshold)"
           - "Includes quality gates configuration"
           - "Includes stats and storyNotes structures"
-
       - id: "STORY-014"
         title: "Generate prompt.md file"
         description: |
@@ -234,7 +223,6 @@ epics:
           - "Includes quality gate requirements"
           - "Includes commit message conventions"
           - "References relevant documentation paths"
-
       - id: "STORY-015"
         title: "Generate progress.txt file"
         description: |
@@ -252,7 +240,6 @@ epics:
           - "Creates file with header template"
           - "Header includes loop name and creation timestamp"
           - "Ready for append-only writes during execution"
-
       - id: "STORY-016"
         title: "Implement git branch creation"
         description: |
@@ -272,7 +259,6 @@ epics:
           - "Handles existing branch (offers to use)"
           - "Warns if working directory is dirty"
           - "--no-branch flag skips branch creation"
-
       - id: "STORY-017"
         title: "Implement interactive loop configuration"
         description: |
@@ -292,7 +278,6 @@ epics:
           - "Prompts for stuck threshold (default: 3)"
           - "Prompts for quality gates to enable"
           - "--yes flag skips all prompts with defaults"
-
       - id: "STORY-018"
         title: "Implement quality gate configuration"
         description: |
@@ -311,7 +296,6 @@ epics:
           - "Gates are individually enable/disable-able"
           - "Custom commands per gate"
           - "Configuration stored in prd.json"
-
       - id: "STORY-019"
         title: "Implement loop template customization"
         description: |
@@ -330,7 +314,6 @@ epics:
           - "Uses custom templates if present"
           - "Falls back to defaults if not"
           - "Documentation for template customization"
-
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-003: Loop Management
   # ═══════════════════════════════════════════════════════════════════════════
@@ -362,7 +345,6 @@ epics:
           - "Shows story count (completed/total)"
           - "--active and --archived filters work"
           - "--json outputs JSON format"
-
       - id: "STORY-021"
         title: "Implement delete command"
         description: |
@@ -382,7 +364,6 @@ epics:
           - "Does not delete git branch (warns user)"
           - "--force skips confirmation"
           - "Cannot delete archived loops"
-
       - id: "STORY-022"
         title: "Implement show command"
         description: |
@@ -402,7 +383,6 @@ epics:
           - "Shows story progress breakdown"
           - "Shows last activity timestamp"
           - "--json outputs JSON format"
-
       - id: "STORY-023"
         title: "Implement edit command"
         description: |
@@ -420,7 +400,6 @@ epics:
           - "Opens prd.json in $EDITOR"
           - "Validates JSON after edit"
           - "Prevents editing archived loops"
-
       - id: "STORY-024"
         title: "Implement clone command"
         description: |
@@ -439,7 +418,6 @@ epics:
           - "Resets execution stats in clone"
           - "Creates new git branch for clone"
           - "Preserves configuration settings"
-
       - id: "STORY-025"
         title: "Implement resume loop state"
         description: |
@@ -458,7 +436,6 @@ epics:
           - "Continues from next pending story"
           - "Preserves attempt counts across runs"
           - "--restart flag starts from beginning"
-
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-004: Loop Execution Engine
   # ═══════════════════════════════════════════════════════════════════════════
@@ -488,7 +465,6 @@ epics:
           - "Checks out associated git branch"
           - "Creates lock file to prevent concurrent execution"
           - "Removes lock on clean exit"
-
       - id: "STORY-031"
         title: "Implement Claude CLI integration"
         description: |
@@ -507,7 +483,6 @@ epics:
           - "Passes prompt.md content as input"
           - "Captures and logs Claude output"
           - "Handles Claude CLI errors gracefully"
-
       - id: "STORY-032"
         title: "Implement story completion detection"
         description: |
@@ -527,7 +502,6 @@ epics:
           - "Updates epic completed_points"
           - "Records completion in prd.json storyNotes"
           - "Logs completion to progress.txt"
-
       - id: "STORY-033"
         title: "Implement stuck detection"
         description: |
@@ -547,7 +521,6 @@ epics:
           - "Pauses loop execution when stuck"
           - "Logs stuck event with details"
           - "Configurable threshold (default: 3)"
-
       - id: "STORY-034"
         title: "Implement quality gate execution"
         description: |
@@ -566,7 +539,6 @@ epics:
           - "Fails story if any gate fails"
           - "Logs gate results to progress.txt"
           - "Claude fixes issues on next iteration"
-
       - id: "STORY-035"
         title: "Implement iteration logging"
         description: |
@@ -586,7 +558,6 @@ epics:
           - "Records Claude output summary"
           - "Records quality gate results"
           - "Records story state transitions"
-
       - id: "STORY-036"
         title: "Implement graceful interrupt handling"
         description: |
@@ -606,7 +577,6 @@ epics:
           - "Logs interruption to progress.txt"
           - "Exits cleanly (exit code 130)"
           - "Removes lock file"
-
       - id: "STORY-037"
         title: "Implement execution statistics tracking"
         description: |
@@ -626,7 +596,6 @@ epics:
           - "Tracks start and end timestamps"
           - "Calculates average iterations per story"
           - "Stores in prd.json stats object"
-
       - id: "STORY-038"
         title: "Implement concurrent execution prevention"
         description: |
@@ -645,7 +614,6 @@ epics:
           - "Checks for existing lock before starting"
           - "Handles stale locks (timeout detection)"
           - "Removes lock on exit"
-
       - id: "STORY-039"
         title: "Implement dry run mode"
         description: |
@@ -664,7 +632,6 @@ epics:
           - "Validates configuration"
           - "Lists stories that would be processed"
           - "Does not modify any files"
-
       - id: "STORY-040A"
         title: "Implement atomic file operations"
         description: |
@@ -683,7 +650,6 @@ epics:
           - "All writes use temp file + rename pattern"
           - "No partial writes on failure"
           - "Survives crashes mid-write"
-
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-005: Monitoring Dashboard
   # ═══════════════════════════════════════════════════════════════════════════
@@ -712,7 +678,6 @@ epics:
           - "Shows rich terminal UI with colors"
           - "Updates in real-time while loop is running"
           - "--once flag shows single snapshot"
-
       - id: "STORY-041"
         title: "Implement progress visualization"
         description: |
@@ -731,7 +696,6 @@ epics:
           - "Progress bar for current epic"
           - "Story count display (completed/total)"
           - "Color-coded status indicators"
-
       - id: "STORY-042"
         title: "Implement current story display"
         description: |
@@ -750,7 +714,6 @@ epics:
           - "Shows story points"
           - "Shows attempt count for current story"
           - "Shows time elapsed on current story"
-
       - id: "STORY-043"
         title: "Implement ETA calculation"
         description: |
@@ -769,7 +732,6 @@ epics:
           - "Estimates remaining time"
           - "Updates estimate as loop progresses"
           - "Shows 'Calculating...' until enough data"
-
       - id: "STORY-044"
         title: "Implement iteration counter display"
         description: |
@@ -787,7 +749,6 @@ epics:
           - "Shows current iteration / max iterations"
           - "Color indicates proximity (green/yellow/red)"
           - "Shows iterations per story average"
-
       - id: "STORY-045"
         title: "Implement stuck warning display"
         description: |
@@ -806,7 +767,6 @@ epics:
           - "Warning color when approaching threshold"
           - "Alert state when stuck"
           - "Shows stuck story details"
-
       - id: "STORY-046"
         title: "Implement quality gate status display"
         description: |
@@ -824,7 +784,6 @@ epics:
           - "Shows pass/fail status for each gate"
           - "Shows last gate execution time"
           - "Color-coded indicators"
-
       - id: "STORY-047"
         title: "Implement log tail display"
         description: |
@@ -842,7 +801,6 @@ epics:
           - "Shows last N lines of progress log"
           - "Auto-scrolls as new entries appear"
           - "Key event highlighting"
-
       - id: "STORY-048"
         title: "Implement configurable refresh rate"
         description: |
@@ -859,7 +817,6 @@ epics:
           - "Default refresh rate of 2 seconds"
           - "--refresh <seconds> flag works"
           - "Manual refresh via keypress"
-
       - id: "STORY-049"
         title: "Implement keyboard controls"
         description: |
@@ -876,7 +833,6 @@ epics:
           - "`q` quits dashboard"
           - "`r` refreshes manually"
           - "`l` shows full log"
-
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-006: Archive & Feedback
   # ═══════════════════════════════════════════════════════════════════════════
@@ -905,7 +861,6 @@ epics:
           - "Moves loop to ralph/archive/<date>-<name>/"
           - "Cannot archive without feedback"
           - "Records archive timestamp"
-
       - id: "STORY-051"
         title: "Implement mandatory feedback questionnaire"
         description: |
@@ -926,7 +881,6 @@ epics:
           - "What should be improved? (required text)"
           - "Would you run this config again? (yes/no)"
           - "Cannot skip questions"
-
       - id: "STORY-052"
         title: "Implement feedback storage"
         description: |
@@ -945,7 +899,6 @@ epics:
           - "Includes all questionnaire responses"
           - "Includes timestamp"
           - "Includes loop execution statistics"
-
       - id: "STORY-053"
         title: "Implement archive directory structure"
         description: |
@@ -963,7 +916,6 @@ epics:
           - "Contains all original loop files"
           - "Contains feedback.json"
           - "Contains final prd.json with stats"
-
       - id: "STORY-054"
         title: "Implement list archived loops"
         description: |
@@ -982,7 +934,6 @@ epics:
           - "Shows archive date"
           - "Shows feedback score"
           - "Shows stories completed count"
-
       - id: "STORY-055"
         title: "Implement show archived loop details"
         description: |
@@ -1001,7 +952,6 @@ epics:
           - "Shows execution statistics"
           - "Shows full feedback responses"
           - "Indicates loop is read-only"
-
       - id: "STORY-056"
         title: "Implement unarchive command"
         description: |
@@ -1020,7 +970,6 @@ epics:
           - "Preserves feedback in loop directory"
           - "Option to reset execution stats"
           - "Creates new git branch if needed"
-
       - id: "STORY-057"
         title: "Implement feedback analytics"
         description: |
@@ -1039,7 +988,6 @@ epics:
           - "Shows average satisfaction score"
           - "Shows common improvement themes"
           - "Shows success rate trends"
-
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC-007: BMAD Agent Integration
   # ═══════════════════════════════════════════════════════════════════════════
@@ -1069,7 +1017,6 @@ epics:
           - "Includes agent activation section"
           - "Includes agent responsibilities"
           - "Compatible with /ralph invocation"
-
       - id: "STORY-061"
         title: "Implement workflow registration"
         description: |
@@ -1087,7 +1034,6 @@ epics:
           - "Workflow appears in /workflow-status"
           - "Follows Phase 4/5 positioning"
           - "Has proper input/output documentation"
-
       - id: "STORY-062"
         title: "Create SKILL.md integration"
         description: |
@@ -1107,7 +1053,6 @@ epics:
           - "Includes file generation templates"
           - "Includes loop script template"
           - "Compatible with skill loading"
-
       - id: "STORY-063"
         title: "Implement auto-install in projects"
         description: |
@@ -1126,7 +1071,6 @@ epics:
           - "Registers in project workflow status"
           - "Creates project-local ralph configuration"
           - "Works with monorepo and standalone setups"
-
       - id: "STORY-064"
         title: "Implement sprint status integration"
         description: |
@@ -1146,7 +1090,6 @@ epics:
           - "Updates epic completed_points"
           - "Does not modify sprint structure"
           - "Follows BMAD schema exactly"
-
       - id: "STORY-065"
         title: "Implement BMAD config detection"
         description: |
@@ -1165,7 +1108,6 @@ epics:
           - "Uses configured output folder paths"
           - "Uses configured sprint status file path"
           - "Falls back to defaults if not found"
-
 # Sprint Metrics
 metrics:
   total_epics: 7
@@ -1175,7 +1117,6 @@ metrics:
   stories_in_progress: 0
   stories_not_started: 47
   points_completed: 5
-
 # Priority Distribution
 priority_summary:
   must_have:
