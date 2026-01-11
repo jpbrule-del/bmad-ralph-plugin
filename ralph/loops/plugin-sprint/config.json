@@ -18,11 +18,29 @@
     "customInstructions": null
   },
   "stats": {
-    "iterationsRun": 1,
-    "storiesCompleted": 1,
+    "iterationsRun": 3,
+    "storiesCompleted": 2,
     "startedAt": "2026-01-11T07:43:57Z",
-    "completedAt": null
+    "completedAt": null,
+    "averageIterationsPerStory": 1
   },
   "storyAttempts": {},
-  "storyNotes": {}
+  "storyNotes": {
+    "STORY-001": {
+      "title": "Create Plugin Manifest",
+      "points": 3,
+      "epic": "EPIC-001",
+      "attempts": 0,
+      "completedAt": "2026-01-11T07:48:05Z",
+      "commit": "b3351a7"
+    },
+    "STORY-002": {
+      "title": "Create Plugin Directory Structure",
+      "points": 2,
+      "epic": "EPIC-001",
+      "attempts": 0,
+      "completedAt": "2026-01-11T07:49:58Z",
+      "commit": "13307e0"
+    }
+  }
 }
