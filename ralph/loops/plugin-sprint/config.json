@@ -1,0 +1,28 @@
+{
+  "project": "ralph",
+  "loopName": "plugin-sprint",
+  "branchName": "ralph/plugin-sprint",
+  "description": "Loop: plugin-sprint",
+  "generatedAt": "2026-01-11T07:43:21Z",
+  "sprintStatusPath": "docs/sprint-status.yaml",
+  "epicFilter": null,
+  "config": {
+    "maxIterations": 100,
+    "stuckThreshold": 3,
+    "qualityGates": {
+      "typecheck": "npx tsc --noEmit",
+      "test": "npm test",
+      "lint": "npm run lint",
+      "build": "npm run build"
+    },
+    "customInstructions": null
+  },
+  "stats": {
+    "iterationsRun": 1,
+    "storiesCompleted": 1,
+    "startedAt": "2026-01-11T07:43:57Z",
+    "completedAt": null
+  },
+  "storyAttempts": {},
+  "storyNotes": {}
+}
