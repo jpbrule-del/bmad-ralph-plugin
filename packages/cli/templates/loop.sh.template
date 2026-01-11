@@ -334,6 +334,7 @@ mark_story_complete() {
     echo "Epic: $epic_id"
     echo "Points: $story_points"
     echo "Attempts: $attempts"
+    echo "Quality gates: All passed"
     echo "Commit: $commit_hash"
   } >> "$PROGRESS_FILE"
 }
@@ -512,6 +513,16 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
   else
     log_error "Quality gates failed"
     increment_story_attempts "$STORY_ID"
+
+    # Log gate failure to progress.txt
+    {
+      echo ""
+      echo "## Iteration $iteration - $STORY_ID"
+      echo "Status: Quality gates failed"
+      echo "Attempts: $((ATTEMPTS + 1))/$STUCK_THRESHOLD"
+      echo "Failed gates:"
+      grep "FAILED" "$GATE_LOG" 2>/dev/null || echo "  See $GATE_LOG for details"
+    } >> "$PROGRESS_FILE"
 
     echo ""
     echo -e "${DIM}See $GATE_LOG for full error output${NC}"
