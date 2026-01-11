@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# prd_generator.sh - Generate config.json loop configuration file
+# prd_generator.sh - Generate loop state files (v2: .state.json)
+# v1 legacy: config.json (full configuration)
+# v2: .state.json (minimal runtime state only)
 
 # Get LIB_DIR from main script or fallback to relative path
 readonly PRD_GEN_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
@@ -7,6 +9,64 @@ readonly PRD_GEN_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" &
 # Source bmad_config utilities
 # shellcheck source=lib/core/bmad_config.sh
 source "$PRD_GEN_LIB_DIR/core/bmad_config.sh"
+
+# ============================================================================
+# v2: Generate minimal .state.json for runtime state tracking
+# ============================================================================
+
+# Generate .state.json - minimal runtime state file
+# Configuration is read from bmad/config.yaml and sprint-status.yaml
+# Arguments:
+#   $1: loop_name - Name of the loop
+#   $2: loop_dir - Full path to loop directory
+generate_state_json() {
+  local loop_name="$1"
+  local loop_dir="$2"
+
+  local output_file="$loop_dir/.state.json"
+
+  # Generate minimal state JSON content
+  local state_content
+  read -r -d '' state_content <<EOF || true
+{
+  "storyAttempts": {},
+  "storyNotes": {},
+  "stats": {
+    "iterationsRun": 0,
+    "storiesCompleted": 0,
+    "startedAt": null,
+    "completedAt": null
+  }
+}
+EOF
+
+  # Validate JSON before writing
+  if ! echo "$state_content" | jq . >/dev/null 2>&1; then
+    error "Generated invalid JSON for .state.json"
+    return 1
+  fi
+
+  # Write to temp file first (atomic write pattern)
+  local temp_file
+  temp_file=$(mktemp)
+  echo "$state_content" > "$temp_file"
+
+  # Validate the temp file
+  if ! jq . "$temp_file" >/dev/null 2>&1; then
+    rm -f "$temp_file"
+    error "Failed to validate generated .state.json"
+    return 1
+  fi
+
+  # Move to final location
+  mv "$temp_file" "$output_file"
+
+  return 0
+}
+
+# ============================================================================
+# v1 Legacy: Generate full config.json (kept for backward compatibility)
+# ============================================================================
 
 # Generate config.json for a given loop
 # Arguments:

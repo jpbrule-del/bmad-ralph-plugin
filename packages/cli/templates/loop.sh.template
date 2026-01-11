@@ -37,11 +37,12 @@ BUILD_CMD="{{BUILD_CMD}}"
 # Paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/config.json"
+STATE_FILE="$SCRIPT_DIR/.state.json"  # v2: Minimal runtime state
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 GATE_LOG="$SCRIPT_DIR/.gate-output.log"
 SPRINT_STATUS="$PROJECT_ROOT/$SPRINT_STATUS_FILE"
+BMAD_CONFIG="$PROJECT_ROOT/bmad/config.yaml"
 
 # Colors
 RED='\033[0;31m'
@@ -119,8 +120,8 @@ print_final_summary() {
   local exit_type="$1"
   local completed=$(get_completed_count)
   local total=$(get_total_count)
-  local iterations=$(jq '.stats.iterationsRun // 0' "$CONFIG_FILE")
-  local started=$(jq -r '.stats.startedAt // "unknown"' "$CONFIG_FILE")
+  local iterations=$(jq '.stats.iterationsRun // 0' "$STATE_FILE")
+  local started=$(jq -r '.stats.startedAt // "unknown"' "$STATE_FILE")
   local duration=""
 
   if [ "$started" != "unknown" ] && [ "$started" != "null" ]; then
@@ -255,7 +256,7 @@ get_story_title() {
 
 get_story_attempts() {
   local story_id="$1"
-  jq -r --arg id "$story_id" '.storyAttempts[$id] // 0' "$CONFIG_FILE"
+  jq -r --arg id "$story_id" '.storyAttempts[$id] // 0' "$STATE_FILE"
 }
 
 get_story_points() {
@@ -366,7 +367,7 @@ mark_story_complete() {
     .last_updated = \"$(date +%Y-%m-%dT%H:%M:%SZ)\"
   " "$SPRINT_STATUS" > "$tmp_file" && mv "$tmp_file" "$SPRINT_STATUS"
 
-  # Update stats in config.json and add storyNotes
+  # Update stats in .state.json and add storyNotes
   local completed=$(get_completed_count)
   local commit_hash=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
   jq --arg ts "$timestamp" \
@@ -387,7 +388,7 @@ mark_story_complete() {
       "completedAt": $ts,
       "commit": $commit
     }
-  ' "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
+  ' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
 
   # Log completion to progress.txt
   {
@@ -409,7 +410,7 @@ increment_story_attempts() {
   local tmp_file=$(mktemp)
   jq --arg id "$story_id" '
     .storyAttempts[$id] = ((.storyAttempts[$id] // 0) + 1)
-  ' "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
+  ' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -444,7 +445,7 @@ handle_stuck_exit() {
   echo "  5. Reset and start fresh with: ./loop.sh --restart"
   echo ""
 
-  log_warning "State preserved in config.json for debugging"
+  log_warning "State preserved in .state.json for debugging"
 }
 
 handle_interrupt() {
@@ -453,11 +454,11 @@ handle_interrupt() {
   echo ""
   print_final_summary "INTERRUPTED"
 
-  # Save current state to config.json
+  # Save current state to .state.json
   # Note: iterationsRun is already correct (only incremented on success)
   # We just need to ensure interruptedAt timestamp is recorded
-  if [[ -n "$CONFIG_FILE" ]] && [[ -f "$CONFIG_FILE" ]]; then
-    jq --arg ts "$timestamp" '.stats.interruptedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE" 2>/dev/null || true
+  if [[ -n "$STATE_FILE" ]] && [[ -f "$STATE_FILE" ]]; then
+    jq --arg ts "$timestamp" '.stats.interruptedAt = $ts' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE" 2>/dev/null || true
   fi
 
   # Log interruption to progress.txt
@@ -469,7 +470,7 @@ handle_interrupt() {
       echo "Story: ${STORY_TITLE:-N/A}"
       echo "Attempts: ${ATTEMPTS:-0}/$STUCK_THRESHOLD"
       echo "Reason: User interrupt (Ctrl+C or SIGTERM)"
-      echo "State: Saved to config.json - resume with ./loop.sh"
+      echo "State: Saved to .state.json - resume with ./loop.sh"
     } >> "$PROGRESS_FILE" 2>/dev/null || true
   fi
 
@@ -537,7 +538,7 @@ command -v claude >/dev/null 2>&1 || { log_error "claude CLI is required but not
 command -v git >/dev/null 2>&1 || { log_error "git is required but not installed"; exit 1; }
 
 # Check files exist
-[ -f "$CONFIG_FILE" ] || { log_error "config.json not found at $CONFIG_FILE"; exit 1; }
+[ -f "$STATE_FILE" ] || { log_error ".state.json not found at $STATE_FILE"; exit 1; }
 [ -f "$PROMPT_FILE" ] || { log_error "prompt.md not found at $PROMPT_FILE"; exit 1; }
 [ -f "$SPRINT_STATUS" ] || { log_error "sprint-status.yaml not found at $SPRINT_STATUS"; exit 1; }
 
@@ -587,15 +588,15 @@ if $RESTART_FLAG; then
     .stats.startedAt = null |
     .stats.completedAt = null |
     .storyAttempts = {}
-  ' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+  ' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE"
   echo ""
 fi
 
 # Initialize or update start time
-jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.startedAt //= $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.startedAt //= $ts' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE"
 
 # Calculate starting iteration (resume from last run)
-ITERATIONS_RUN=$(jq '.stats.iterationsRun // 0' "$CONFIG_FILE")
+ITERATIONS_RUN=$(jq '.stats.iterationsRun // 0' "$STATE_FILE")
 START_ITERATION=$((ITERATIONS_RUN + 1))
 END_ITERATION=$MAX_ITERATIONS
 
@@ -613,7 +614,7 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
 
   # Check if all stories complete
   if [ -z "$STORY_ID" ]; then
-    jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+    jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE"
     print_final_summary "COMPLETE"
     exit 0
   fi
@@ -643,7 +644,7 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
 
   # Check for explicit completion signal
   if echo "$OUTPUT" | grep -q "<complete>ALL_STORIES_PASSED</complete>"; then
-    jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+    jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE"
     print_final_summary "COMPLETE"
     exit 0
   fi
@@ -682,7 +683,7 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
     log_success "Story $STORY_ID completed"
 
     # Update iteration count
-    jq '.stats.iterationsRun += 1' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+    jq '.stats.iterationsRun += 1' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE"
 
     # Show progress bar
     print_progress_bar
@@ -708,7 +709,7 @@ for iteration in $(seq $START_ITERATION $END_ITERATION); do
 done
 
 # Max iterations reached
-jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$STATE_FILE" > tmp.$$.json && mv tmp.$$.json "$STATE_FILE"
 print_final_summary "MAX_ITERATIONS"
 echo ""
 log_warning "Reached maximum iterations ($MAX_ITERATIONS)."

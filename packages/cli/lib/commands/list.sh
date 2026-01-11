@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
-# ralph list - List all loops
+# ralph list - List all loops (v2: BMAD-native)
 
 # Use the LIB_DIR variable from main script, or fallback to relative path
 readonly LIST_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 
+# Source required modules
+source "$LIB_DIR/core/bmad_config.sh"
+source "$LIB_DIR/core/migration.sh"
+
 cmd_list() {
+  # Check for migration (v1 -> v2)
+  check_and_migrate
   local show_active=true
   local show_archived=true
   local json_output=false
@@ -58,15 +64,42 @@ cmd_list() {
     for loop_dir in "$loops_dir"/*; do
       if [[ -d "$loop_dir" ]]; then
         local loop_name=$(basename "$loop_dir")
-        local prd_file="$loop_dir/config.json"
+        local state_file="$loop_dir/.state.json"
+        local config_file="$loop_dir/config.json"  # v1 legacy
+        local prd_file=""
 
-        if [[ -f "$prd_file" ]]; then
-          local created_at=$(jq -r '.generatedAt // "Unknown"' "$prd_file")
+        # Determine state file (v2: .state.json, v1: config.json)
+        if [[ -f "$state_file" ]]; then
+          prd_file="$state_file"
+        elif [[ -f "$config_file" ]]; then
+          prd_file="$config_file"
+        fi
+
+        if [[ -n "$prd_file" ]] && [[ -f "$prd_file" ]]; then
+          local created_at=""
           local iterations=$(jq -r '.stats.iterationsRun // 0' "$prd_file")
           local stories_completed=$(jq -r '.stats.storiesCompleted // 0' "$prd_file")
+          local total_stories=0
 
-          # Count total stories from storyAttempts
-          local total_stories=$(jq -r '.storyAttempts | length' "$prd_file")
+          # Get created_at from sprint-status.yaml (v2) or config.json (v1)
+          local sprint_status_path=$(get_bmad_sprint_status_path 2>/dev/null || echo "docs/sprint-status.yaml")
+          if [[ -f "$sprint_status_path" ]]; then
+            created_at=$(yq eval ".ralph_loops[] | select(.name == \"$loop_name\") | .created_at" "$sprint_status_path" 2>/dev/null)
+          fi
+          # Fallback to config.json for v1
+          if [[ -z "$created_at" ]] || [[ "$created_at" == "null" ]]; then
+            if [[ -f "$config_file" ]]; then
+              created_at=$(jq -r '.generatedAt // "Unknown"' "$config_file")
+            else
+              created_at="Unknown"
+            fi
+          fi
+
+          # Count total stories from storyAttempts or sprint-status.yaml
+          total_stories=$(jq -r '.storyAttempts | length' "$prd_file" 2>/dev/null || echo "0")
+          if [[ "$total_stories" == "0" ]] && [[ -f "$sprint_status_path" ]]; then
+            total_stories=$(yq eval '[.epics[].stories[]] | length' "$sprint_status_path" 2>/dev/null || echo "0")
+          fi
 
           # Active loops don't have archive date or feedback
           loop_data+=("active|$loop_name|$created_at|$stories_completed|$total_stories|$iterations|N/A|N/A")
@@ -81,13 +114,29 @@ cmd_list() {
     for loop_dir in "$archive_dir"/*; do
       if [[ -d "$loop_dir" ]]; then
         local loop_name=$(basename "$loop_dir")
-        local prd_file="$loop_dir/config.json"
+        local state_file="$loop_dir/.state.json"
+        local config_file="$loop_dir/config.json"  # v1 legacy
+        local prd_file=""
         local feedback_file="$loop_dir/feedback.json"
 
-        if [[ -f "$prd_file" ]]; then
-          local created_at=$(jq -r '.generatedAt // "Unknown"' "$prd_file")
+        # Determine state file (v2: .state.json, v1: config.json)
+        if [[ -f "$state_file" ]]; then
+          prd_file="$state_file"
+        elif [[ -f "$config_file" ]]; then
+          prd_file="$config_file"
+        fi
+
+        if [[ -n "$prd_file" ]] && [[ -f "$prd_file" ]]; then
+          local created_at=""
           local iterations=$(jq -r '.stats.iterationsRun // 0' "$prd_file")
           local stories_completed=$(jq -r '.stats.storiesCompleted // 0' "$prd_file")
+
+          # Get created_at from config.json for archived loops (v1 always has it)
+          if [[ -f "$config_file" ]]; then
+            created_at=$(jq -r '.generatedAt // "Unknown"' "$config_file")
+          else
+            created_at="Unknown"
+          fi
 
           # Count total stories from storyAttempts
           local total_stories=$(jq -r '.storyAttempts | length' "$prd_file")

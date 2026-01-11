@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ralph init - Initialize ralph in a BMAD project
+# ralph init - Initialize ralph in a BMAD project (v2: BMAD-native)
 
 # Get LIB_DIR from main script or fallback to relative path
 readonly INIT_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
@@ -7,6 +7,9 @@ readonly INIT_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && p
 # Source bmad_config utilities
 # shellcheck source=lib/core/bmad_config.sh
 source "$INIT_LIB_DIR/core/bmad_config.sh"
+
+# Ralph version
+readonly RALPH_VERSION="2.0"
 
 cmd_init() {
   local force=false
@@ -31,37 +34,57 @@ cmd_init() {
     esac
   done
 
-  # Detect BMAD project
+  # Detect BMAD project - requires bmad/config.yaml for v2
   if ! is_bmad_project; then
     error "Not a BMAD project"
     echo ""
-    echo "Ralph requires a BMAD project with one of:"
-    echo "  • docs/sprint-status.yaml"
-    echo "  • bmad/config.yaml"
+    echo "Ralph v2 requires a BMAD project with:"
+    echo "  • bmad/config.yaml (required)"
+    echo "  • docs/sprint-status.yaml (required)"
     echo ""
     echo "Initialize BMAD first, then run 'ralph init'"
     exit 1
   fi
 
-  # Check if already initialized
-  if [[ -f "ralph/config.yaml" ]] && [[ "$force" != "true" ]]; then
+  # v2 requires bmad/config.yaml specifically
+  if [[ ! -f "bmad/config.yaml" ]]; then
+    error "bmad/config.yaml not found"
+    echo ""
+    echo "Ralph v2 requires bmad/config.yaml to store configuration."
+    echo "Please ensure your BMAD project has this file."
+    exit 1
+  fi
+
+  # Check if already initialized (v2 style: ralph section in bmad/config.yaml)
+  if has_ralph_config && [[ "$force" != "true" ]]; then
     warning "Ralph already initialized in this project"
     echo ""
-    echo "ralph/config.yaml already exists"
+    echo "Ralph configuration exists in bmad/config.yaml"
     echo "Use 'ralph init --force' to reinitialize"
     exit 0
   fi
 
+  # Check for v1 installation that needs migration
+  if [[ -f "ralph/config.yaml" ]] && [[ "$force" != "true" ]]; then
+    warning "Found Ralph v1 configuration (ralph/config.yaml)"
+    echo ""
+    echo "Ralph v2 stores configuration in bmad/config.yaml"
+    echo "Your existing configuration will be migrated automatically."
+    echo ""
+    echo "Use 'ralph init --force' to reinitialize (will overwrite settings)"
+    exit 0
+  fi
+
   # Create directory structure
-  info "Initializing ralph in $(basename "$(pwd)")..."
+  info "Initializing Ralph v2 in $(basename "$(pwd)")..."
 
   mkdir -p ralph/loops
   mkdir -p ralph/archive
   success "Created directory structure"
 
-  # Create config.yaml with defaults
-  create_config_yaml
-  success "Created ralph/config.yaml"
+  # Add ralph section to bmad/config.yaml
+  extend_bmad_config
+  success "Added ralph configuration to bmad/config.yaml"
 
   # Install agent files if requested
   if [[ "$install_agent" == "true" ]]; then
@@ -71,10 +94,12 @@ cmd_init() {
   fi
 
   echo ""
-  success "Ralph initialized successfully!"
+  success "Ralph v2 initialized successfully!"
+  echo ""
+  echo "Configuration stored in: bmad/config.yaml (ralph: section)"
   echo ""
   echo "Next steps:"
-  echo "  1. Review ralph/config.yaml and adjust defaults if needed"
+  echo "  1. Review bmad/config.yaml ralph section and adjust defaults if needed"
   echo "  2. Create a loop: ralph create <loop-name>"
   echo "  3. Run the loop: ralph run <loop-name>"
 
@@ -91,8 +116,42 @@ is_bmad_project() {
   [[ -f "docs/sprint-status.yaml" ]] || [[ -f "bmad/config.yaml" ]]
 }
 
-# Create config.yaml with defaults
-create_config_yaml() {
+# Add ralph section to bmad/config.yaml (v2 style)
+extend_bmad_config() {
+  local bmad_config="bmad/config.yaml"
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # Create temp file for atomic write
+  local temp_file
+  temp_file=$(mktemp)
+
+  # Add ralph section to bmad/config.yaml
+  yq eval "
+    .ralph.version = \"$RALPH_VERSION\" |
+    .ralph.initialized_at = \"$timestamp\" |
+    .ralph.defaults.max_iterations = 50 |
+    .ralph.defaults.stuck_threshold = 3 |
+    .ralph.defaults.quality_gates.typecheck = null |
+    .ralph.defaults.quality_gates.test = null |
+    .ralph.defaults.quality_gates.lint = null |
+    .ralph.defaults.quality_gates.build = null |
+    .ralph.loops_dir = \"ralph/loops\" |
+    .ralph.archive_dir = \"ralph/archive\"
+  " "$bmad_config" > "$temp_file"
+
+  # Validate and apply
+  if yq eval '.' "$temp_file" >/dev/null 2>&1; then
+    mv "$temp_file" "$bmad_config"
+  else
+    rm -f "$temp_file"
+    error "Failed to update bmad/config.yaml"
+    return 1
+  fi
+}
+
+# Legacy: Create config.yaml with defaults (kept for reference, not used in v2)
+create_config_yaml_legacy() {
   local project_name
   local sprint_status_path
   local bmad_config_path

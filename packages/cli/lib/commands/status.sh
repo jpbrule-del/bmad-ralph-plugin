@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
-# ralph status - Show loop status
+# ralph status - Show loop status (v2: BMAD-native)
+
+# Source required modules
+source "$LIB_DIR/core/bmad_config.sh"
+source "$LIB_DIR/core/migration.sh"
 
 cmd_status() {
+  # Check for migration (v1 -> v2)
+  check_and_migrate
   local loop_name=""
   local once=false
   local refresh_rate=2
@@ -85,9 +91,19 @@ cmd_status() {
     fi
   fi
 
-  local prd_file="$loop_path/config.json"
-  if [[ ! -f "$prd_file" ]]; then
-    error "Loop configuration file not found: $prd_file"
+  # Validate loop state file exists (v2: .state.json or v1: config.json)
+  local state_file="$loop_path/.state.json"
+  local config_file="$loop_path/config.json"  # v1 legacy
+  local prd_file=""
+
+  if [[ -f "$state_file" ]]; then
+    # v2: Use .state.json for runtime state
+    prd_file="$state_file"
+  elif [[ -f "$config_file" ]]; then
+    # v1 legacy: Use config.json
+    prd_file="$config_file"
+  else
+    error "Loop state file not found (.state.json or config.json)"
     exit 1
   fi
 
@@ -237,21 +253,64 @@ display_status() {
   local loop_path="$1"
   local prd_file="$2"
   local is_archived="$3"
+  local loop_name=$(basename "$loop_path")
 
-  # Extract data from config.json
-  local project=$(jq -r '.project // "Unknown"' "$prd_file")
-  local branch=$(jq -r '.branchName // "Unknown"' "$prd_file")
-  local sprint_status_path=$(jq -r '.sprintStatusPath // "docs/sprint-status.yaml"' "$prd_file")
+  # Determine config source (v2: bmad/config.yaml, v1: config.json)
+  local project=""
+  local branch=""
+  local sprint_status_path=""
+  local max_iterations=50
+  local stuck_threshold=3
+  local typecheck="null"
+  local test="null"
+  local lint="null"
+  local build="null"
 
-  # Configuration
-  local max_iterations=$(jq -r '.config.maxIterations // 50' "$prd_file")
-  local stuck_threshold=$(jq -r '.config.stuckThreshold // 3' "$prd_file")
+  if [[ -f "bmad/config.yaml" ]] && yq eval '.ralph // ""' bmad/config.yaml 2>/dev/null | grep -q "version"; then
+    # v2: Read from bmad/config.yaml and sprint-status.yaml
+    project=$(get_bmad_project_name)
+    sprint_status_path=$(get_bmad_sprint_status_path || echo "docs/sprint-status.yaml")
 
-  # Quality gates
-  local typecheck=$(jq -r '.config.qualityGates.typecheck // null' "$prd_file")
-  local test=$(jq -r '.config.qualityGates.test // null' "$prd_file")
-  local lint=$(jq -r '.config.qualityGates.lint // null' "$prd_file")
-  local build=$(jq -r '.config.qualityGates.build // null' "$prd_file")
+    # Get branch from sprint-status.yaml ralph_loops section
+    if [[ -f "$sprint_status_path" ]]; then
+      branch=$(yq eval ".ralph_loops[] | select(.name == \"$loop_name\") | .branch" "$sprint_status_path" 2>/dev/null)
+    fi
+    # Fallback to convention-based branch name
+    if [[ -z "$branch" ]] || [[ "$branch" == "null" ]]; then
+      branch="ralph/$loop_name"
+    fi
+
+    # Read configuration from bmad/config.yaml ralph section
+    max_iterations=$(get_ralph_max_iterations)
+    stuck_threshold=$(get_ralph_stuck_threshold)
+
+    # Quality gates from bmad/config.yaml
+    typecheck=$(yq -r '.ralph.defaults.quality_gates.typecheck // "null"' bmad/config.yaml 2>/dev/null)
+    test=$(yq -r '.ralph.defaults.quality_gates.test // "null"' bmad/config.yaml 2>/dev/null)
+    lint=$(yq -r '.ralph.defaults.quality_gates.lint // "null"' bmad/config.yaml 2>/dev/null)
+    build=$(yq -r '.ralph.defaults.quality_gates.build // "null"' bmad/config.yaml 2>/dev/null)
+
+    # Handle empty strings as null
+    [[ -z "$typecheck" ]] && typecheck="null"
+    [[ -z "$test" ]] && test="null"
+    [[ -z "$lint" ]] && lint="null"
+    [[ -z "$build" ]] && build="null"
+  else
+    # v1: Read from config.json
+    project=$(jq -r '.project // "Unknown"' "$prd_file")
+    branch=$(jq -r '.branchName // "Unknown"' "$prd_file")
+    sprint_status_path=$(jq -r '.sprintStatusPath // "docs/sprint-status.yaml"' "$prd_file")
+
+    # Configuration
+    max_iterations=$(jq -r '.config.maxIterations // 50' "$prd_file")
+    stuck_threshold=$(jq -r '.config.stuckThreshold // 3' "$prd_file")
+
+    # Quality gates
+    typecheck=$(jq -r '.config.qualityGates.typecheck // null' "$prd_file")
+    test=$(jq -r '.config.qualityGates.test // null' "$prd_file")
+    lint=$(jq -r '.config.qualityGates.lint // null' "$prd_file")
+    build=$(jq -r '.config.qualityGates.build // null' "$prd_file")
+  fi
 
   # Statistics
   local iterations_run=$(jq -r '.stats.iterationsRun // 0' "$prd_file")

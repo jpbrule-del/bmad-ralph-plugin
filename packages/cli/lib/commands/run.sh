@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# ralph run - Run a loop
+# ralph run - Run a loop (v2: BMAD-native)
 
 # Source required modules
 source "$LIB_DIR/core/git.sh"
+source "$LIB_DIR/core/bmad_config.sh"
+source "$LIB_DIR/core/migration.sh"
 
 cmd_run() {
+  # Check for migration (v1 -> v2)
+  check_and_migrate
+
   local loop_name=""
   local dry_run=false
   local restart=false
@@ -71,19 +76,42 @@ cmd_run() {
     exit 1
   fi
 
-  # Validate config.json exists
-  local prd_file="$loop_path/config.json"
-  if [[ ! -f "$prd_file" ]]; then
-    error "Invalid loop: config.json not found"
+  # Validate loop state file exists (v2: .state.json or v1: config.json)
+  local state_file="$loop_path/.state.json"
+  local config_file="$loop_path/config.json"  # v1 legacy
+  local prd_file=""
+
+  if [[ -f "$state_file" ]]; then
+    # v2: Use .state.json
+    prd_file="$state_file"
+  elif [[ -f "$config_file" ]]; then
+    # v1 legacy: Use config.json
+    prd_file="$config_file"
+  else
+    error "Invalid loop: no state file found (.state.json or config.json)"
     exit 1
   fi
 
-  # Get branch name from config.json
-  local branch_name
-  branch_name=$(jq -r '.branchName // ""' "$prd_file")
-  if [[ -z "$branch_name" ]]; then
-    error "Invalid loop: branchName not found in config.json"
-    exit 1
+  # Get branch name from sprint-status.yaml (v2) or config.json (v1)
+  local branch_name=""
+
+  # Try to get branch from sprint-status.yaml ralph_loops section (v2)
+  local sprint_file
+  sprint_file=$(get_bmad_sprint_status_path)
+  if [[ -n "$sprint_file" ]] && [[ -f "$sprint_file" ]]; then
+    branch_name=$(yq eval ".ralph_loops[] | select(.name == \"$loop_name\") | .branch" "$sprint_file" 2>/dev/null)
+  fi
+
+  # Fall back to config.json if not found (v1 or missing)
+  if [[ -z "$branch_name" ]] || [[ "$branch_name" == "null" ]]; then
+    if [[ -f "$config_file" ]]; then
+      branch_name=$(jq -r '.branchName // ""' "$config_file")
+    fi
+  fi
+
+  # Default to convention-based branch name
+  if [[ -z "$branch_name" ]] || [[ "$branch_name" == "null" ]]; then
+    branch_name="ralph/$loop_name"
   fi
 
   # Check for existing lock file
@@ -122,7 +150,8 @@ cmd_run() {
     if ! branch_exists "$branch_name"; then
       error "Branch does not exist: $branch_name"
       echo "The loop configuration references a branch that doesn't exist."
-      echo "You may need to create it manually or update config.json"
+      echo "You may need to create it manually:"
+      echo "  git checkout -b $branch_name"
       exit 1
     fi
 
@@ -175,6 +204,7 @@ cmd_run() {
 perform_dry_run() {
   local loop_path="$1"
   local prd_file="$2"
+  local loop_name=$(basename "$loop_path")
 
   # Colors for output
   local CYAN='\033[0;36m'
@@ -191,23 +221,88 @@ perform_dry_run() {
   echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
   echo ""
 
+  # Determine config source (v2: bmad/config.yaml, v1: config.json)
+  local is_v2=false
+  local project_name=""
+  local branch_name=""
+  local sprint_status_path=""
+  local max_iterations=50
+  local stuck_threshold=3
+  local typecheck_cmd="disabled"
+  local test_cmd="disabled"
+  local lint_cmd="disabled"
+  local build_cmd="disabled"
+
+  if [[ -f "bmad/config.yaml" ]] && yq eval '.ralph // ""' bmad/config.yaml 2>/dev/null | grep -q "version"; then
+    is_v2=true
+    # v2: Read from bmad/config.yaml and sprint-status.yaml
+    project_name=$(get_bmad_project_name)
+    sprint_status_path=$(get_bmad_sprint_status_path || echo "docs/sprint-status.yaml")
+
+    # Get branch from sprint-status.yaml ralph_loops section
+    if [[ -f "$sprint_status_path" ]]; then
+      branch_name=$(yq eval ".ralph_loops[] | select(.name == \"$loop_name\") | .branch" "$sprint_status_path" 2>/dev/null)
+    fi
+    # Fallback to convention-based branch name
+    if [[ -z "$branch_name" ]] || [[ "$branch_name" == "null" ]]; then
+      branch_name="ralph/$loop_name"
+    fi
+
+    # Read configuration from bmad/config.yaml ralph section
+    max_iterations=$(get_ralph_max_iterations)
+    stuck_threshold=$(get_ralph_stuck_threshold)
+
+    # Quality gates from bmad/config.yaml
+    typecheck_cmd=$(yq -r '.ralph.defaults.quality_gates.typecheck // "disabled"' bmad/config.yaml 2>/dev/null)
+    test_cmd=$(yq -r '.ralph.defaults.quality_gates.test // "disabled"' bmad/config.yaml 2>/dev/null)
+    lint_cmd=$(yq -r '.ralph.defaults.quality_gates.lint // "disabled"' bmad/config.yaml 2>/dev/null)
+    build_cmd=$(yq -r '.ralph.defaults.quality_gates.build // "disabled"' bmad/config.yaml 2>/dev/null)
+
+    # Handle empty strings and null as disabled
+    [[ -z "$typecheck_cmd" || "$typecheck_cmd" == "null" ]] && typecheck_cmd="disabled"
+    [[ -z "$test_cmd" || "$test_cmd" == "null" ]] && test_cmd="disabled"
+    [[ -z "$lint_cmd" || "$lint_cmd" == "null" ]] && lint_cmd="disabled"
+    [[ -z "$build_cmd" || "$build_cmd" == "null" ]] && build_cmd="disabled"
+  else
+    # v1: Read from config.json
+    project_name=$(jq -r '.project // "Unknown"' "$prd_file")
+    branch_name=$(jq -r '.branchName // "Unknown"' "$prd_file")
+    sprint_status_path=$(jq -r '.sprintStatusPath // "docs/sprint-status.yaml"' "$prd_file")
+    max_iterations=$(jq -r '.config.maxIterations // 50' "$prd_file")
+    stuck_threshold=$(jq -r '.config.stuckThreshold // 3' "$prd_file")
+
+    typecheck_cmd=$(jq -r '.config.qualityGates.typecheck // "disabled"' "$prd_file")
+    test_cmd=$(jq -r '.config.qualityGates.test // "disabled"' "$prd_file")
+    lint_cmd=$(jq -r '.config.qualityGates.lint // "disabled"' "$prd_file")
+    build_cmd=$(jq -r '.config.qualityGates.build // "disabled"' "$prd_file")
+  fi
+
   # 1. Validate and display configuration
   echo -e "${BOLD}Configuration Validation:${NC}"
-
-  # Validate config.json structure
-  local required_fields=("project" "branchName" "sprintStatusPath" "config.maxIterations" "config.stuckThreshold" "config.qualityGates")
   local validation_passed=true
 
-  for field in "${required_fields[@]}"; do
-    local value
-    value=$(jq -r ".$field // empty" "$prd_file" 2>/dev/null)
-    if [[ -z "$value" || "$value" == "null" ]]; then
-      echo -e "  ${YELLOW}⚠${NC}  Missing or invalid: $field"
-      validation_passed=false
-    else
-      echo -e "  ${GREEN}✓${NC}  $field"
-    fi
-  done
+  if [[ "$is_v2" == "true" ]]; then
+    # v2 validation: Check bmad/config.yaml ralph section
+    echo -e "  ${GREEN}✓${NC}  bmad/config.yaml (ralph section)"
+    echo -e "  ${GREEN}✓${NC}  project: $project_name"
+    echo -e "  ${GREEN}✓${NC}  branch: $branch_name"
+    echo -e "  ${GREEN}✓${NC}  max_iterations: $max_iterations"
+    echo -e "  ${GREEN}✓${NC}  stuck_threshold: $stuck_threshold"
+  else
+    # v1 validation: Check config.json fields
+    local required_fields=("project" "branchName" "sprintStatusPath" "config.maxIterations" "config.stuckThreshold" "config.qualityGates")
+
+    for field in "${required_fields[@]}"; do
+      local value
+      value=$(jq -r ".$field // empty" "$prd_file" 2>/dev/null)
+      if [[ -z "$value" || "$value" == "null" ]]; then
+        echo -e "  ${YELLOW}⚠${NC}  Missing or invalid: $field"
+        validation_passed=false
+      else
+        echo -e "  ${GREEN}✓${NC}  $field"
+      fi
+    done
+  fi
 
   # Validate required files exist
   local prompt_file="$loop_path/prompt.md"
@@ -224,8 +319,6 @@ perform_dry_run() {
   done
 
   # Validate sprint status file
-  local sprint_status_path
-  sprint_status_path=$(jq -r '.sprintStatusPath // "docs/sprint-status.yaml"' "$prd_file")
   if [[ -f "$sprint_status_path" ]]; then
     echo -e "  ${GREEN}✓${NC}  Sprint status file: $sprint_status_path"
   else
@@ -245,16 +338,6 @@ perform_dry_run() {
   echo ""
   echo -e "${BOLD}Loop Configuration:${NC}"
 
-  local project_name
-  local branch_name
-  local max_iterations
-  local stuck_threshold
-
-  project_name=$(jq -r '.project' "$prd_file")
-  branch_name=$(jq -r '.branchName' "$prd_file")
-  max_iterations=$(jq -r '.config.maxIterations' "$prd_file")
-  stuck_threshold=$(jq -r '.config.stuckThreshold' "$prd_file")
-
   echo -e "  ${DIM}Project:${NC}           $project_name"
   echo -e "  ${DIM}Branch:${NC}            $branch_name"
   echo -e "  ${DIM}Max Iterations:${NC}    $max_iterations"
@@ -263,16 +346,6 @@ perform_dry_run() {
   # Display quality gates
   echo ""
   echo -e "${BOLD}Quality Gates:${NC}"
-
-  local typecheck_cmd
-  local test_cmd
-  local lint_cmd
-  local build_cmd
-
-  typecheck_cmd=$(jq -r '.config.qualityGates.typecheck // "disabled"' "$prd_file")
-  test_cmd=$(jq -r '.config.qualityGates.test // "disabled"' "$prd_file")
-  lint_cmd=$(jq -r '.config.qualityGates.lint // "disabled"' "$prd_file")
-  build_cmd=$(jq -r '.config.qualityGates.build // "disabled"' "$prd_file")
 
   [[ "$typecheck_cmd" != "null" && "$typecheck_cmd" != "disabled" ]] && echo -e "  ${GREEN}✓${NC}  Typecheck: $typecheck_cmd" || echo -e "  ${DIM}○${NC}  Typecheck: disabled"
   [[ "$test_cmd" != "null" && "$test_cmd" != "disabled" ]] && echo -e "  ${GREEN}✓${NC}  Test: $test_cmd" || echo -e "  ${DIM}○${NC}  Test: disabled"

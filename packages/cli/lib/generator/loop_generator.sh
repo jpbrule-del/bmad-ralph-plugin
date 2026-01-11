@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# loop_generator.sh - Generate loop.sh orchestration script
+# loop_generator.sh - Generate loop.sh orchestration script (v2: BMAD-native)
 
 # Get LIB_DIR from main script or fallback to relative path
 readonly LOOP_GEN_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 readonly LOOP_GEN_TEMPLATES_DIR="${TEMPLATES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../templates" && pwd)}"
+
+# Source bmad_config utilities
+# shellcheck source=lib/core/bmad_config.sh
+source "$LOOP_GEN_LIB_DIR/core/bmad_config.sh"
 
 # Generate loop.sh for a given loop
 # Arguments:
@@ -56,22 +60,36 @@ generate_loop_sh() {
   # Use expected loop branch name (ralph/<loop_name>)
   local branch_name="ralph/$loop_name"
 
-  # Read quality gate commands from ralph/config.yaml or use defaults
+  # Read quality gate commands from bmad/config.yaml (v2) or fall back to legacy locations
   local typecheck_cmd=""
   local test_cmd=""
   local lint_cmd=""
   local build_cmd=""
 
-  if [[ -f "ralph/config.yaml" ]]; then
-    typecheck_cmd=$(yq -r '.qualityGates.typecheck // ""' ralph/config.yaml 2>/dev/null || echo "")
-    test_cmd=$(yq -r '.qualityGates.test // ""' ralph/config.yaml 2>/dev/null || echo "")
-    lint_cmd=$(yq -r '.qualityGates.lint // ""' ralph/config.yaml 2>/dev/null || echo "")
-    build_cmd=$(yq -r '.qualityGates.build // ""' ralph/config.yaml 2>/dev/null || echo "")
-  elif [[ -f "ralph/config.json" ]]; then
-    typecheck_cmd=$(jq -r '.qualityGates.typecheck // ""' ralph/config.json 2>/dev/null || echo "")
-    test_cmd=$(jq -r '.qualityGates.test // ""' ralph/config.json 2>/dev/null || echo "")
-    lint_cmd=$(jq -r '.qualityGates.lint // ""' ralph/config.json 2>/dev/null || echo "")
-    build_cmd=$(jq -r '.qualityGates.build // ""' ralph/config.json 2>/dev/null || echo "")
+  if [[ -f "bmad/config.yaml" ]]; then
+    # v2: Read from bmad/config.yaml ralph section
+    typecheck_cmd=$(yq -r '.ralph.defaults.quality_gates.typecheck // ""' bmad/config.yaml 2>/dev/null || echo "")
+    test_cmd=$(yq -r '.ralph.defaults.quality_gates.test // ""' bmad/config.yaml 2>/dev/null || echo "")
+    lint_cmd=$(yq -r '.ralph.defaults.quality_gates.lint // ""' bmad/config.yaml 2>/dev/null || echo "")
+    build_cmd=$(yq -r '.ralph.defaults.quality_gates.build // ""' bmad/config.yaml 2>/dev/null || echo "")
+
+    # Handle null values
+    [[ "$typecheck_cmd" == "null" ]] && typecheck_cmd=""
+    [[ "$test_cmd" == "null" ]] && test_cmd=""
+    [[ "$lint_cmd" == "null" ]] && lint_cmd=""
+    [[ "$build_cmd" == "null" ]] && build_cmd=""
+  elif [[ -f "ralph/config.yaml" ]]; then
+    # v1 legacy: Read from ralph/config.yaml
+    typecheck_cmd=$(yq -r '.defaults.quality_gates.typecheck // ""' ralph/config.yaml 2>/dev/null || echo "")
+    test_cmd=$(yq -r '.defaults.quality_gates.test // ""' ralph/config.yaml 2>/dev/null || echo "")
+    lint_cmd=$(yq -r '.defaults.quality_gates.lint // ""' ralph/config.yaml 2>/dev/null || echo "")
+    build_cmd=$(yq -r '.defaults.quality_gates.build // ""' ralph/config.yaml 2>/dev/null || echo "")
+
+    # Handle null values
+    [[ "$typecheck_cmd" == "null" ]] && typecheck_cmd=""
+    [[ "$test_cmd" == "null" ]] && test_cmd=""
+    [[ "$lint_cmd" == "null" ]] && lint_cmd=""
+    [[ "$build_cmd" == "null" ]] && build_cmd=""
   fi
 
   # Generate timestamp

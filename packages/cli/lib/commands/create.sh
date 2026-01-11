@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ralph create - Create a new loop
+# ralph create - Create a new loop (v2: BMAD-native)
 
 # Source sprint analysis and generator utilities
 # Use the LIB_DIR variable from main script, or fallback to relative path
@@ -7,6 +7,8 @@ readonly CREATE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" &&
 source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
 source "$CREATE_LIB_DIR/core/git.sh"
 source "$CREATE_LIB_DIR/core/interactive.sh"
+source "$CREATE_LIB_DIR/core/bmad_config.sh"
+source "$CREATE_LIB_DIR/core/migration.sh"
 source "$CREATE_LIB_DIR/generator/loop_generator.sh"
 source "$CREATE_LIB_DIR/generator/prd_generator.sh"
 source "$CREATE_LIB_DIR/generator/prompt_generator.sh"
@@ -76,11 +78,14 @@ cmd_create() {
     exit 1
   fi
 
-  # Check if ralph is initialized
-  if [[ ! -f "ralph/config.yaml" ]] && [[ ! -f "ralph/config.json" ]]; then
+  # Check for migration (v1 -> v2)
+  check_and_migrate
+
+  # Check if ralph is initialized (v2: bmad/config.yaml ralph section, v1: ralph/config.yaml)
+  if ! is_ralph_initialized; then
     error "Ralph is not initialized in this project"
     echo ""
-    echo "Run 'ralph init' first to initialize ralph"
+    echo "Run 'ralph init' first to initialize Ralph"
     exit 1
   fi
 
@@ -252,6 +257,17 @@ cmd_create() {
   mkdir -p "$loop_dir"
   success "Created loop directory: $loop_dir"
 
+  # Determine branch name
+  local branch_name="ralph/$loop_name"
+
+  # Add loop to sprint-status.yaml (v2)
+  info "Registering loop in sprint-status.yaml..."
+  if add_loop_to_sprint_status "$loop_name" "$branch_name"; then
+    success "Registered loop in sprint-status.yaml"
+  else
+    warning "Could not register loop in sprint-status.yaml (will continue)"
+  fi
+
   # Generate loop.sh
   info "Generating loop.sh orchestration script..."
   if generate_loop_sh "$loop_name" "$loop_dir" "$epic_filter" "$max_iterations" "$stuck_threshold"; then
@@ -261,12 +277,12 @@ cmd_create() {
     exit 1
   fi
 
-  # Generate config.json
-  info "Generating config.json configuration file..."
-  if generate_prd_json "$loop_name" "$loop_dir" "$epic_filter" "$max_iterations" "$stuck_threshold"; then
-    success "Generated config.json"
+  # Generate .state.json (v2: minimal runtime state)
+  info "Generating .state.json runtime state file..."
+  if generate_state_json "$loop_name" "$loop_dir"; then
+    success "Generated .state.json"
   else
-    error "Failed to generate config.json"
+    error "Failed to generate .state.json"
     exit 1
   fi
 

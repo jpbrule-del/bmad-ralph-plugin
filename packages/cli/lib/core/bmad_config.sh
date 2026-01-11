@@ -159,3 +159,270 @@ get_bmad_project_name() {
     basename "$(pwd)"
   fi
 }
+
+# ============================================================================
+# Ralph Configuration (v2) - Read from bmad/config.yaml ralph: section
+# ============================================================================
+
+# Check if Ralph is initialized (v2 style: ralph section in bmad/config.yaml)
+has_ralph_config() {
+  if [[ -f "bmad/config.yaml" ]]; then
+    local version
+    version=$(yq eval '.ralph.version // ""' bmad/config.yaml 2>/dev/null)
+    [[ -n "$version" ]]
+  else
+    return 1
+  fi
+}
+
+# Check if Ralph is initialized (either v1 or v2)
+is_ralph_initialized() {
+  # v2: Check for ralph section in bmad/config.yaml
+  if has_ralph_config; then
+    return 0
+  fi
+
+  # v1: Check for ralph/config.yaml (backward compat, will be migrated)
+  if [[ -f "ralph/config.yaml" ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
+# Get Ralph default max_iterations
+# Reads from bmad/config.yaml ralph.defaults.max_iterations
+# Falls back to 50
+get_ralph_max_iterations() {
+  local value=50
+
+  if [[ -f "bmad/config.yaml" ]]; then
+    local config_value
+    config_value=$(yq eval '.ralph.defaults.max_iterations // ""' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$config_value" ]] && [[ "$config_value" != "null" ]]; then
+      value="$config_value"
+    fi
+  fi
+
+  echo "$value"
+}
+
+# Get Ralph default stuck_threshold
+# Reads from bmad/config.yaml ralph.defaults.stuck_threshold
+# Falls back to 3
+get_ralph_stuck_threshold() {
+  local value=3
+
+  if [[ -f "bmad/config.yaml" ]]; then
+    local config_value
+    config_value=$(yq eval '.ralph.defaults.stuck_threshold // ""' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$config_value" ]] && [[ "$config_value" != "null" ]]; then
+      value="$config_value"
+    fi
+  fi
+
+  echo "$value"
+}
+
+# Get Ralph quality gates from bmad/config.yaml
+# Returns JSON object with typecheck, test, lint, build values
+get_ralph_quality_gates() {
+  local typecheck="null"
+  local test="null"
+  local lint="null"
+  local build="null"
+
+  if [[ -f "bmad/config.yaml" ]]; then
+    local tmp_val
+
+    tmp_val=$(yq eval '.ralph.defaults.quality_gates.typecheck // null' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$tmp_val" ]] && [[ "$tmp_val" != "null" ]]; then
+      typecheck="\"$tmp_val\""
+    fi
+
+    tmp_val=$(yq eval '.ralph.defaults.quality_gates.test // null' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$tmp_val" ]] && [[ "$tmp_val" != "null" ]]; then
+      test="\"$tmp_val\""
+    fi
+
+    tmp_val=$(yq eval '.ralph.defaults.quality_gates.lint // null' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$tmp_val" ]] && [[ "$tmp_val" != "null" ]]; then
+      lint="\"$tmp_val\""
+    fi
+
+    tmp_val=$(yq eval '.ralph.defaults.quality_gates.build // null' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$tmp_val" ]] && [[ "$tmp_val" != "null" ]]; then
+      build="\"$tmp_val\""
+    fi
+  fi
+
+  echo "{\"typecheck\": $typecheck, \"test\": $test, \"lint\": $lint, \"build\": $build}"
+}
+
+# Get Ralph loops directory
+# Reads from bmad/config.yaml ralph.loops_dir
+# Falls back to ralph/loops
+get_ralph_loops_dir() {
+  local dir="ralph/loops"
+
+  if [[ -f "bmad/config.yaml" ]]; then
+    local config_dir
+    config_dir=$(yq eval '.ralph.loops_dir // ""' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$config_dir" ]] && [[ "$config_dir" != "null" ]]; then
+      dir="$config_dir"
+    fi
+  fi
+
+  echo "$dir"
+}
+
+# Get Ralph archive directory
+# Reads from bmad/config.yaml ralph.archive_dir
+# Falls back to ralph/archive
+get_ralph_archive_dir() {
+  local dir="ralph/archive"
+
+  if [[ -f "bmad/config.yaml" ]]; then
+    local config_dir
+    config_dir=$(yq eval '.ralph.archive_dir // ""' bmad/config.yaml 2>/dev/null)
+    if [[ -n "$config_dir" ]] && [[ "$config_dir" != "null" ]]; then
+      dir="$config_dir"
+    fi
+  fi
+
+  echo "$dir"
+}
+
+# Get loop info from sprint-status.yaml
+# Arguments: $1 = loop_name
+# Returns JSON with loop metadata or empty if not found
+get_loop_from_sprint_status() {
+  local loop_name="$1"
+  local sprint_file
+  sprint_file=$(get_bmad_sprint_status_path)
+
+  if [[ ! -f "$sprint_file" ]]; then
+    return 1
+  fi
+
+  yq eval ".ralph_loops[] | select(.name == \"$loop_name\")" "$sprint_file" 2>/dev/null
+}
+
+# Get all loops from sprint-status.yaml
+# Returns array of loop objects
+get_all_loops_from_sprint_status() {
+  local sprint_file
+  sprint_file=$(get_bmad_sprint_status_path)
+
+  if [[ ! -f "$sprint_file" ]]; then
+    echo "[]"
+    return 0
+  fi
+
+  yq eval '.ralph_loops // []' "$sprint_file" 2>/dev/null
+}
+
+# Update loop status in sprint-status.yaml
+# Arguments: $1 = loop_name, $2 = status (active, paused, completed, archived)
+update_loop_status_in_sprint() {
+  local loop_name="$1"
+  local new_status="$2"
+  local sprint_file
+  sprint_file=$(get_bmad_sprint_status_path)
+
+  if [[ ! -f "$sprint_file" ]]; then
+    return 1
+  fi
+
+  local temp_file
+  temp_file=$(mktemp)
+
+  yq eval "
+    (.ralph_loops[] | select(.name == \"$loop_name\")).status = \"$new_status\"
+  " "$sprint_file" > "$temp_file"
+
+  if yq eval '.' "$temp_file" >/dev/null 2>&1; then
+    mv "$temp_file" "$sprint_file"
+    return 0
+  else
+    rm -f "$temp_file"
+    return 1
+  fi
+}
+
+# Update loop stats in sprint-status.yaml
+# Arguments: $1 = loop_name, $2 = iterations_run, $3 = stories_completed
+update_loop_stats_in_sprint() {
+  local loop_name="$1"
+  local iterations_run="$2"
+  local stories_completed="$3"
+  local sprint_file
+  sprint_file=$(get_bmad_sprint_status_path)
+
+  if [[ ! -f "$sprint_file" ]]; then
+    return 1
+  fi
+
+  local temp_file
+  temp_file=$(mktemp)
+
+  yq eval "
+    (.ralph_loops[] | select(.name == \"$loop_name\")).stats.iterations_run = $iterations_run |
+    (.ralph_loops[] | select(.name == \"$loop_name\")).stats.stories_completed = $stories_completed
+  " "$sprint_file" > "$temp_file"
+
+  if yq eval '.' "$temp_file" >/dev/null 2>&1; then
+    mv "$temp_file" "$sprint_file"
+    return 0
+  else
+    rm -f "$temp_file"
+    return 1
+  fi
+}
+
+# Add a new loop to sprint-status.yaml
+# Arguments: $1 = loop_name, $2 = branch_name
+add_loop_to_sprint_status() {
+  local loop_name="$1"
+  local branch_name="$2"
+  local sprint_file
+  sprint_file=$(get_bmad_sprint_status_path)
+
+  if [[ ! -f "$sprint_file" ]]; then
+    return 1
+  fi
+
+  local temp_file
+  temp_file=$(mktemp)
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # Check if ralph_loops exists, if not create it
+  if ! yq eval '.ralph_loops' "$sprint_file" 2>/dev/null | grep -q "name"; then
+    yq eval '.ralph_loops = []' "$sprint_file" > "$temp_file"
+    mv "$temp_file" "$sprint_file"
+    temp_file=$(mktemp)
+  fi
+
+  # Add the new loop
+  yq eval "
+    .ralph_loops += [{
+      \"name\": \"$loop_name\",
+      \"branch\": \"$branch_name\",
+      \"created_at\": \"$timestamp\",
+      \"status\": \"active\",
+      \"stats\": {
+        \"iterations_run\": 0,
+        \"stories_completed\": 0
+      }
+    }]
+  " "$sprint_file" > "$temp_file"
+
+  if yq eval '.' "$temp_file" >/dev/null 2>&1; then
+    mv "$temp_file" "$sprint_file"
+    return 0
+  else
+    rm -f "$temp_file"
+    return 1
+  fi
+}
