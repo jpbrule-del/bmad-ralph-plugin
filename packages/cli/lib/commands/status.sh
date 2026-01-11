@@ -560,8 +560,38 @@ display_status() {
   # Recent Activity
   section "Recent Activity"
   if [[ -f "$progress_file" ]]; then
-    # Show last 5 lines (excluding empty lines)
-    tail -20 "$progress_file" | grep -v "^$" | tail -5
+    # Show last 10 lines with key event highlighting
+    local lines=$(tail -30 "$progress_file" | grep -v "^$" | tail -10)
+
+    if [[ -n "$lines" ]]; then
+      while IFS= read -r line; do
+        # Highlight key events
+        if [[ "$line" =~ ^##\ Iteration\ [0-9]+\ -\ STORY- ]]; then
+          # Iteration start - cyan
+          echo -e "${COLOR_CYAN}${line}${COLOR_RESET}"
+        elif [[ "$line" =~ ^Completed: ]]; then
+          # Story completion - green
+          echo -e "${COLOR_GREEN}${line}${COLOR_RESET}"
+        elif [[ "$line" =~ QUALITY\ GATES\ FAILED ]] || [[ "$line" =~ Failed\ gates: ]]; then
+          # Quality gate failure - red
+          echo -e "${COLOR_RED}${line}${COLOR_RESET}"
+        elif [[ "$line" =~ STUCK ]] || [[ "$line" =~ stuck\ threshold ]]; then
+          # Stuck event - red
+          echo -e "${COLOR_RED}${line}${COLOR_RESET}"
+        elif [[ "$line" =~ INTERRUPTED ]] || [[ "$line" =~ interrupted ]]; then
+          # Interruption - yellow
+          echo -e "${COLOR_YELLOW}${line}${COLOR_RESET}"
+        elif [[ "$line" =~ Quality\ gates:\ All\ passed ]]; then
+          # Quality gates passed - green
+          echo -e "${COLOR_GREEN}${line}${COLOR_RESET}"
+        else
+          # Regular line
+          echo "$line"
+        fi
+      done <<< "$lines"
+    else
+      echo "${COLOR_DIM}No recent activity${COLOR_RESET}"
+    fi
   else
     echo "${COLOR_DIM}No activity log found${COLOR_RESET}"
   fi
