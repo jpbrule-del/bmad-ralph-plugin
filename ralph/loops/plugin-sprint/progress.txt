@@ -1544,3 +1544,19 @@ Story: Migrate Run Command
 Attempts: 0/3
 Claude Output:
 Invalid API key · Fix external API key
+
+## Iteration 62 - STORY-008 (COMPLETED)
+Timestamp: 2026-01-11T13:19:13Z
+Story: Migrate Run Command
+Epic: EPIC-002
+Points: 13
+Attempts: 0
+Quality gates: All passed
+Commit: b700df9
+
+## Iteration 61 - STORY-009 - STARTED
+Timestamp: 2026-01-11T13:19:15Z
+Story: Migrate Status Command
+Attempts: 0/3
+Claude Output:
+Invalid API key · Fix external API key
