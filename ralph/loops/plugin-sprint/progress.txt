@@ -899,3 +899,12 @@ Completed: Created pre-commit-quality-gates.sh hook script that runs quality gat
 Learning: Pre-commit hooks provide critical quality assurance by running automated checks before code is committed. The hook script follows best practices with bypass support for emergencies (RALPH_BYPASS_HOOKS environment variable), clear colored output for user feedback, detailed error reporting showing last 20 lines of failed gate output, loop context detection to load appropriate configuration, comprehensive logging for debugging, and proper exit codes (0=success, 1=gates failed, 2=config error). Quality gate configuration should match project technology stack - removed typecheck from this bash/markdown-focused plugin project.
 
 Note for next: STORY-025 (Implement Post-Story Hook) requires creating post-story-update.sh script that triggers after story completion to update progress.txt, send optional notifications, trigger next story pickup, and log completion metrics. This hook is already defined as template in hooks.json waiting for implementation.
+Claude Output:
+Output summary (42 lines total):
+Perfect! I've successfully completed **STORY-024: Implement Pre-Commit Hook**. Here's a summary:
+
+## Summary
+...
+
+### Next Story
+**STORY-025: Implement Post-Story Hook** (5 points, should-have) - Create post-story-update.sh script that triggers after story completion to update progress.txt, send optional notifications, trigger next story pickup, and log completion metrics.
