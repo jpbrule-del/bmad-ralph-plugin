@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver BMAD Ralph Plugin with full Claude Code integration"
 sprint_start_date: "2026-01-11"
 sprint_end_date: "2026-01-15"
-last_updated: "2026-01-11T08:21:50Z"
+last_updated: "2026-01-11T08:21:55Z"
 sprint_status: "not_started"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8, 13)
 # 1 = Trivial (< 1 hour)
@@ -614,7 +614,7 @@ epics:
     status: "not_started"
     priority: "could-have"
     total_points: 16
-    completed_points: 11
+    completed_points: 16
     stories:
       - id: "STORY-029"
         title: "Create MCP Configuration"
@@ -662,7 +662,7 @@ epics:
 
           As a security-conscious user, I want secure MCP credential handling
           so that my API keys are protected.
-        status: "not_started"
+        status: "completed"
         points: 5
         priority: "should-have"
         functional_requirements:
