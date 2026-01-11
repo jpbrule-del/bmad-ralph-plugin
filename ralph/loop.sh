@@ -316,6 +316,7 @@ mark_story_complete() {
      --argjson attempts "$attempts" \
      --arg commit "$commit_hash" '
     .stats.storiesCompleted = $count |
+    .stats.averageIterationsPerStory = (if $count > 0 then (.stats.iterationsRun / $count) else 0 end) |
     .storyNotes[$id] = {
       "title": $title,
       "points": $points,
