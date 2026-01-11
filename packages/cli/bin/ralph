@@ -7,6 +7,11 @@ set -euo pipefail
 # Script directory
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+readonly TEMPLATES_DIR="$(cd "$SCRIPT_DIR/../templates" && pwd)"
+
+# Export for sourced scripts
+export LIB_DIR
+export TEMPLATES_DIR
 
 # Version
 readonly VERSION="1.0.0"

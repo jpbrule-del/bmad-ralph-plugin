@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # ralph create - Create a new loop
 
-# Source sprint analysis utilities
+# Source sprint analysis and generator utilities
 # Use the LIB_DIR variable from main script, or fallback to relative path
 readonly CREATE_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
+source "$CREATE_LIB_DIR/generator/loop_generator.sh"
 
 cmd_create() {
   local loop_name=""
@@ -161,6 +162,15 @@ cmd_create() {
   info "Creating loop: $loop_name"
   mkdir -p "$loop_dir"
   success "Created loop directory: $loop_dir"
+
+  # Generate loop.sh
+  info "Generating loop.sh orchestration script..."
+  if generate_loop_sh "$loop_name" "$loop_dir" "$epic_filter"; then
+    success "Generated loop.sh"
+  else
+    error "Failed to generate loop.sh"
+    exit 1
+  fi
 
   echo ""
   success "Loop '$loop_name' created successfully!"
