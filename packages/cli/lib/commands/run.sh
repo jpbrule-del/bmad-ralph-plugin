@@ -163,12 +163,209 @@ cmd_run() {
   # Execute the loop script
   # Pass through exit code from loop.sh
   if [[ "$dry_run" == "true" ]]; then
-    # Dry run mode - not implemented yet (STORY-039)
-    info "Dry run mode not yet implemented (STORY-039)"
-    echo "Would execute: $loop_script ${loop_args[*]}"
-    exit 0
+    # Dry run mode - show what would be executed without actually running
+    perform_dry_run "$loop_path" "$prd_file"
   else
     # Execute the loop
     exec "$loop_script" "${loop_args[@]}"
   fi
+}
+
+# Perform dry run - show what would be executed without running
+perform_dry_run() {
+  local loop_path="$1"
+  local prd_file="$2"
+
+  # Colors for output
+  local CYAN='\033[0;36m'
+  local GREEN='\033[0;32m'
+  local YELLOW='\033[1;33m'
+  local BLUE='\033[0;34m'
+  local BOLD='\033[1m'
+  local DIM='\033[2m'
+  local NC='\033[0m'
+
+  echo ""
+  echo -e "${CYAN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║${NC} ${BOLD}DRY RUN MODE${NC} - Simulation (no files will be modified)"
+  echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
+  echo ""
+
+  # 1. Validate and display configuration
+  echo -e "${BOLD}Configuration Validation:${NC}"
+
+  # Validate prd.json structure
+  local required_fields=("project" "branchName" "sprintStatusPath" "config.maxIterations" "config.stuckThreshold" "config.qualityGates")
+  local validation_passed=true
+
+  for field in "${required_fields[@]}"; do
+    local value
+    value=$(jq -r ".$field // empty" "$prd_file" 2>/dev/null)
+    if [[ -z "$value" || "$value" == "null" ]]; then
+      echo -e "  ${YELLOW}⚠${NC}  Missing or invalid: $field"
+      validation_passed=false
+    else
+      echo -e "  ${GREEN}✓${NC}  $field"
+    fi
+  done
+
+  # Validate required files exist
+  local prompt_file="$loop_path/prompt.md"
+  local progress_file="$loop_path/progress.txt"
+  local loop_script="$loop_path/loop.sh"
+
+  for file in "$prompt_file" "$progress_file" "$loop_script"; do
+    if [[ -f "$file" ]]; then
+      echo -e "  ${GREEN}✓${NC}  $(basename "$file") exists"
+    else
+      echo -e "  ${YELLOW}⚠${NC}  Missing file: $(basename "$file")"
+      validation_passed=false
+    fi
+  done
+
+  # Validate sprint status file
+  local sprint_status_path
+  sprint_status_path=$(jq -r '.sprintStatusPath // "docs/sprint-status.yaml"' "$prd_file")
+  if [[ -f "$sprint_status_path" ]]; then
+    echo -e "  ${GREEN}✓${NC}  Sprint status file: $sprint_status_path"
+  else
+    echo -e "  ${YELLOW}⚠${NC}  Sprint status file not found: $sprint_status_path"
+    validation_passed=false
+  fi
+
+  if [[ "$validation_passed" == "false" ]]; then
+    echo ""
+    echo -e "${YELLOW}Configuration has validation warnings${NC}"
+  else
+    echo ""
+    echo -e "${GREEN}✓ Configuration is valid${NC}"
+  fi
+
+  # 2. Display loop configuration
+  echo ""
+  echo -e "${BOLD}Loop Configuration:${NC}"
+
+  local project_name
+  local branch_name
+  local max_iterations
+  local stuck_threshold
+
+  project_name=$(jq -r '.project' "$prd_file")
+  branch_name=$(jq -r '.branchName' "$prd_file")
+  max_iterations=$(jq -r '.config.maxIterations' "$prd_file")
+  stuck_threshold=$(jq -r '.config.stuckThreshold' "$prd_file")
+
+  echo -e "  ${DIM}Project:${NC}           $project_name"
+  echo -e "  ${DIM}Branch:${NC}            $branch_name"
+  echo -e "  ${DIM}Max Iterations:${NC}    $max_iterations"
+  echo -e "  ${DIM}Stuck Threshold:${NC}   $stuck_threshold"
+
+  # Display quality gates
+  echo ""
+  echo -e "${BOLD}Quality Gates:${NC}"
+
+  local typecheck_cmd
+  local test_cmd
+  local lint_cmd
+  local build_cmd
+
+  typecheck_cmd=$(jq -r '.config.qualityGates.typecheck // "disabled"' "$prd_file")
+  test_cmd=$(jq -r '.config.qualityGates.test // "disabled"' "$prd_file")
+  lint_cmd=$(jq -r '.config.qualityGates.lint // "disabled"' "$prd_file")
+  build_cmd=$(jq -r '.config.qualityGates.build // "disabled"' "$prd_file")
+
+  [[ "$typecheck_cmd" != "null" && "$typecheck_cmd" != "disabled" ]] && echo -e "  ${GREEN}✓${NC}  Typecheck: $typecheck_cmd" || echo -e "  ${DIM}○${NC}  Typecheck: disabled"
+  [[ "$test_cmd" != "null" && "$test_cmd" != "disabled" ]] && echo -e "  ${GREEN}✓${NC}  Test: $test_cmd" || echo -e "  ${DIM}○${NC}  Test: disabled"
+  [[ "$lint_cmd" != "null" && "$lint_cmd" != "disabled" ]] && echo -e "  ${GREEN}✓${NC}  Lint: $lint_cmd" || echo -e "  ${DIM}○${NC}  Lint: disabled"
+  [[ "$build_cmd" != "null" && "$build_cmd" != "disabled" ]] && echo -e "  ${GREEN}✓${NC}  Build: $build_cmd" || echo -e "  ${DIM}○${NC}  Build: disabled"
+
+  # 3. Display stories that would be processed
+  echo ""
+  echo -e "${BOLD}Stories to Process:${NC}"
+
+  if [[ ! -f "$sprint_status_path" ]]; then
+    echo -e "  ${YELLOW}⚠${NC}  Cannot read sprint status file"
+  else
+    # Extract pending stories (status != "completed")
+    local pending_stories
+    pending_stories=$(yq eval -o json '.epics[].stories[] | select(.status != "completed") | {id: .id, title: .title, status: .status, points: .points}' "$sprint_status_path" 2>/dev/null | jq -s '.')
+
+    local story_count
+    story_count=$(echo "$pending_stories" | jq 'length')
+
+    if [[ "$story_count" -eq 0 ]]; then
+      echo -e "  ${GREEN}✓${NC}  No pending stories found - all work is complete!"
+    else
+      echo -e "  ${BLUE}${story_count}${NC} pending stories would be processed:"
+      echo ""
+
+      # Display stories
+      local i=0
+      while [[ $i -lt $story_count ]]; do
+        local story_id
+        local story_title
+        local story_status
+        local story_points
+
+        story_id=$(echo "$pending_stories" | jq -r ".[$i].id")
+        story_title=$(echo "$pending_stories" | jq -r ".[$i].title")
+        story_status=$(echo "$pending_stories" | jq -r ".[$i].status")
+        story_points=$(echo "$pending_stories" | jq -r ".[$i].points")
+
+        # Color code by status
+        local status_indicator
+        if [[ "$story_status" == "in-progress" ]]; then
+          status_indicator="${YELLOW}●${NC}"
+        else
+          status_indicator="${DIM}○${NC}"
+        fi
+
+        echo -e "  $status_indicator  ${BLUE}$story_id${NC} ($story_points pts) - $story_title"
+
+        # Only show first 10 stories, then summarize
+        if [[ $i -eq 9 && $story_count -gt 10 ]]; then
+          local remaining=$((story_count - 10))
+          echo -e "  ${DIM}   ... and $remaining more stories${NC}"
+          break
+        fi
+
+        i=$((i + 1))
+      done
+
+      # Calculate total points
+      local total_points
+      total_points=$(echo "$pending_stories" | jq '[.[].points] | add')
+      echo ""
+      echo -e "  ${DIM}Total points remaining:${NC} $total_points"
+    fi
+  fi
+
+  # 4. Display execution statistics if available
+  local iterations_run
+  local stories_completed
+  local avg_iterations
+
+  iterations_run=$(jq -r '.stats.iterationsRun // 0' "$prd_file")
+  stories_completed=$(jq -r '.stats.storiesCompleted // 0' "$prd_file")
+  avg_iterations=$(jq -r '.stats.averageIterationsPerStory // 0' "$prd_file")
+
+  if [[ "$iterations_run" -gt 0 ]]; then
+    echo ""
+    echo -e "${BOLD}Current Progress:${NC}"
+    echo -e "  ${DIM}Iterations run:${NC}      $iterations_run"
+    echo -e "  ${DIM}Stories completed:${NC}   $stories_completed"
+    echo -e "  ${DIM}Avg iterations/story:${NC} $avg_iterations"
+  fi
+
+  # 5. Summary
+  echo ""
+  echo -e "${CYAN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║${NC} ${BOLD}Dry Run Complete${NC}"
+  echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
+  echo ""
+  echo -e "${DIM}To actually execute this loop, run:${NC}"
+  echo -e "  ${GREEN}ralph run $(basename "$loop_path")${NC}"
+  echo ""
+
+  exit 0
 }
