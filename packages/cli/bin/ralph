@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# Ralph - BMAD Phase 5 Autonomous Execution CLI
+# Main entry point with command routing
+
+set -euo pipefail
+
+# Script directory
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+
+# Version
+readonly VERSION="1.0.0"
+
+# Source core utilities
+source "$LIB_DIR/core/output.sh"
+
+# Command routing function
+route_command() {
+  local cmd="${1:-}"
+  shift || true
+
+  case "$cmd" in
+    init)
+      source "$LIB_DIR/commands/init.sh"
+      cmd_init "$@"
+      ;;
+    create)
+      source "$LIB_DIR/commands/create.sh"
+      cmd_create "$@"
+      ;;
+    list)
+      source "$LIB_DIR/commands/list.sh"
+      cmd_list "$@"
+      ;;
+    run)
+      source "$LIB_DIR/commands/run.sh"
+      cmd_run "$@"
+      ;;
+    status)
+      source "$LIB_DIR/commands/status.sh"
+      cmd_status "$@"
+      ;;
+    archive)
+      source "$LIB_DIR/commands/archive.sh"
+      cmd_archive "$@"
+      ;;
+    delete)
+      source "$LIB_DIR/commands/delete.sh"
+      cmd_delete "$@"
+      ;;
+    show)
+      source "$LIB_DIR/commands/show.sh"
+      cmd_show "$@"
+      ;;
+    edit)
+      source "$LIB_DIR/commands/edit.sh"
+      cmd_edit "$@"
+      ;;
+    clone)
+      source "$LIB_DIR/commands/clone.sh"
+      cmd_clone "$@"
+      ;;
+    help|--help|-h)
+      show_help
+      ;;
+    --version|-v)
+      echo "ralph version $VERSION"
+      ;;
+    "")
+      error "No command specified"
+      show_help
+      exit 1
+      ;;
+    *)
+      error "Unknown command: $cmd"
+      echo ""
+      echo "Run 'ralph help' to see available commands"
+      exit 1
+      ;;
+  esac
+}
+
+# Help function
+show_help() {
+  cat <<EOF
+Ralph - BMAD Phase 5 Autonomous Execution CLI
+
+Usage: ralph <command> [options]
+
+Commands:
+  init              Initialize ralph in a BMAD project
+  create <name>     Create a new loop
+  list              List all loops
+  run <name>        Run a loop
+  status <name>     Show loop status
+  archive <name>    Archive a loop (with feedback)
+  delete <name>     Delete a loop
+  show <name>       Show loop details
+  edit <name>       Edit loop configuration
+  clone <src> <dst> Clone a loop
+
+Options:
+  --help, -h        Show this help message
+  --version, -v     Show version number
+
+Examples:
+  ralph init
+  ralph create my-feature
+  ralph run my-feature
+  ralph status my-feature
+  ralph archive my-feature
+
+For more information, visit: https://github.com/snarktank/ralph
+EOF
+}
+
+# Main execution
+main() {
+  route_command "$@"
+}
+
+main "$@"

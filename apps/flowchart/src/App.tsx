@@ -240,13 +240,12 @@ function App() {
     return [...stepNodes, ...noteNodes];
   };
 
-  const initialNodes = getNodes(1);
-  const initialEdges = edgeConnections.map((conn, index) =>
-    createEdge(conn, index < 0)
+  const [nodes, setNodes] = useNodesState(() => getNodes(1));
+  const [edges, setEdges] = useEdgesState(() =>
+    edgeConnections.map((conn, index) =>
+      createEdge(conn, index < 0)
+    )
   );
-
-  const [nodes, setNodes] = useNodesState(initialNodes);
-  const [edges, setEdges] = useEdgesState(initialEdges);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
