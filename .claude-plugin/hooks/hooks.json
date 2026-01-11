@@ -3,6 +3,15 @@
   "hooks": [
     {
       "type": "plugin-load",
+      "name": "show-permissions",
+      "description": "Display plugin permissions to user during installation",
+      "script": "./show-permissions.sh",
+      "timeout": 3000,
+      "required": false,
+      "on_failure": "warn"
+    },
+    {
+      "type": "plugin-load",
       "name": "verify-dependencies",
       "description": "Verify required system dependencies are installed",
       "script": "./verify-dependencies.sh",
