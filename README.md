@@ -2,6 +2,8 @@
 
 ![Ralph](ralph.webp)
 
+> **MVP Complete** - 56 stories, 166 points implemented in ~4 hours via autonomous loop
+
 Ralph is an autonomous AI agent loop for **Claude Code**. It runs Claude Code CLI repeatedly until all PRD items are complete. Each iteration is a fresh Claude session with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
@@ -28,6 +30,7 @@ npx @ralph/cli install
 
 - [Claude Code CLI](https://claude.ai/claude-code) installed and authenticated
 - `jq` installed (`brew install jq` on macOS)
+- `yq` installed (`brew install yq` on macOS) - for YAML processing
 - A git repository for your project
 
 ## Installation Options
@@ -232,9 +235,20 @@ npm run dev
 | Command | Description |
 |---------|-------------|
 | `ralph init` | Initialize Ralph in your project |
-| `ralph run` | Run the autonomous loop |
-| `ralph status` | Show current progress |
-| `ralph install` | Install as Claude Code command |
+| `ralph create <name>` | Create a new loop with configuration |
+| `ralph run [name]` | Run the autonomous loop |
+| `ralph status [name]` | Show current progress with live dashboard |
+| `ralph list` | List all loops (active and archived) |
+| `ralph show <name>` | Show detailed loop information |
+| `ralph delete <name>` | Delete a loop |
+| `ralph clone <src> <dst>` | Clone a loop with reset stats |
+| `ralph archive <name>` | Archive a completed loop (with feedback) |
+| `ralph unarchive <name>` | Restore an archived loop |
+| `ralph edit <name>` | Edit loop configuration |
+| `ralph feedback-report` | Generate feedback analytics report |
+| `ralph config` | Show/edit Ralph configuration |
+| `ralph help` | Show help for all commands |
+| `ralph --version` | Show version |
 
 ## Signals
 

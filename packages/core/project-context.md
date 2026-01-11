@@ -7,10 +7,11 @@
 | Attribute | Value |
 |-----------|-------|
 | **Project** | Ralph |
-| **Type** | BMAD Workflow / Library |
+| **Type** | BMAD Workflow / CLI Tool |
 | **Level** | 3 (Complex) |
 | **Pattern** | Pipeline with State Machine |
-| **Status** | Complete (26/26 stories) |
+| **Status** | Complete (56/56 stories, 166 points) |
+| **Sprint Duration** | ~4 hours (automated) |
 
 ---
 
