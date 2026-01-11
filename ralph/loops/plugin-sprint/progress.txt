@@ -1014,3 +1014,12 @@ Completed: Created stuck-detection.sh hook script that detects both story-level 
 Learning: Stuck detection hooks provide critical alerting capabilities when loops need manual intervention. The hook implements multiple detection strategies - story-level detection checks individual story attempts against threshold, loop-level detection uses heuristics like remaining iterations vs remaining stories ratio, zero completion rate after significant iterations, and high average iterations per story (>5). Comprehensive diagnostics help users understand the stuck condition, and suggested resolution actions guide next steps. The script follows established hook patterns with color output, logging, optional notifications, and proper exit codes. Hook configuration uses on_failure: "warn" to ensure stuck detection never blocks loop execution but still alerts users.
 
 Note for next: STORY-028 (Implement Hook Execution Engine) is the final story in EPIC-004, requiring creation of a robust hook execution system to parse hooks.json, register hooks with Claude Code, execute hooks in correct order, handle failures gracefully, implement timeout handling, provide execution logs, and support async execution. This is an 8-point "should-have" story that completes the hooks system infrastructure.
+Claude Output:
+Output summary (38 lines total):
+## Summary
+
+Successfully completed **STORY-027: Implement Stuck Detection Hook** for the BMAD Ralph Plugin sprint.
+...
+
+### Next Story
+**STORY-028: Implement Hook Execution Engine** (8 points, should-have) - Final story in EPIC-004 that creates a robust hook execution system to parse hooks.json, register hooks with Claude Code, execute hooks in correct order, handle failures gracefully, implement timeout handling, provide execution logs, and support async execution. This will complete the Hooks System epic.
