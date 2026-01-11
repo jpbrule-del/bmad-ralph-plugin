@@ -166,12 +166,12 @@ COMMANDS:
           --dry-run       Simulate execution without running Claude
           --restart       Start from beginning (ignore resume state)
 
-    status <loop-name> [--once] [--refresh <seconds>]
+    status <loop-name> [--once]
         Monitor loop execution with real-time terminal dashboard.
+        Shows current story, progress, iterations, and recent activity.
 
         Options:
           --once              Show single snapshot, don't refresh
-          --refresh <n>       Set refresh rate in seconds (default: 2)
 
   Loop Archival:
     archive <loop-name>

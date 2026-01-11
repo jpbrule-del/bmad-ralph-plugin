@@ -8,6 +8,7 @@ if [[ -z "${NO_COLOR:-}" ]] && [[ -t 1 ]]; then
   readonly COLOR_YELLOW='\033[0;33m'
   readonly COLOR_BLUE='\033[0;34m'
   readonly COLOR_CYAN='\033[0;36m'
+  readonly COLOR_DIM='\033[2m'
   readonly COLOR_RESET='\033[0m'
 else
   readonly COLOR_RED=''
@@ -15,6 +16,7 @@ else
   readonly COLOR_YELLOW=''
   readonly COLOR_BLUE=''
   readonly COLOR_CYAN=''
+  readonly COLOR_DIM=''
   readonly COLOR_RESET=''
 fi
 
@@ -37,4 +39,12 @@ error() {
 
 header() {
   echo -e "${COLOR_CYAN}$*${COLOR_RESET}"
+}
+
+section() {
+  echo -e "${COLOR_BLUE}## $*${COLOR_RESET}"
+}
+
+warn() {
+  warning "$@"
 }
