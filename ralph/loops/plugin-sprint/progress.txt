@@ -1880,3 +1880,19 @@ Story: Create MCP Configuration
 Attempts: 0/3
 Claude Output:
 Invalid API key · Fix external API key
+
+## Iteration 97 - STORY-029 (COMPLETED)
+Timestamp: 2026-01-11T13:21:46Z
+Story: Create MCP Configuration
+Epic: EPIC-005
+Points: 3
+Attempts: 0
+Quality gates: All passed
+Commit: 6b9be96
+
+## Iteration 98 - STORY-030 - STARTED
+Timestamp: 2026-01-11T13:21:48Z
+Story: Implement Perplexity MCP Server
+Attempts: 0/3
+Claude Output:
+Invalid API key · Fix external API key
