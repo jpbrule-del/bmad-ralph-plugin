@@ -254,6 +254,62 @@ cmd_show() {
       fi
     fi
 
+    # Feedback (archived loops only)
+    if [[ "$is_archived" == "true" ]]; then
+      local feedback_file="$loop_path/feedback.json"
+      if [[ -f "$feedback_file" ]]; then
+        section "Feedback"
+
+        # Extract feedback responses
+        local satisfaction=$(jq -r '.responses.satisfaction // "N/A"' "$feedback_file")
+        local manual_interventions=$(jq -r '.responses.manualInterventions // "N/A"' "$feedback_file")
+        local worked_well=$(jq -r '.responses.whatWorkedWell // "N/A"' "$feedback_file")
+        local should_improve=$(jq -r '.responses.whatShouldImprove // "N/A"' "$feedback_file")
+        local would_run_again=$(jq -r '.responses.wouldRunAgain // "N/A"' "$feedback_file")
+        local feedback_timestamp=$(jq -r '.timestamp // "N/A"' "$feedback_file")
+
+        # Display feedback with color coding for satisfaction
+        echo "Satisfaction (1-5):"
+        local sat_display=""
+        case "$satisfaction" in
+          1|2) sat_display="${COLOR_RED}$satisfaction${COLOR_RESET}" ;;
+          3)   sat_display="${COLOR_YELLOW}$satisfaction${COLOR_RESET}" ;;
+          4|5) sat_display="${COLOR_GREEN}$satisfaction${COLOR_RESET}" ;;
+          *)   sat_display="$satisfaction" ;;
+        esac
+        echo "  $sat_display"
+        echo ""
+
+        echo "Manual Interventions:"
+        echo "  $manual_interventions"
+        echo ""
+
+        echo "What Worked Well:"
+        echo "  $worked_well"
+        echo ""
+
+        echo "What Should Improve:"
+        echo "  $should_improve"
+        echo ""
+
+        echo "Would Run Again:"
+        local run_again_display=""
+        case "$would_run_again" in
+          yes) run_again_display="${COLOR_GREEN}Yes${COLOR_RESET}" ;;
+          no)  run_again_display="${COLOR_RED}No${COLOR_RESET}" ;;
+          *)   run_again_display="$would_run_again" ;;
+        esac
+        echo "  $run_again_display"
+        echo ""
+
+        echo "${COLOR_DIM}Feedback collected: $feedback_timestamp${COLOR_RESET}"
+        echo ""
+      else
+        warn "No feedback available for this archived loop"
+        echo ""
+      fi
+    fi
+
     # Footer
     info "Loop location: $loop_path"
   fi
