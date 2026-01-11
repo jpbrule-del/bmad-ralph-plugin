@@ -218,8 +218,7 @@
       "required": true,
       "on_failure": "warn",
       "execution_order": 1,
-      "enabled": false,
-      "note": "To be implemented in STORY-027",
+      "enabled": true,
       "triggers": {
         "threshold": 3
       }
