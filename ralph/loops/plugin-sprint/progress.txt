@@ -1092,3 +1092,12 @@ Learning: MCP (Model Context Protocol) integration enables Ralph agent to access
 Note for next: STORY-030 (Implement Perplexity MCP Server) is an 8-point "could-have" story that requires exposing search/research capabilities to agent, handling API authentication, implementing rate limiting, caching queries, and graceful network error handling. This will build on the configuration created in STORY-029 to provide full Perplexity integration.
 Claude Output:
 Output summary (story completed successfully)
+Claude Output:
+Output summary (56 lines total):
+Perfect! Successfully completed **STORY-029: Create MCP Configuration** for the BMAD Ralph Plugin sprint.
+
+## Summary
+...
+### Next Story
+
+**STORY-030: Implement Perplexity MCP Server** (8 points, could-have) - Build on this configuration to expose search/research capabilities to the agent, handle API authentication, implement rate limiting, cache queries, and provide graceful network error handling. This completes the full Perplexity MCP integration.
