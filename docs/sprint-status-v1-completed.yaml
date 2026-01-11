@@ -1,0 +1,1141 @@
+# BMAD Method Sprint Status
+# Generated: 2026-01-10T21:30:00Z
+# Project: ralph
+
+project_name: "ralph"
+sprint_number: 1
+sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
+sprint_start_date: "2026-01-10"
+sprint_end_date: "2026-01-11"
+last_updated: "2026-01-11T05:09:33Z"
+sprint_status: "completed"
+# Point Scale: Fibonacci (1, 2, 3, 5, 8)
+# 1 = Trivial (< 1 hour)
+# 2 = Small (1-2 hours)
+# 3 = Medium (half day)
+# 5 = Large (full day)
+# 8 = Extra Large (2+ days)
+epics:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-001: CLI Foundation
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-001"
+    name: "CLI Foundation"
+    description: "Core CLI infrastructure including initialization, help system, and project detection"
+    status: "completed"
+    priority: "must-have"
+    total_points: 13
+    completed_points: 13
+    stories:
+      - id: "STORY-001"
+        title: "Set up project structure and entry point"
+        description: |
+          Create the ralph CLI project structure with bin/ralph entry point,
+          lib/ directory structure, and basic command routing.
+
+          As a developer, I want a well-organized project structure so that
+          code is maintainable and easy to navigate.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-001"
+        acceptance_criteria:
+          - "bin/ralph is executable"
+          - "lib/ directory structure matches architecture"
+          - "Command routing dispatches to correct handlers"
+          - "Unrecognized commands show helpful error"
+      - id: "STORY-002"
+        title: "Implement help command"
+        description: |
+          Implement `ralph help` and `ralph --help` to display usage information
+          for all commands with their descriptions and flags.
+
+          As a developer, I want clear help documentation so that I can learn
+          available commands without reading source code.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "`ralph help` lists all commands with descriptions"
+          - "`ralph --help` and `ralph -h` work identically"
+          - "Each command shows usage syntax"
+          - "No external dependencies required for help"
+      - id: "STORY-003"
+        title: "Implement version command"
+        description: |
+          Implement `ralph --version` to display semantic version number.
+
+          As a developer, I want to check my ralph version so that I can
+          report issues accurately and verify updates.
+        status: "completed"
+        points: 1
+        priority: "should-have"
+        functional_requirements:
+          - "FR-003"
+        acceptance_criteria:
+          - "`ralph --version` outputs version number (e.g., 1.0.0)"
+          - "`ralph -v` works as alias"
+          - "Works without project initialization"
+      - id: "STORY-004"
+        title: "Implement dependency validation"
+        description: |
+          Check for required dependencies (jq, yq, git, claude) on startup
+          and provide clear installation instructions if missing.
+
+          As a developer, I want early dependency detection so that I don't
+          encounter cryptic errors during operation.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "NFR-013"
+        acceptance_criteria:
+          - "Checks for jq, yq, git, claude CLI"
+          - "Missing deps show installation instructions"
+          - "Version checks where applicable"
+          - "Clear error messages with brew/apt commands"
+      - id: "STORY-005"
+        title: "Implement init command"
+        description: |
+          Implement `ralph init` to initialize ralph in a BMAD project by
+          creating ralph/ directory structure and config.yaml.
+
+          As a developer, I want to initialize ralph in my project so that
+          I can start creating loops.
+        status: "completed"
+        points: 4
+        priority: "must-have"
+        functional_requirements:
+          - "FR-001"
+          - "FR-065"
+        acceptance_criteria:
+          - "Creates ralph/ directory structure"
+          - "Creates ralph/config.yaml with defaults"
+          - "Detects BMAD project (bmad/config.yaml or docs/sprint-status.yaml)"
+          - "Fails gracefully if not a BMAD project"
+          - "Idempotent (safe to run multiple times)"
+          - "--force flag allows reinitialization"
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-002: Loop Creation
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-002"
+    name: "Loop Creation"
+    description: "Complete loop creation workflow including sprint analysis, file generation, and git branch creation"
+    status: "completed"
+    priority: "must-have"
+    total_points: 34
+    completed_points: 34
+    stories:
+      - id: "STORY-010"
+        title: "Implement create command basic structure"
+        description: |
+          Implement `ralph create <loop-name>` command structure with argument
+          parsing and validation.
+
+          As a developer, I want to create named loops so that I can organize
+          my automation configurations.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-010"
+        acceptance_criteria:
+          - "Command accepts loop name argument"
+          - "Validates loop name (alphanumeric + hyphens)"
+          - "Checks if loop already exists"
+          - "Creates ralph/loops/<name>/ directory"
+      - id: "STORY-011"
+        title: "Implement sprint-status.yaml analysis"
+        description: |
+          Parse docs/sprint-status.yaml to extract pending stories for loop
+          creation, supporting epic filtering.
+
+          As a developer, I want ralph to read my sprint status so that loops
+          target the correct stories automatically.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-011"
+        acceptance_criteria:
+          - "Reads sprint-status.yaml correctly"
+          - "Identifies all pending stories (status != completed)"
+          - "Extracts story IDs, titles, points, acceptance criteria"
+          - "Supports --epic flag for filtering to single epic"
+          - "Handles malformed YAML with clear errors"
+      - id: "STORY-012"
+        title: "Generate loop.sh file"
+        description: |
+          Generate the main orchestration script (loop.sh) that runs Claude
+          Code CLI iterations with configurable parameters.
+
+          As a developer, I want an auto-generated loop script so that I don't
+          have to write orchestration code manually.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-012"
+        acceptance_criteria:
+          - "Creates executable bash script"
+          - "Includes configurable max iterations"
+          - "Includes stuck detection logic"
+          - "Handles story completion detection"
+          - "Updates sprint-status.yaml on completion"
+          - "Logs progress to progress.txt"
+      - id: "STORY-013"
+        title: "Generate prd.json file"
+        description: |
+          Generate loop configuration and metadata file (prd.json) with all
+          settings and tracking structures.
+
+          As a developer, I want loop configuration in a structured format
+          so that settings are clear and modifiable.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-013"
+        acceptance_criteria:
+          - "Creates valid JSON file"
+          - "Includes project metadata (name, branch, epic filter)"
+          - "Includes configuration (max iterations, stuck threshold)"
+          - "Includes quality gates configuration"
+          - "Includes stats and storyNotes structures"
+      - id: "STORY-014"
+        title: "Generate prompt.md file"
+        description: |
+          Generate the context prompt (prompt.md) that will be passed to
+          Claude Code CLI on each iteration.
+
+          As a developer, I want a well-crafted prompt so that Claude has
+          the right context for implementation.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-014"
+        acceptance_criteria:
+          - "Includes project context from architecture"
+          - "Includes current story information dynamically"
+          - "Includes quality gate requirements"
+          - "Includes commit message conventions"
+          - "References relevant documentation paths"
+      - id: "STORY-015"
+        title: "Generate progress.txt file"
+        description: |
+          Generate the iteration log file (progress.txt) with header template
+          for tracking loop execution history.
+
+          As a developer, I want execution logs so that I can review what
+          happened during loop execution.
+        status: "completed"
+        points: 1
+        priority: "must-have"
+        functional_requirements:
+          - "FR-015"
+        acceptance_criteria:
+          - "Creates file with header template"
+          - "Header includes loop name and creation timestamp"
+          - "Ready for append-only writes during execution"
+      - id: "STORY-016"
+        title: "Implement git branch creation"
+        description: |
+          Automatically create and checkout a new git branch when a loop
+          is created with naming convention ralph/<loop-name>.
+
+          As a developer, I want automatic branch creation so that loop
+          work is isolated from main branch.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-016"
+        acceptance_criteria:
+          - "Creates branch with ralph/<loop-name> naming"
+          - "Checks out the new branch"
+          - "Handles existing branch (offers to use)"
+          - "Warns if working directory is dirty"
+          - "--no-branch flag skips branch creation"
+      - id: "STORY-017"
+        title: "Implement interactive loop configuration"
+        description: |
+          During `ralph create`, prompt user for configuration options
+          interactively with sensible defaults.
+
+          As a developer, I want to configure loops interactively so that
+          I can customize behavior without editing files.
+        status: "completed"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-017"
+        acceptance_criteria:
+          - "Prompts for epic filter (all or specific)"
+          - "Prompts for max iterations (default: 50)"
+          - "Prompts for stuck threshold (default: 3)"
+          - "Prompts for quality gates to enable"
+          - "--yes flag skips all prompts with defaults"
+      - id: "STORY-018"
+        title: "Implement quality gate configuration"
+        description: |
+          Allow configuration of project-specific quality gates (typecheck,
+          test, lint, build commands).
+
+          As a developer, I want to configure quality gates so that loop
+          output meets my project's standards.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-018"
+        acceptance_criteria:
+          - "Supports typecheck, test, lint, build gates"
+          - "Gates are individually enable/disable-able"
+          - "Custom commands per gate"
+          - "Configuration stored in prd.json"
+      - id: "STORY-019"
+        title: "Implement loop template customization"
+        description: |
+          Allow users to customize loop file templates via project-level
+          overrides in ralph/templates/.
+
+          As a developer, I want to customize templates so that generated
+          files match my preferences.
+        status: "completed"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-019"
+        acceptance_criteria:
+          - "Checks for ralph/templates/ directory"
+          - "Uses custom templates if present"
+          - "Falls back to defaults if not"
+          - "Documentation for template customization"
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-003: Loop Management
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-003"
+    name: "Loop Management"
+    description: "CRUD operations for managing loops after creation"
+    status: "in-progress"
+    priority: "must-have"
+    total_points: 15
+    completed_points: 12
+    stories:
+      - id: "STORY-020"
+        title: "Implement list command"
+        description: |
+          Implement `ralph list` to display all loops in the project with
+          their status, story count, and creation date.
+
+          As a developer, I want to see all my loops so that I can manage
+          them effectively.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-020"
+        acceptance_criteria:
+          - "Lists all loops in ralph/loops/"
+          - "Shows loop status (active/archived)"
+          - "Shows creation date"
+          - "Shows story count (completed/total)"
+          - "--active and --archived filters work"
+          - "--json outputs JSON format"
+      - id: "STORY-021"
+        title: "Implement delete command"
+        description: |
+          Implement `ralph delete <loop-name>` to remove a loop and its files
+          with confirmation prompt.
+
+          As a developer, I want to delete loops so that I can clean up
+          failed experiments.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-021"
+        acceptance_criteria:
+          - "Prompts for confirmation before deletion"
+          - "Removes entire loop directory"
+          - "Does not delete git branch (warns user)"
+          - "--force skips confirmation"
+          - "Cannot delete archived loops"
+      - id: "STORY-022"
+        title: "Implement show command"
+        description: |
+          Implement `ralph show <loop-name>` to display detailed information
+          about a specific loop.
+
+          As a developer, I want to see loop details so that I understand
+          its configuration and progress.
+        status: "completed"
+        points: 2
+        priority: "should-have"
+        functional_requirements:
+          - "FR-022"
+        acceptance_criteria:
+          - "Shows all configuration from prd.json"
+          - "Shows execution statistics"
+          - "Shows story progress breakdown"
+          - "Shows last activity timestamp"
+          - "--json outputs JSON format"
+      - id: "STORY-023"
+        title: "Implement edit command"
+        description: |
+          Implement `ralph edit <loop-name>` to open loop configuration
+          in the user's default editor.
+
+          As a developer, I want to edit loop config so that I can make
+          adjustments without finding files manually.
+        status: "completed"
+        points: 2
+        priority: "could-have"
+        functional_requirements:
+          - "FR-023"
+        acceptance_criteria:
+          - "Opens prd.json in $EDITOR"
+          - "Validates JSON after edit"
+          - "Prevents editing archived loops"
+      - id: "STORY-024"
+        title: "Implement clone command"
+        description: |
+          Implement `ralph clone <source> <destination>` to copy an existing
+          loop with reset stats.
+
+          As a developer, I want to clone loops so that I can reuse
+          configurations.
+        status: "completed"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-024"
+        acceptance_criteria:
+          - "Copies all loop files to new directory"
+          - "Resets execution stats in clone"
+          - "Creates new git branch for clone"
+          - "Preserves configuration settings"
+      - id: "STORY-025"
+        title: "Implement resume loop state"
+        description: |
+          When re-running a loop, resume from the last known state rather
+          than starting over.
+
+          As a developer, I want loops to resume so that I don't lose
+          progress after interruptions.
+        status: "completed"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-025"
+        acceptance_criteria:
+          - "Reads last completed story from prd.json"
+          - "Continues from next pending story"
+          - "Preserves attempt counts across runs"
+          - "--restart flag starts from beginning"
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-004: Loop Execution Engine
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-004"
+    name: "Loop Execution Engine"
+    description: "Core execution engine that runs loops, integrates with Claude CLI, and manages iteration lifecycle"
+    status: "in-progress"
+    priority: "must-have"
+    total_points: 39
+    completed_points: 34
+    stories:
+      - id: "STORY-030"
+        title: "Implement run command basic structure"
+        description: |
+          Implement `ralph run <loop-name>` command structure with validation
+          and lock file management.
+
+          As a developer, I want to run loops so that stories are implemented
+          automatically.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-030"
+        acceptance_criteria:
+          - "Validates loop exists and is not archived"
+          - "Checks out associated git branch"
+          - "Creates lock file to prevent concurrent execution"
+          - "Removes lock on clean exit"
+      - id: "STORY-031"
+        title: "Implement Claude CLI integration"
+        description: |
+          Integrate with Claude Code CLI to execute each iteration with the
+          configured prompt.
+
+          As a developer, I want Claude to implement my stories so that I
+          can review code instead of writing it.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-031"
+        acceptance_criteria:
+          - "Calls `claude --print --dangerously-skip-permissions`"
+          - "Passes prompt.md content as input"
+          - "Captures and logs Claude output"
+          - "Handles Claude CLI errors gracefully"
+      - id: "STORY-032"
+        title: "Implement story completion detection"
+        description: |
+          Detect when a story has been completed by Claude and update
+          sprint-status.yaml accordingly.
+
+          As a developer, I want automatic progress tracking so that
+          sprint status stays accurate.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-032"
+        acceptance_criteria:
+          - "Parses Claude output for completion signals"
+          - "Updates sprint-status.yaml story status"
+          - "Updates epic completed_points"
+          - "Records completion in prd.json storyNotes"
+          - "Logs completion to progress.txt"
+      - id: "STORY-033"
+        title: "Implement stuck detection"
+        description: |
+          Track attempt counts per story and detect when a story exceeds
+          the stuck threshold.
+
+          As a developer, I want stuck detection so that I'm notified when
+          human intervention is needed.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-033"
+        acceptance_criteria:
+          - "Tracks attempt count per story"
+          - "Triggers stuck status at threshold"
+          - "Pauses loop execution when stuck"
+          - "Logs stuck event with details"
+          - "Configurable threshold (default: 3)"
+      - id: "STORY-034"
+        title: "Implement quality gate execution"
+        description: |
+          Run configured quality gates (typecheck, test, lint, build) after
+          each story attempt.
+
+          As a developer, I want quality gates so that implementation meets
+          standards before moving on.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-034"
+        acceptance_criteria:
+          - "Runs each enabled quality gate command"
+          - "Fails story if any gate fails"
+          - "Logs gate results to progress.txt"
+          - "Claude fixes issues on next iteration"
+      - id: "STORY-035"
+        title: "Implement iteration logging"
+        description: |
+          Log detailed information about each iteration to progress.txt
+          including timestamps, stories, and outcomes.
+
+          As a developer, I want detailed logs so that I can understand
+          what happened during execution.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-035"
+        acceptance_criteria:
+          - "Records iteration number and timestamp"
+          - "Records current story being worked on"
+          - "Records Claude output summary"
+          - "Records quality gate results"
+          - "Records story state transitions"
+      - id: "STORY-036"
+        title: "Implement graceful interrupt handling"
+        description: |
+          Handle SIGINT/SIGTERM gracefully, preserving state before exit
+          for clean resume.
+
+          As a developer, I want safe interruption so that I can stop loops
+          without losing state.
+        status: "completed"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-036"
+        acceptance_criteria:
+          - "Catches interrupt signals"
+          - "Saves current state to prd.json"
+          - "Logs interruption to progress.txt"
+          - "Exits cleanly (exit code 130)"
+          - "Removes lock file"
+      - id: "STORY-037"
+        title: "Implement execution statistics tracking"
+        description: |
+          Track and store execution statistics throughout the loop run
+          including iterations, completions, and timing.
+
+          As a developer, I want execution stats so that I can measure
+          loop effectiveness.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-037"
+        acceptance_criteria:
+          - "Tracks total iterations run"
+          - "Tracks stories completed"
+          - "Tracks start and end timestamps"
+          - "Calculates average iterations per story"
+          - "Stores in prd.json stats object"
+      - id: "STORY-038"
+        title: "Implement concurrent execution prevention"
+        description: |
+          Prevent multiple ralph instances from running simultaneously on
+          the same loop using lock files.
+
+          As a developer, I want single execution so that loops don't
+          conflict with each other.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-038"
+        acceptance_criteria:
+          - "Creates lock file when loop starts"
+          - "Checks for existing lock before starting"
+          - "Handles stale locks (timeout detection)"
+          - "Removes lock on exit"
+      - id: "STORY-039"
+        title: "Implement dry run mode"
+        description: |
+          Implement `ralph run <loop-name> --dry-run` to simulate execution
+          without actually running Claude.
+
+          As a developer, I want dry run so that I can verify configuration
+          before real execution.
+        status: "completed"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-039"
+        acceptance_criteria:
+          - "Shows what would be executed"
+          - "Validates configuration"
+          - "Lists stories that would be processed"
+          - "Does not modify any files"
+      - id: "STORY-040A"
+        title: "Implement atomic file operations"
+        description: |
+          Implement atomic write pattern (temp + rename) for all state
+          file updates.
+
+          As a developer, I want atomic writes so that state files are
+          never corrupted.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "NFR-010"
+          - "NFR-011"
+        acceptance_criteria:
+          - "All writes use temp file + rename pattern"
+          - "No partial writes on failure"
+          - "Survives crashes mid-write"
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-005: Monitoring Dashboard
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-005"
+    name: "Monitoring Dashboard"
+    description: "Real-time terminal UI for monitoring loop execution with progress visualization"
+    status: "completed"
+    priority: "should-have"
+    total_points: 26
+    completed_points: 26
+    stories:
+      - id: "STORY-040"
+        title: "Implement status command basic structure"
+        description: |
+          Implement `ralph status <loop-name>` command structure with
+          terminal UI initialization.
+
+          As a developer, I want a status command so that I can monitor
+          loop progress.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-040"
+        acceptance_criteria:
+          - "Shows rich terminal UI with colors"
+          - "Updates in real-time while loop is running"
+          - "--once flag shows single snapshot"
+      - id: "STORY-041"
+        title: "Implement progress visualization"
+        description: |
+          Create progress bars for overall loop completion and current
+          epic progress.
+
+          As a developer, I want visual progress so that I can quickly
+          assess completion status.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-041"
+        acceptance_criteria:
+          - "Progress bar for overall completion"
+          - "Progress bar for current epic"
+          - "Story count display (completed/total)"
+          - "Color-coded status indicators"
+      - id: "STORY-042"
+        title: "Implement current story display"
+        description: |
+          Display the story currently being worked on prominently in
+          the dashboard.
+
+          As a developer, I want to see current story so that I know
+          what's being implemented.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-042"
+        acceptance_criteria:
+          - "Shows story ID and title"
+          - "Shows story points"
+          - "Shows attempt count for current story"
+          - "Shows time elapsed on current story"
+      - id: "STORY-043"
+        title: "Implement ETA calculation"
+        description: |
+          Calculate and display estimated time to completion based on
+          historical pace.
+
+          As a developer, I want ETA so that I can plan my time while
+          loops run.
+        status: "completed"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-043"
+        acceptance_criteria:
+          - "Calculates average time per story"
+          - "Estimates remaining time"
+          - "Updates estimate as loop progresses"
+          - "Shows 'Calculating...' until enough data"
+      - id: "STORY-044"
+        title: "Implement iteration counter display"
+        description: |
+          Show current iteration number and remaining iterations with
+          proximity warning colors.
+
+          As a developer, I want iteration count so that I know how
+          much capacity remains.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-044"
+        acceptance_criteria:
+          - "Shows current iteration / max iterations"
+          - "Color indicates proximity (green/yellow/red)"
+          - "Shows iterations per story average"
+      - id: "STORY-045"
+        title: "Implement stuck warning display"
+        description: |
+          Prominently warn when approaching or at stuck threshold with
+          alert colors.
+
+          As a developer, I want stuck warnings so that I know when
+          intervention is needed.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-045"
+        acceptance_criteria:
+          - "Shows attempt count vs stuck threshold"
+          - "Warning color when approaching threshold"
+          - "Alert state when stuck"
+          - "Shows stuck story details"
+      - id: "STORY-046"
+        title: "Implement quality gate status display"
+        description: |
+          Show results of quality gate executions with pass/fail
+          indicators.
+
+          As a developer, I want gate status so that I know which
+          checks are passing.
+        status: "completed"
+        points: 2
+        priority: "should-have"
+        functional_requirements:
+          - "FR-046"
+        acceptance_criteria:
+          - "Shows pass/fail status for each gate"
+          - "Shows last gate execution time"
+          - "Color-coded indicators"
+      - id: "STORY-047"
+        title: "Implement log tail display"
+        description: |
+          Show recent entries from progress.txt in a scrollable area
+          of the dashboard.
+
+          As a developer, I want log visibility so that I can see
+          recent activity.
+        status: "completed"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-047"
+        acceptance_criteria:
+          - "Shows last N lines of progress log"
+          - "Auto-scrolls as new entries appear"
+          - "Key event highlighting"
+      - id: "STORY-048"
+        title: "Implement configurable refresh rate"
+        description: |
+          Allow dashboard refresh rate to be configured via flag.
+
+          As a developer, I want configurable refresh so that I can
+          balance updates vs. performance.
+        status: "completed"
+        points: 1
+        priority: "should-have"
+        functional_requirements:
+          - "FR-048"
+        acceptance_criteria:
+          - "Default refresh rate of 2 seconds"
+          - "--refresh <seconds> flag works"
+          - "Manual refresh via keypress"
+      - id: "STORY-049"
+        title: "Implement keyboard controls"
+        description: |
+          Add keyboard shortcuts for common dashboard actions.
+
+          As a developer, I want keyboard controls so that I can
+          interact without leaving terminal.
+        status: "completed"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-049"
+        acceptance_criteria:
+          - "`q` quits dashboard"
+          - "`r` refreshes manually"
+          - "`l` shows full log"
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-006: Archive & Feedback
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-006"
+    name: "Archive & Feedback"
+    description: "Loop archival system with mandatory feedback collection"
+    status: "completed"
+    priority: "must-have"
+    total_points: 21
+    completed_points: 21
+    stories:
+      - id: "STORY-050"
+        title: "Implement archive command basic structure"
+        description: |
+          Implement `ralph archive <loop-name>` command structure that
+          moves loops to archive directory.
+
+          As a developer, I want to archive loops so that I maintain
+          a clean workspace.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-050"
+        acceptance_criteria:
+          - "Moves loop to ralph/archive/<date>-<name>/"
+          - "Cannot archive without feedback"
+          - "Records archive timestamp"
+      - id: "STORY-051"
+        title: "Implement mandatory feedback questionnaire"
+        description: |
+          Before archiving, require completion of feedback questionnaire
+          with satisfaction and improvement questions.
+
+          As a developer, I want to provide feedback so that ralph
+          improves over time.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-051"
+        acceptance_criteria:
+          - "Overall satisfaction (1-5 scale)"
+          - "Stories requiring manual intervention (count)"
+          - "What worked well? (required text)"
+          - "What should be improved? (required text)"
+          - "Would you run this config again? (yes/no)"
+          - "Cannot skip questions"
+      - id: "STORY-052"
+        title: "Implement feedback storage"
+        description: |
+          Store feedback responses in feedback.json within the archived
+          loop directory.
+
+          As a developer, I want feedback stored so that it can be
+          analyzed later.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-052"
+        acceptance_criteria:
+          - "Creates feedback.json in archived loop"
+          - "Includes all questionnaire responses"
+          - "Includes timestamp"
+          - "Includes loop execution statistics"
+      - id: "STORY-053"
+        title: "Implement archive directory structure"
+        description: |
+          Create consistent naming and structure for archived loops.
+
+          As a developer, I want consistent archives so that history
+          is organized.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-053"
+        acceptance_criteria:
+          - "Directory name: <YYYY-MM-DD>-<loop-name>"
+          - "Contains all original loop files"
+          - "Contains feedback.json"
+          - "Contains final prd.json with stats"
+      - id: "STORY-054"
+        title: "Implement list archived loops"
+        description: |
+          Extend `ralph list --archived` to show archived loops with
+          their feedback summaries.
+
+          As a developer, I want to see archived loops so that I can
+          review history.
+        status: "completed"
+        points: 2
+        priority: "should-have"
+        functional_requirements:
+          - "FR-054"
+        acceptance_criteria:
+          - "Lists all archived loops"
+          - "Shows archive date"
+          - "Shows feedback score"
+          - "Shows stories completed count"
+      - id: "STORY-055"
+        title: "Implement show archived loop details"
+        description: |
+          Extend `ralph show` to display archived loop details including
+          full feedback responses.
+
+          As a developer, I want archived details so that I can review
+          past configurations.
+        status: "completed"
+        points: 2
+        priority: "should-have"
+        functional_requirements:
+          - "FR-055"
+        acceptance_criteria:
+          - "Shows all loop configuration"
+          - "Shows execution statistics"
+          - "Shows full feedback responses"
+          - "Indicates loop is read-only"
+      - id: "STORY-056"
+        title: "Implement unarchive command"
+        description: |
+          Implement `ralph unarchive <name>` to restore a loop from
+          archive back to active.
+
+          As a developer, I want to unarchive so that I can resume
+          old configurations.
+        status: "completed"
+        points: 2
+        priority: "could-have"
+        functional_requirements:
+          - "FR-056"
+        acceptance_criteria:
+          - "Moves loop back to active loops"
+          - "Preserves feedback in loop directory"
+          - "Option to reset execution stats"
+          - "Creates new git branch if needed"
+      - id: "STORY-057"
+        title: "Implement feedback analytics"
+        description: |
+          Implement `ralph feedback-report` to generate aggregate
+          feedback analytics across all archived loops.
+
+          As a developer, I want analytics so that I can identify
+          improvement patterns.
+        status: "completed"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-057"
+        acceptance_criteria:
+          - "Aggregates all feedback"
+          - "Shows average satisfaction score"
+          - "Shows common improvement themes"
+          - "Shows success rate trends"
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-007: BMAD Agent Integration
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-007"
+    name: "BMAD Agent Integration"
+    description: "Full integration with BMAD method as a proper Phase 4/5 workflow agent"
+    status: "completed"
+    priority: "must-have"
+    total_points: 18
+    completed_points: 21
+    stories:
+      - id: "STORY-060"
+        title: "Create agent definition file"
+        description: |
+          Create proper BMAD agent definition following BMM agent
+          conventions for /ralph invocation.
+
+          As a BMAD user, I want ralph as a proper agent so that I can
+          invoke it naturally.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-060"
+        acceptance_criteria:
+          - "Agent file follows bmm/agents/ structure"
+          - "Includes agent activation section"
+          - "Includes agent responsibilities"
+          - "Compatible with /ralph invocation"
+      - id: "STORY-061"
+        title: "Implement workflow registration"
+        description: |
+          Register ralph workflow in BMAD workflow system for proper
+          Phase 4/5 positioning.
+
+          As a BMAD user, I want ralph in workflow status so that
+          I see it in /workflow-status.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-061"
+        acceptance_criteria:
+          - "Workflow appears in /workflow-status"
+          - "Follows Phase 4/5 positioning"
+          - "Has proper input/output documentation"
+      - id: "STORY-062"
+        title: "Create SKILL.md integration"
+        description: |
+          Maintain comprehensive SKILL.md with full workflow specification
+          for Claude Code skill loading.
+
+          As a BMAD user, I want complete SKILL.md so that ralph has
+          full instructions.
+        status: "completed"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-062"
+        acceptance_criteria:
+          - "SKILL.md in skills/ralph/ directory"
+          - "Includes complete workflow instructions"
+          - "Includes file generation templates"
+          - "Includes loop script template"
+          - "Compatible with skill loading"
+      - id: "STORY-063"
+        title: "Implement auto-install in projects"
+        description: |
+          Allow `ralph init` to optionally install ralph agent files
+          into a BMAD project.
+
+          As a developer, I want auto-install so that ralph integrates
+          with my project's BMAD setup.
+        status: "completed"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-063"
+        acceptance_criteria:
+          - "Copies agent definition to project BMAD config"
+          - "Registers in project workflow status"
+          - "Creates project-local ralph configuration"
+          - "Works with monorepo and standalone setups"
+      - id: "STORY-064"
+        title: "Implement sprint status integration"
+        description: |
+          Read from and write to sprint-status.yaml following the exact
+          BMAD sprint-status schema.
+
+          As a BMAD user, I want seamless integration so that ralph
+          uses the same source of truth.
+        status: "completed"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-064"
+        acceptance_criteria:
+          - "Reads story definitions from sprint-status.yaml"
+          - "Updates story status in sprint-status.yaml"
+          - "Updates epic completed_points"
+          - "Does not modify sprint structure"
+          - "Follows BMAD schema exactly"
+      - id: "STORY-065"
+        title: "Implement BMAD config detection"
+        description: |
+          Automatically detect and use BMAD project configuration for
+          paths and conventions.
+
+          As a BMAD user, I want automatic detection so that ralph
+          respects my project settings.
+        status: "completed"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-065"
+        acceptance_criteria:
+          - "Reads bmad/config.yaml if present"
+          - "Uses configured output folder paths"
+          - "Uses configured sprint status file path"
+          - "Falls back to defaults if not found"
+# Sprint Metrics
+metrics:
+  total_epics: 7
+  total_stories: 56
+  total_points: 166
+  stories_completed: 56
+  stories_in_progress: 0
+  stories_not_started: 0
+  points_completed: 166
+  completion_rate: "100%"
+  iterations_run: 86
+  average_iterations_per_story: 1.54
+# Priority Distribution
+priority_summary:
+  must_have:
+    stories: 35
+    points: 115
+  should_have:
+    stories: 8
+    points: 30
+  could_have:
+    stories: 6
+    points: 21
+# Execution Summary
+execution_summary:
+  started_at: "2026-01-11T01:13:59Z"
+  completed_at: "2026-01-11T05:09:33Z"
+  duration_hours: 3.9
+  automated_by: "ralph"
+  branch: "ralph/sprint-1"

@@ -1,0 +1,719 @@
+#!/bin/bash
+# Ralph Loop - Generated 2026-01-11T07:43:20Z
+# Project: bmad-ralph-plugin
+# Branch: ralph/plugin-sprint
+
+set -e
+
+# Parse command-line arguments
+RESTART_FLAG=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --restart)
+      RESTART_FLAG=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--restart]"
+      exit 1
+      ;;
+  esac
+done
+
+# Configuration
+PROJECT_NAME="bmad-ralph-plugin"
+BRANCH_NAME="ralph/plugin-sprint"
+MAX_ITERATIONS=50
+STUCK_THRESHOLD=3
+SPRINT_STATUS_FILE="docs/sprint-status.yaml"
+
+# Quality Gates
+TYPECHECK_CMD=""
+TEST_CMD=""
+LINT_CMD=""
+BUILD_CMD=""
+
+# Paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/config.json"
+PROMPT_FILE="$SCRIPT_DIR/prompt.md"
+PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
+GATE_LOG="$SCRIPT_DIR/.gate-output.log"
+SPRINT_STATUS="$PROJECT_ROOT/$SPRINT_STATUS_FILE"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m' # No Color
+
+# Track last story for stuck detection reset
+LAST_STORY_ID=""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+print_header_bar() {
+  local completed=$(get_completed_count)
+  local total=$(get_total_count)
+  local pending=$((total - completed))
+
+  echo ""
+  echo -e "${CYAN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║${NC} ${BOLD}RALPH${NC} │ $PROJECT_NAME │ Branch: $BRANCH_NAME"
+  echo -e "${CYAN}╠══════════════════════════════════════════════════════════════════════╣${NC}"
+  echo -e "${CYAN}║${NC} Stories: ${GREEN}$completed${NC}/${total} complete │ Pending: ${YELLOW}$pending${NC}"
+  echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
+}
+
+print_iteration_header() {
+  local iteration="$1"
+  local story_id="$2"
+  local story_title="$3"
+  local attempts="$4"
+
+  echo ""
+  echo -e "${BLUE}═══════════════════════════════════════════════════════════════════════${NC}"
+  echo -e "${BLUE}  Iteration ${BOLD}$iteration/$MAX_ITERATIONS${NC}${BLUE}: $story_id${NC}"
+  echo -e "${BLUE}═══════════════════════════════════════════════════════════════════════${NC}"
+  echo -e "${DIM}Story:${NC} $story_title"
+  echo -e "${DIM}Attempts:${NC} $attempts/$STUCK_THRESHOLD"
+}
+
+print_gate_results() {
+  local typecheck_result="$1"
+  local test_result="$2"
+  local lint_result="$3"
+  local build_result="$4"
+
+  echo ""
+  echo -e "${DIM}Quality Gates:${NC}"
+  [ -n "$TYPECHECK_CMD" ] && printf "  Typecheck: %s" "$typecheck_result"
+  [ -n "$TEST_CMD" ] && printf " │ Tests: %s" "$test_result"
+  [ -n "$LINT_CMD" ] && printf " │ Lint: %s" "$lint_result"
+  [ -n "$BUILD_CMD" ] && printf " │ Build: %s" "$build_result"
+  echo ""
+}
+
+print_progress_bar() {
+  local completed=$(get_completed_count)
+  local total=$(get_total_count)
+  local width=40
+  local filled=$((completed * width / total))
+  local empty=$((width - filled))
+
+  printf "\n  Progress: ["
+  printf "%${filled}s" | tr ' ' '█'
+  printf "%${empty}s" | tr ' ' '░'
+  printf "] %d/%d\n" "$completed" "$total"
+}
+
+print_final_summary() {
+  local exit_type="$1"
+  local completed=$(get_completed_count)
+  local total=$(get_total_count)
+  local iterations=$(jq '.stats.iterationsRun // 0' "$CONFIG_FILE")
+  local started=$(jq -r '.stats.startedAt // "unknown"' "$CONFIG_FILE")
+  local duration=""
+
+  if [ "$started" != "unknown" ] && [ "$started" != "null" ]; then
+    local start_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$started" "+%s" 2>/dev/null || echo "0")
+    local now_epoch=$(date "+%s")
+    local diff=$((now_epoch - start_epoch))
+    local hours=$((diff / 3600))
+    local mins=$(((diff % 3600) / 60))
+    duration="${hours}h ${mins}m"
+  fi
+
+  echo ""
+  echo -e "${CYAN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
+  case "$exit_type" in
+    COMPLETE)
+      echo -e "${CYAN}║${NC}                    ${GREEN}${BOLD}RALPH COMPLETE${NC}                                   ${CYAN}║${NC}"
+      ;;
+    STUCK)
+      echo -e "${CYAN}║${NC}                    ${RED}${BOLD}RALPH STUCK${NC}                                      ${CYAN}║${NC}"
+      ;;
+    MAX_ITERATIONS)
+      echo -e "${CYAN}║${NC}                ${YELLOW}${BOLD}MAX ITERATIONS REACHED${NC}                            ${CYAN}║${NC}"
+      ;;
+    INTERRUPTED)
+      echo -e "${CYAN}║${NC}                    ${YELLOW}${BOLD}RALPH INTERRUPTED${NC}                              ${CYAN}║${NC}"
+      ;;
+  esac
+  echo -e "${CYAN}╠══════════════════════════════════════════════════════════════════════╣${NC}"
+  echo -e "${CYAN}║${NC} Stories:    $completed/$total passed"
+  echo -e "${CYAN}║${NC} Iterations: $iterations"
+  [ -n "$duration" ] && echo -e "${CYAN}║${NC} Duration:   $duration"
+  echo -e "${CYAN}║${NC} Branch:     $BRANCH_NAME"
+  echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
+}
+
+log_success() {
+  echo -e "${GREEN}✓ $1${NC}"
+}
+
+log_error() {
+  echo -e "${RED}✗ $1${NC}"
+}
+
+log_warning() {
+  echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATE FUNCTIONS (Read from sprint-status.yaml - single source of truth)
+# Supports both BMAD formats: .epics[].stories[] and .sprints[].stories[]
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Detect sprint-status format (cached for performance)
+_SPRINT_FORMAT=""
+detect_sprint_format() {
+  if [ -z "$_SPRINT_FORMAT" ]; then
+    local has_epics has_sprints
+    has_epics=$(yq '.epics | length' "$SPRINT_STATUS" 2>/dev/null)
+    has_sprints=$(yq '.sprints | length' "$SPRINT_STATUS" 2>/dev/null)
+    if [ "$has_epics" != "0" ] && [ "$has_epics" != "null" ] && [ -n "$has_epics" ]; then
+      _SPRINT_FORMAT="epics"
+    elif [ "$has_sprints" != "0" ] && [ "$has_sprints" != "null" ] && [ -n "$has_sprints" ]; then
+      _SPRINT_FORMAT="sprints"
+    else
+      _SPRINT_FORMAT="unknown"
+    fi
+  fi
+  echo "$_SPRINT_FORMAT"
+}
+
+get_pending_count() {
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq '[.epics[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | length' "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq '[.sprints[].stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | length' "$SPRINT_STATUS"
+  else
+    echo "0"
+  fi
+}
+
+get_completed_count() {
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq '[.epics[].stories[] | select(.status == "completed")] | length' "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq '[.sprints[].stories[] | select(.status == "completed" or .status == "done")] | length' "$SPRINT_STATUS"
+  else
+    echo "0"
+  fi
+}
+
+get_total_count() {
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq '[.epics[].stories[]] | length' "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq '[.sprints[].stories[]] | length' "$SPRINT_STATUS"
+  else
+    echo "0"
+  fi
+}
+
+get_next_story() {
+  # Get first story that is not completed, ordered by epic/sprint then position
+  local format=$(detect_sprint_format)
+  local result
+  if [ "$format" = "epics" ]; then
+    result=$(yq -r '[.epics[] | .stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | .[0].id' "$SPRINT_STATUS")
+  elif [ "$format" = "sprints" ]; then
+    result=$(yq -r '[.sprints[] | .stories[] | select(.status == "not_started" or .status == "not-started" or .status == "in_progress" or .status == "in-progress")] | .[0] | (.story_id // .id)' "$SPRINT_STATUS")
+  else
+    result=""
+  fi
+  # Return empty string if result is "null" or empty
+  if [ "$result" = "null" ] || [ -z "$result" ]; then
+    echo ""
+  else
+    echo "$result"
+  fi
+}
+
+get_story_title() {
+  local story_id="$1"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].title" "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq -r "[.sprints[].stories[] | select(.story_id == \"$story_id\" or .id == \"$story_id\")] | .[0].title" "$SPRINT_STATUS"
+  fi
+}
+
+get_story_attempts() {
+  local story_id="$1"
+  jq -r --arg id "$story_id" '.storyAttempts[$id] // 0' "$CONFIG_FILE"
+}
+
+get_story_points() {
+  local story_id="$1"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq -r "[.epics[].stories[] | select(.id == \"$story_id\")] | .[0].points" "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq -r "[.sprints[].stories[] | select(.story_id == \"$story_id\" or .id == \"$story_id\")] | .[0].points" "$SPRINT_STATUS"
+  fi
+}
+
+get_story_epic_id() {
+  local story_id="$1"
+  local format=$(detect_sprint_format)
+  if [ "$format" = "epics" ]; then
+    yq -r ".epics[] | select(.stories[].id == \"$story_id\") | .id" "$SPRINT_STATUS"
+  elif [ "$format" = "sprints" ]; then
+    yq -r ".sprints[] | select(.stories[].story_id == \"$story_id\" or .stories[].id == \"$story_id\") | .sprint_number" "$SPRINT_STATUS"
+  fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# QUALITY GATES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+run_quality_gate() {
+  local name="$1"
+  local cmd="$2"
+  local result_var="$3"
+
+  [ -z "$cmd" ] && { eval "$result_var='${DIM}SKIP${NC}'"; return 0; }
+
+  echo -n "  [$name] Running... "
+
+  local output
+  local exit_code
+  output=$(cd "$PROJECT_ROOT" && eval "$cmd" 2>&1)
+  exit_code=$?
+
+  if [ $exit_code -eq 0 ]; then
+    echo -e "${GREEN}PASS${NC}"
+    eval "$result_var='${GREEN}PASS${NC}'"
+    return 0
+  else
+    echo -e "${RED}FAIL${NC}"
+    eval "$result_var='${RED}FAIL${NC}'"
+
+    echo "--- $name FAILED ---" >> "$GATE_LOG"
+    echo "$output" >> "$GATE_LOG"
+    echo "--- END $name ---" >> "$GATE_LOG"
+
+    echo -e "${DIM}Error output (first 10 lines):${NC}"
+    echo "$output" | head -10 | sed 's/^/    /'
+
+    return 1
+  fi
+}
+
+run_all_gates() {
+  local all_pass=true
+  local typecheck_result test_result lint_result build_result
+
+  > "$GATE_LOG"
+
+  echo ""
+  echo -e "${DIM}Running quality gates...${NC}"
+
+  run_quality_gate "Build" "$BUILD_CMD" build_result || all_pass=false
+  run_quality_gate "Lint" "$LINT_CMD" lint_result || all_pass=false
+
+  if [ -n "$TYPECHECK_CMD" ]; then
+    run_quality_gate "Typecheck" "$TYPECHECK_CMD" typecheck_result || all_pass=false
+  else
+    typecheck_result="${DIM}SKIP${NC}"
+  fi
+
+  if [ -n "$TEST_CMD" ]; then
+    run_quality_gate "Tests" "$TEST_CMD" test_result || all_pass=false
+  else
+    test_result="${DIM}SKIP${NC}"
+  fi
+
+  print_gate_results "$typecheck_result" "$test_result" "$lint_result" "$build_result"
+
+  $all_pass
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATE UPDATES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+mark_story_complete() {
+  local story_id="$1"
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # Get story metadata
+  local story_points=$(get_story_points "$story_id")
+  local epic_id=$(get_story_epic_id "$story_id")
+  local story_title=$(get_story_title "$story_id")
+  local attempts=$(get_story_attempts "$story_id")
+
+  # Update sprint-status.yaml (single source of truth)
+  local tmp_file=$(mktemp)
+  yq eval "
+    (.epics[].stories[] | select(.id == \"$story_id\")).status = \"completed\" |
+    (.epics[] | select(.id == \"$epic_id\")).completed_points += $story_points |
+    .last_updated = \"$(date +%Y-%m-%dT%H:%M:%SZ)\"
+  " "$SPRINT_STATUS" > "$tmp_file" && mv "$tmp_file" "$SPRINT_STATUS"
+
+  # Update stats in config.json and add storyNotes
+  local completed=$(get_completed_count)
+  local commit_hash=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+  jq --arg ts "$timestamp" \
+     --argjson count "$completed" \
+     --arg id "$story_id" \
+     --arg title "$story_title" \
+     --argjson points "$story_points" \
+     --arg epic "$epic_id" \
+     --argjson attempts "$attempts" \
+     --arg commit "$commit_hash" '
+    .stats.storiesCompleted = $count |
+    .stats.averageIterationsPerStory = (if $count > 0 then (.stats.iterationsRun / $count) else 0 end) |
+    .storyNotes[$id] = {
+      "title": $title,
+      "points": $points,
+      "epic": $epic,
+      "attempts": $attempts,
+      "completedAt": $ts,
+      "commit": $commit
+    }
+  ' "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
+
+  # Log completion to progress.txt
+  {
+    echo ""
+    echo "## Iteration $iteration - $story_id (COMPLETED)"
+    echo "Timestamp: $timestamp"
+    echo "Story: $story_title"
+    echo "Epic: $epic_id"
+    echo "Points: $story_points"
+    echo "Attempts: $attempts"
+    echo "Quality gates: All passed"
+    echo "Commit: $commit_hash"
+  } >> "$PROGRESS_FILE"
+}
+
+increment_story_attempts() {
+  local story_id="$1"
+
+  local tmp_file=$(mktemp)
+  jq --arg id "$story_id" '
+    .storyAttempts[$id] = ((.storyAttempts[$id] // 0) + 1)
+  ' "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STUCK DETECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+check_stuck_threshold() {
+  local story_id="$1"
+  local attempts=$(get_story_attempts "$story_id")
+
+  LAST_STORY_ID="$story_id"
+
+  if [ "$attempts" -ge "$STUCK_THRESHOLD" ]; then
+    return 1
+  fi
+  return 0
+}
+
+handle_stuck_exit() {
+  local story_id="$1"
+  local attempts=$(get_story_attempts "$story_id")
+
+  print_final_summary "STUCK"
+  echo ""
+  log_error "Story $story_id failed $attempts consecutive times."
+  echo ""
+  echo "Suggestions:"
+  echo "  1. Review the story - it may need to be split into smaller pieces"
+  echo "  2. Check $GATE_LOG for error details"
+  echo "  3. Manually fix the issue and run: ./loop.sh (will preserve attempt counts)"
+  echo "  4. Skip this story by manually updating sprint-status.yaml"
+  echo "  5. Reset and start fresh with: ./loop.sh --restart"
+  echo ""
+
+  log_warning "State preserved in config.json for debugging"
+}
+
+handle_interrupt() {
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  echo ""
+  print_final_summary "INTERRUPTED"
+
+  # Save current state to config.json
+  # Note: iterationsRun is already correct (only incremented on success)
+  # We just need to ensure interruptedAt timestamp is recorded
+  if [[ -n "$CONFIG_FILE" ]] && [[ -f "$CONFIG_FILE" ]]; then
+    jq --arg ts "$timestamp" '.stats.interruptedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE" 2>/dev/null || true
+  fi
+
+  # Log interruption to progress.txt
+  if [[ -n "$PROGRESS_FILE" ]]; then
+    {
+      echo ""
+      echo "## Iteration ${iteration:-unknown} - ${STORY_ID:-unknown} - INTERRUPTED"
+      echo "Timestamp: $timestamp"
+      echo "Story: ${STORY_TITLE:-N/A}"
+      echo "Attempts: ${ATTEMPTS:-0}/$STUCK_THRESHOLD"
+      echo "Reason: User interrupt (Ctrl+C or SIGTERM)"
+      echo "State: Saved to config.json - resume with ./loop.sh"
+    } >> "$PROGRESS_FILE" 2>/dev/null || true
+  fi
+
+  echo ""
+  log_warning "Loop interrupted. State saved - run ./loop.sh to resume from iteration ${iteration:-unknown}."
+  echo ""
+  echo "Or run ./loop.sh --restart to start fresh."
+  exit 130
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ITERATION LOGGING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+log_iteration_start() {
+  local iteration="$1"
+  local story_id="$2"
+  local story_title="$3"
+  local attempts="$4"
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  {
+    echo ""
+    echo "## Iteration $iteration - $story_id - STARTED"
+    echo "Timestamp: $timestamp"
+    echo "Story: $story_title"
+    echo "Attempts: $attempts/$STUCK_THRESHOLD"
+  } >> "$PROGRESS_FILE"
+}
+
+log_claude_output() {
+  local iteration="$1"
+  local story_id="$2"
+  local output="$3"
+
+  # Extract first and last few lines as summary (avoid logging full output)
+  local output_lines=$(echo "$output" | wc -l | tr -d ' ')
+  local summary=""
+
+  if [ "$output_lines" -gt 10 ]; then
+    local first_lines=$(echo "$output" | head -n 3)
+    local last_lines=$(echo "$output" | tail -n 3)
+    summary="Output summary (${output_lines} lines total):"$'\n'"${first_lines}"$'\n'"..."$'\n'"${last_lines}"
+  else
+    summary="$output"
+  fi
+
+  {
+    echo "Claude Output:"
+    echo "$summary"
+  } >> "$PROGRESS_FILE"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN EXECUTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Trap Ctrl+C and SIGTERM
+trap 'handle_interrupt' INT TERM
+
+# Check dependencies
+command -v jq >/dev/null 2>&1 || { log_error "jq is required but not installed"; exit 1; }
+command -v yq >/dev/null 2>&1 || { log_error "yq is required but not installed. Install with: brew install yq"; exit 1; }
+command -v claude >/dev/null 2>&1 || { log_error "claude CLI is required but not installed"; exit 1; }
+command -v git >/dev/null 2>&1 || { log_error "git is required but not installed"; exit 1; }
+
+# Check files exist
+[ -f "$CONFIG_FILE" ] || { log_error "config.json not found at $CONFIG_FILE"; exit 1; }
+[ -f "$PROMPT_FILE" ] || { log_error "prompt.md not found at $PROMPT_FILE"; exit 1; }
+[ -f "$SPRINT_STATUS" ] || { log_error "sprint-status.yaml not found at $SPRINT_STATUS"; exit 1; }
+
+# Pre-flight check: Verify quality gates pass before starting
+echo ""
+echo -e "${DIM}Running pre-flight checks...${NC}"
+PREFLIGHT_FAILED=false
+
+if [ -n "$BUILD_CMD" ]; then
+  echo -n "  [Build] Checking... "
+  if (cd "$PROJECT_ROOT" && eval "$BUILD_CMD" >/dev/null 2>&1); then
+    echo -e "${GREEN}OK${NC}"
+  else
+    echo -e "${RED}FAIL${NC}"
+    PREFLIGHT_FAILED=true
+    log_error "Build failed. Fix build errors before starting the loop."
+    echo -e "${DIM}Run: $BUILD_CMD${NC}"
+  fi
+fi
+
+if [ -n "$LINT_CMD" ]; then
+  echo -n "  [Lint] Checking... "
+  if (cd "$PROJECT_ROOT" && eval "$LINT_CMD" >/dev/null 2>&1); then
+    echo -e "${GREEN}OK${NC}"
+  else
+    echo -e "${RED}FAIL${NC}"
+    PREFLIGHT_FAILED=true
+    log_error "Lint failed. Fix lint errors before starting the loop."
+    echo -e "${DIM}Run: $LINT_CMD${NC}"
+  fi
+fi
+
+if $PREFLIGHT_FAILED; then
+  echo ""
+  log_error "Pre-flight checks failed. Please fix the issues above before running the loop."
+  exit 1
+fi
+echo -e "${GREEN}Pre-flight checks passed${NC}"
+echo ""
+
+# Handle --restart flag
+if $RESTART_FLAG; then
+  log_warning "Restarting loop from beginning (resetting stats)..."
+  jq '
+    .stats.iterationsRun = 0 |
+    .stats.storiesCompleted = 0 |
+    .stats.startedAt = null |
+    .stats.completedAt = null |
+    .storyAttempts = {}
+  ' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+  echo ""
+fi
+
+# Initialize or update start time
+jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.startedAt //= $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+
+# Calculate starting iteration (resume from last run)
+ITERATIONS_RUN=$(jq '.stats.iterationsRun // 0' "$CONFIG_FILE")
+START_ITERATION=$((ITERATIONS_RUN + 1))
+END_ITERATION=$MAX_ITERATIONS
+
+if [ $START_ITERATION -gt 1 ]; then
+  log_success "Resuming from iteration $START_ITERATION (completed $ITERATIONS_RUN iterations previously)"
+  echo ""
+fi
+
+# Print startup header
+print_header_bar
+
+# Main loop
+for iteration in $(seq $START_ITERATION $END_ITERATION); do
+  STORY_ID=$(get_next_story)
+
+  # Check if all stories complete
+  if [ -z "$STORY_ID" ]; then
+    jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+    print_final_summary "COMPLETE"
+    exit 0
+  fi
+
+  STORY_TITLE=$(get_story_title "$STORY_ID")
+  ATTEMPTS=$(get_story_attempts "$STORY_ID")
+
+  # Check stuck threshold BEFORE attempting
+  if ! check_stuck_threshold "$STORY_ID"; then
+    handle_stuck_exit "$STORY_ID"
+    exit 1
+  fi
+
+  # Print iteration header
+  print_iteration_header "$iteration" "$STORY_ID" "$STORY_TITLE" "$ATTEMPTS"
+
+  # Log iteration start to progress.txt
+  log_iteration_start "$iteration" "$STORY_ID" "$STORY_TITLE" "$ATTEMPTS"
+
+  # Invoke Claude
+  echo ""
+  echo -e "${DIM}Invoking Claude...${NC}"
+  OUTPUT=$(claude --print --dangerously-skip-permissions -p "$(cat "$PROMPT_FILE")" 2>&1) || true
+
+  # Log Claude output summary
+  log_claude_output "$iteration" "$STORY_ID" "$OUTPUT"
+
+  # Check for explicit completion signal
+  if echo "$OUTPUT" | grep -q "<complete>ALL_STORIES_PASSED</complete>"; then
+    jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+    print_final_summary "COMPLETE"
+    exit 0
+  fi
+
+  # Check for stuck signal from Claude
+  if echo "$OUTPUT" | grep -q "<stuck>"; then
+    STUCK_REASON=$(echo "$OUTPUT" | grep -o '<stuck>[^<]*</stuck>' | sed 's/<[^>]*>//g')
+    log_warning "Claude signaled stuck: $STUCK_REASON"
+    increment_story_attempts "$STORY_ID"
+
+    {
+      echo ""
+      echo "## Iteration $iteration - $STORY_ID (STUCK)"
+      echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+      echo "Reason: $STUCK_REASON"
+      echo "Attempts: $((ATTEMPTS + 1))/$STUCK_THRESHOLD"
+    } >> "$PROGRESS_FILE"
+
+    continue
+  fi
+
+  # Run quality gates
+  if run_all_gates; then
+    log_success "All quality gates passed"
+
+    # Get commit hash before commit
+    cd "$PROJECT_ROOT"
+    git add -A
+    COMMIT_OUTPUT=$(git commit -m "feat: $STORY_ID - $STORY_TITLE" --no-verify 2>&1) || true
+    COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
+    echo -e "${DIM}Commit:${NC} $COMMIT_HASH"
+
+    # Mark story complete in sprint-status.yaml
+    mark_story_complete "$STORY_ID"
+    log_success "Story $STORY_ID completed"
+
+    # Update iteration count
+    jq '.stats.iterationsRun += 1' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+
+    # Show progress bar
+    print_progress_bar
+  else
+    log_error "Quality gates failed"
+    increment_story_attempts "$STORY_ID"
+
+    # Log gate failure to progress.txt
+    {
+      echo ""
+      echo "## Iteration $iteration - $STORY_ID (QUALITY GATES FAILED)"
+      echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+      echo "Attempts: $((ATTEMPTS + 1))/$STUCK_THRESHOLD"
+      echo "Failed gates:"
+      grep "FAILED" "$GATE_LOG" 2>/dev/null || echo "  See $GATE_LOG for details"
+    } >> "$PROGRESS_FILE"
+
+    echo ""
+    echo -e "${DIM}See $GATE_LOG for full error output${NC}"
+  fi
+
+  sleep 2
+done
+
+# Max iterations reached
+jq --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '.stats.completedAt = $ts' "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+print_final_summary "MAX_ITERATIONS"
+echo ""
+log_warning "Reached maximum iterations ($MAX_ITERATIONS)."
+echo "Completed $(get_completed_count)/$(get_total_count) stories."
+echo ""
+echo "To continue where you left off: ./loop.sh"
+echo "To start fresh: ./loop.sh --restart"
+exit 2
