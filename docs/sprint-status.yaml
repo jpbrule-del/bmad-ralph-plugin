@@ -445,7 +445,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 39
-    completed_points: 8
+    completed_points: 11
     stories:
       - id: "STORY-030"
         title: "Implement run command basic structure"
@@ -510,7 +510,7 @@ epics:
 
           As a developer, I want stuck detection so that I'm notified when
           human intervention is needed.
-        status: "not-started"
+        status: "completed"
         points: 3
         priority: "must-have"
         functional_requirements:
@@ -1113,10 +1113,10 @@ metrics:
   total_epics: 7
   total_stories: 49
   total_points: 166
-  stories_completed: 21
+  stories_completed: 25
   stories_in_progress: 0
-  stories_not_started: 28
-  points_completed: 62
+  stories_not_started: 24
+  points_completed: 78
 # Priority Distribution
 priority_summary:
   must_have:
