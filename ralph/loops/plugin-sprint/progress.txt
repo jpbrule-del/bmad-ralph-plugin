@@ -1061,3 +1061,34 @@ Successfully completed **STORY-028: Implement Hook Execution Engine** for the BM
 ### Next Story
 
 **STORY-029: Create MCP Configuration** (3 points, could-have) - Begin EPIC-005 (MCP Integration) by creating .claude-plugin/.mcp.json configuration for external service integration including Perplexity server setup with authentication method, retry policies, and usage documentation.
+
+## Iteration 28 - STORY-028 (COMPLETED)
+Timestamp: 2026-01-11T09:25:54Z
+Story: Implement Hook Execution Engine
+Epic: EPIC-004
+Points: 8
+Attempts: 0
+Quality gates: All passed
+Commit: 8ac0847
+
+## Iteration 29 - STORY-029 - STARTED
+Timestamp: 2026-01-11T09:25:56Z
+Story: Create MCP Configuration
+Attempts: 0/3
+
+## Iteration 29 - STORY-029 (COMPLETED)
+Timestamp: 2026-01-11T09:30:00Z
+Story: Create MCP Configuration
+Epic: EPIC-005
+Points: 3
+Attempts: 0
+Quality gates: All passed
+Commit: 905fe4f
+
+Completed: Created comprehensive .claude-plugin/.mcp.json configuration file with Perplexity MCP server setup (command, args, environment variables, capabilities, retry policy, timeout), authentication method (environment variables with PERPLEXITY_API_KEY), retry policies (max 3 attempts, exponential backoff, 30s max backoff), rate limiting (10 requests/minute, burst size 5), error handling (auth failure/timeout/rate limit strategies), global settings (connection timeout, logging, caching), security configuration (credential handling, allowed domains), and monitoring (usage tracking, metrics). Created comprehensive .claude-plugin/MCP-USAGE.md documentation covering setup instructions, usage during loop execution, configuration reference, security best practices, monitoring, troubleshooting, and advanced configuration.
+
+Learning: MCP (Model Context Protocol) integration enables Ralph agent to access external services during loop execution. Configuration schema follows MCP standard with comprehensive settings for server registration (command, args, env), retry policies (max_attempts, backoff_multiplier, max_backoff_seconds), rate limiting (requests_per_minute, burst_size), error handling (auth/timeout/rate_limit strategies), and monitoring (usage logs, metrics tracking). Perplexity AI provides search and research capabilities via npx-based MCP server. API keys must be stored in environment variables (${PERPLEXITY_API_KEY}) for security - never hardcoded in configuration. Retry policy with exponential backoff ensures resilient operation under network issues or rate limits. Cache responses (TTL 300s) reduce API usage and improve performance. Comprehensive documentation provides setup instructions, usage patterns, troubleshooting guides, and best practices for effective MCP integration.
+
+Note for next: STORY-030 (Implement Perplexity MCP Server) is an 8-point "could-have" story that requires exposing search/research capabilities to agent, handling API authentication, implementing rate limiting, caching queries, and graceful network error handling. This will build on the configuration created in STORY-029 to provide full Perplexity integration.
+Claude Output:
+Output summary (story completed successfully)
