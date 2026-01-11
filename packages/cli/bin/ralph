@@ -66,6 +66,10 @@ route_command() {
       source "$LIB_DIR/commands/clone.sh"
       cmd_clone "$@"
       ;;
+    config)
+      source "$LIB_DIR/commands/config.sh"
+      cmd_config "$@"
+      ;;
     help|--help|-h)
       show_help
       ;;
@@ -107,6 +111,14 @@ COMMANDS:
 
         Options:
           --force    Reinitialize even if already initialized
+
+  Configuration:
+    config <subcommand>
+        Manage ralph configuration settings.
+
+        Subcommands:
+          show              Display current configuration
+          quality-gates     Configure quality gates interactively
 
   Loop Management:
     create <loop-name> [--epic <id>] [--yes] [--no-branch]
@@ -174,6 +186,12 @@ EXAMPLES:
   # Initialize ralph in your BMAD project
   ralph init
 
+  # Configure quality gates
+  ralph config quality-gates
+
+  # View current configuration
+  ralph config show
+
   # Create a loop for a specific epic
   ralph create feature-auth --epic EPIC-002
 
@@ -199,7 +217,7 @@ QUALITY GATES:
     - lint: Code linting
     - build: Project build
 
-  Configure quality gates during 'ralph create' or edit prd.json later.
+  Configure quality gates with 'ralph config quality-gates'.
 
 For more information, visit: https://github.com/snarktank/ralph
 EOF
