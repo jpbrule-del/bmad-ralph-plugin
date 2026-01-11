@@ -177,6 +177,7 @@ COMMANDS:
         Keyboard controls (in watch mode):
           q                   Quit status monitor
           r                   Refresh immediately
+          l                   View full log (progress.txt)
 
   Loop Archival:
     archive <loop-name>

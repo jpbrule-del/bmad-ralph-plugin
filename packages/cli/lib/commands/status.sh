@@ -106,7 +106,7 @@ cmd_status() {
       clear
       display_status "$loop_path" "$prd_file" "$is_archived"
       echo ""
-      echo -e "${COLOR_DIM}Refreshing every ${refresh_rate}s... (Press 'q' to quit, 'r' to refresh now)${COLOR_RESET}"
+      echo -e "${COLOR_DIM}Refreshing every ${refresh_rate}s... (Press 'q' to quit, 'r' to refresh now, 'l' to view full log)${COLOR_RESET}"
 
       # Use read with timeout to allow keypress during wait
       local key=""
@@ -121,6 +121,33 @@ cmd_status() {
           ;;
         r|R)
           # Refresh immediately by continuing loop
+          continue
+          ;;
+        l|L)
+          # Show full log
+          local progress_file="$loop_path/progress.txt"
+          if [[ -f "$progress_file" ]]; then
+            clear
+            echo -e "${COLOR_CYAN}════════════════════════════════════════════════════════════════${COLOR_RESET}"
+            echo -e "${COLOR_CYAN}  Full Log: $loop_name${COLOR_RESET}"
+            echo -e "${COLOR_CYAN}════════════════════════════════════════════════════════════════${COLOR_RESET}"
+            echo ""
+
+            # Use less if available for better navigation, otherwise cat
+            if command -v less &> /dev/null; then
+              less -R "$progress_file"
+            else
+              cat "$progress_file"
+              echo ""
+              echo -e "${COLOR_DIM}Press any key to continue...${COLOR_RESET}"
+              read -n 1 -s -r
+            fi
+          else
+            echo ""
+            warn "No log file found: $progress_file"
+            sleep 2
+          fi
+          # Continue the loop to refresh display
           continue
           ;;
       esac
