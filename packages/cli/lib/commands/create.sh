@@ -8,6 +8,7 @@ source "$CREATE_LIB_DIR/core/sprint_analysis.sh"
 source "$CREATE_LIB_DIR/generator/loop_generator.sh"
 source "$CREATE_LIB_DIR/generator/prd_generator.sh"
 source "$CREATE_LIB_DIR/generator/prompt_generator.sh"
+source "$CREATE_LIB_DIR/generator/progress_generator.sh"
 
 cmd_create() {
   local loop_name=""
@@ -189,6 +190,15 @@ cmd_create() {
     success "Generated prompt.md"
   else
     error "Failed to generate prompt.md"
+    exit 1
+  fi
+
+  # Generate progress.txt
+  info "Generating progress.txt iteration log file..."
+  if generate_progress_txt "$loop_name" "$loop_dir"; then
+    success "Generated progress.txt"
+  else
+    error "Failed to generate progress.txt"
     exit 1
   fi
 
