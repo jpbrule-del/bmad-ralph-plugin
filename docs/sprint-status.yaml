@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-10T23:03:02Z"
+last_updated: "2026-01-11T04:08:32Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -659,7 +659,7 @@ epics:
     status: "in-progress"
     priority: "should-have"
     total_points: 26
-    completed_points: 22
+    completed_points: 23
     stories:
       - id: "STORY-040"
         title: "Implement status command basic structure"
@@ -808,7 +808,7 @@ epics:
 
           As a developer, I want configurable refresh so that I can
           balance updates vs. performance.
-        status: "not-started"
+        status: "completed"
         points: 1
         priority: "should-have"
         functional_requirements:
@@ -1113,10 +1113,10 @@ metrics:
   total_epics: 7
   total_stories: 49
   total_points: 166
-  stories_completed: 36
+  stories_completed: 37
   stories_in_progress: 0
   stories_not_started: 16
-  points_completed: 104
+  points_completed: 105
 # Priority Distribution
 priority_summary:
   must_have:
