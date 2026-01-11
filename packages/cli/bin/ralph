@@ -158,6 +158,16 @@ COMMANDS:
         Options:
           --force         Skip confirmation prompt
 
+    archive <loop-name> [--skip-feedback]
+        Archive a loop by moving it to ralph/archive/<date>-<name>/.
+        Archived loops are read-only for historical record.
+
+        Note: Feedback collection is required before archiving.
+        Use --skip-feedback only during development/testing.
+
+        Options:
+          --skip-feedback Skip feedback collection (not recommended)
+
   Loop Execution:
     run <loop-name> [--dry-run] [--restart]
         Execute a loop to implement stories automatically via Claude.
