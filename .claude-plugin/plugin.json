@@ -1,159 +1,38 @@
 {
   "name": "bmad-ralph",
   "version": "1.0.0",
-  "description": "Ralph - Autonomous AI agent loop for Claude Code",
+  "description": "Ralph - Autonomous AI agent loop for Claude Code that automates BMAD sprint story execution",
   "author": {
-    "name": "snarktank",
-    "email": "noreply@snarktank.dev"
+    "name": "Svrnty",
+    "email": "contact@svrnty.com"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/snarktank/ralph.git"
-  },
-  "homepage": "https://github.com/snarktank/ralph#readme",
+  "repository": "https://github.com/jpbrule-del/bmad-ralph-plugin",
+  "homepage": "https://github.com/jpbrule-del/bmad-ralph-plugin#readme",
+  "license": "MIT",
   "keywords": [
     "claude",
-    "claude-code",
-    "ai",
     "automation",
-    "autonomous",
-    "agent",
-    "bmad"
+    "bmad",
+    "sprints",
+    "agile"
   ],
-  "license": "MIT",
-  "claude_code_version": ">=1.0.0",
-  "dependencies": {
-    "system": {
-      "jq": ">=1.6",
-      "yq": ">=4.0",
-      "git": ">=2.0"
-    }
-  },
-  "permissions": {
-    "filesystem": {
-      "read": ["ralph/", "docs/", "bmad/"],
-      "write": ["ralph/"]
-    },
-    "process": {
-      "execute": ["jq", "yq", "git", "npm", "node"]
-    },
-    "network": {
-      "mcp": ["perplexity"]
-    }
-  },
-  "commands": {
-    "directory": "commands/",
-    "namespace": "bmad-ralph"
-  },
-  "hooks": {
-    "config": "hooks/hooks.json"
-  },
-  "skills": {
-    "directory": "skills/",
-    "auto_invoke": {
-      "enabled": true,
-      "triggers": {
-        "command_completion": {
-          "commands": ["bmad-ralph:run", "bmad-ralph:status"],
-          "phase": "post"
-        },
-        "story_completion": {
-          "enabled": true,
-          "phase": "post"
-        },
-        "iteration_milestone": {
-          "enabled": true,
-          "interval": 5
-        },
-        "quality_gate_failure": {
-          "enabled": true,
-          "threshold": 2
-        }
-      },
-      "context_detection": {
-        "loop_running": {
-          "check": "file_exists",
-          "path": "ralph/loops/*/\.lock"
-        },
-        "iteration_count": {
-          "check": "json_value",
-          "path": "ralph/loops/*/config.json",
-          "key": "stats.iterationsRun"
-        },
-        "quality_gate_status": {
-          "check": "file_parse",
-          "path": "ralph/loops/*/progress.txt",
-          "pattern": "Quality gates: (.*)"
-        }
-      },
-      "chaining": {
-        "mode": "sequential",
-        "max_chain_depth": 3,
-        "interrupt_on_error": false
-      },
-      "logging": {
-        "enabled": true,
-        "path": "ralph/logs/skill-invocations.log",
-        "level": "info"
-      }
-    }
-  },
-  "agents": {
-    "directory": "agents/"
-  },
-  "mcp": {
-    "config": ".mcp.json"
-  },
-  "config": {
-    "schema": {
-      "type": "object",
-      "properties": {
-        "max_iterations": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 1000,
-          "description": "Maximum number of iterations before stopping a loop"
-        },
-        "stuck_threshold": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10,
-          "description": "Number of failed attempts before marking a story as stuck"
-        },
-        "quality_gates": {
-          "type": "object",
-          "description": "Commands to run as quality gates before committing",
-          "properties": {
-            "lint": {
-              "type": "string",
-              "description": "Linting command"
-            },
-            "typecheck": {
-              "type": "string",
-              "description": "Type checking command"
-            },
-            "test": {
-              "type": "string",
-              "description": "Testing command"
-            },
-            "build": {
-              "type": "string",
-              "description": "Build command"
-            }
-          }
-        }
-      }
-    },
-    "defaults": {
-      "max_iterations": 100,
-      "stuck_threshold": 3,
-      "quality_gates": {
-        "lint": "npm run lint",
-        "typecheck": "npx tsc --noEmit",
-        "test": "npm test",
-        "build": "npm run build"
-      }
-    },
-    "override_path": "ralph/config.yaml"
-  }
+  "commands": [
+    "./commands/init.md",
+    "./commands/create.md",
+    "./commands/run.md",
+    "./commands/status.md",
+    "./commands/list.md",
+    "./commands/show.md",
+    "./commands/edit.md",
+    "./commands/clone.md",
+    "./commands/delete.md",
+    "./commands/archive.md",
+    "./commands/unarchive.md",
+    "./commands/config.md",
+    "./commands/feedback-report.md"
+  ],
+  "agents": [
+    "./agents/ralph-execution-agent.md",
+    "./agents/loop-monitor-agent.md"
+  ]
 }

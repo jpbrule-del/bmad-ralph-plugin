@@ -9,20 +9,20 @@
     "description": "Autonomous AI agent loop for Claude Code that automates story execution following the BMAD methodology. Ralph executes user stories from sprint backlogs with quality gates, progress tracking, and intelligent stuck detection.",
     "tagline": "Automate your BMAD sprint stories with autonomous AI execution",
     "author": {
-      "name": "snarktank",
-      "email": "noreply@snarktank.dev",
-      "url": "https://github.com/snarktank"
+      "name": "Svrnty",
+      "email": "contact@svrnty.com",
+      "url": "https://github.com/jpbrule-del"
     },
-    "publisher": "snarktank",
+    "publisher": "Svrnty",
     "license": "MIT",
     "repository": {
       "type": "git",
-      "url": "https://github.com/snarktank/ralph.git"
+      "url": "https://github.com/jpbrule-del/bmad-ralph-plugin.git"
     },
-    "homepage": "https://github.com/snarktank/ralph#readme",
-    "documentation": "https://github.com/snarktank/ralph/blob/main/README.md",
-    "support_url": "https://github.com/snarktank/ralph/issues",
-    "changelog_url": "https://github.com/snarktank/ralph/blob/main/CHANGELOG.md"
+    "homepage": "https://github.com/jpbrule-del/bmad-ralph-plugin#readme",
+    "documentation": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/README.md",
+    "support_url": "https://github.com/jpbrule-del/bmad-ralph-plugin/issues",
+    "changelog_url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/CHANGELOG.md"
   },
   "categories": [
     "automation",
@@ -117,7 +117,7 @@
     "manual_installation": {
       "description": "Install the plugin manually from the GitHub repository",
       "steps": [
-        "Clone the repository: `git clone https://github.com/snarktank/ralph.git`",
+        "Clone the repository: `git clone https://github.com/jpbrule-del/bmad-ralph-plugin.git`",
         "Navigate to your Claude Code plugins directory",
         "Copy the `.claude-plugin` directory to your plugins folder",
         "Install system dependencies: `jq`, `yq`, `git`",
@@ -213,29 +213,29 @@
   },
   "screenshots": [
     {
-      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/screenshot-status-dashboard.png",
+      "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/docs/images/screenshot-status-dashboard.png",
       "caption": "Real-time status dashboard showing loop progress and quality gate results",
       "alt": "Ralph status dashboard displaying iteration count, story progress, and quality gates"
     },
     {
-      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/screenshot-create-loop.png",
+      "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/docs/images/screenshot-create-loop.png",
       "caption": "Creating a new automation loop from sprint backlog",
       "alt": "Ralph create command interface with epic filtering and configuration options"
     },
     {
-      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/screenshot-run-execution.png",
+      "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/docs/images/screenshot-run-execution.png",
       "caption": "Loop execution showing story implementation with quality gates",
       "alt": "Ralph run command executing stories with real-time progress updates"
     },
     {
-      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/demo-loop-optimization.gif",
+      "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/docs/images/demo-loop-optimization.gif",
       "caption": "Loop optimization skill providing performance suggestions",
       "alt": "Animated demonstration of loop optimization skill analyzing performance"
     }
   ],
   "demo": {
     "video_url": "https://www.youtube.com/watch?v=PLACEHOLDER_VIDEO_ID",
-    "gif_url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/demo-quick-start.gif",
+    "gif_url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/docs/images/demo-quick-start.gif",
     "description": "Quick demonstration of creating and running a Ralph loop in a BMAD project"
   },
   "commands": {
@@ -320,53 +320,53 @@
     "documentation": [
       {
         "title": "Getting Started Guide",
-        "url": "https://github.com/snarktank/ralph/blob/main/docs/getting-started.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/docs/getting-started.md",
         "description": "Step-by-step guide to set up and use Ralph"
       },
       {
         "title": "Command Reference",
-        "url": "https://github.com/snarktank/ralph/blob/main/docs/commands.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/docs/commands.md",
         "description": "Complete reference for all Ralph commands"
       },
       {
         "title": "Hook Configuration Guide",
-        "url": "https://github.com/snarktank/ralph/blob/main/docs/hooks.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/docs/hooks.md",
         "description": "How to customize automation with hooks"
       },
       {
         "title": "MCP Integration Guide",
-        "url": "https://github.com/snarktank/ralph/blob/main/.claude-plugin/MCP-USAGE.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/.claude-plugin/MCP-USAGE.md",
         "description": "Set up Perplexity AI integration for research"
       }
     ],
     "tutorials": [
       {
         "title": "Your First Ralph Loop",
-        "url": "https://github.com/snarktank/ralph/blob/main/docs/tutorials/first-loop.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/docs/tutorials/first-loop.md",
         "duration": "10 minutes"
       },
       {
         "title": "Configuring Quality Gates",
-        "url": "https://github.com/snarktank/ralph/blob/main/docs/tutorials/quality-gates.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/docs/tutorials/quality-gates.md",
         "duration": "5 minutes"
       },
       {
         "title": "Advanced Hook Configuration",
-        "url": "https://github.com/snarktank/ralph/blob/main/docs/tutorials/advanced-hooks.md",
+        "url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/docs/tutorials/advanced-hooks.md",
         "duration": "15 minutes"
       }
     ],
     "community": {
       "discord": null,
       "slack": null,
-      "forum": "https://github.com/snarktank/ralph/discussions",
+      "forum": "https://github.com/jpbrule-del/bmad-ralph-plugin/discussions",
       "twitter": null
     }
   },
   "seo": {
     "meta_title": "BMAD Ralph Plugin - Autonomous AI Agent Loop for Claude Code",
     "meta_description": "Automate your BMAD sprint stories with Ralph, an autonomous AI agent loop for Claude Code. Features quality gates, progress tracking, and intelligent stuck detection.",
-    "og_image": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/og-image.png",
+    "og_image": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/docs/images/og-image.png",
     "keywords": "claude code plugin, ai automation, autonomous agent, sprint automation, bmad methodology, quality gates, agile development"
   },
   "changelog_preview": {

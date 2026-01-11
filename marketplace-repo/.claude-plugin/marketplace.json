@@ -1,75 +1,27 @@
 {
-  "$schema": "https://marketplace.claude.ai/schemas/marketplace-manifest/v1.json",
-  "manifest_version": "1.0.0",
-  "marketplace": {
-    "id": "svrnty-marketplace",
-    "name": "Svrnty Plugin Marketplace",
+  "name": "svrnty-marketplace",
+  "owner": {
+    "name": "Svrnty",
+    "email": "contact@svrnty.com",
+    "url": "https://github.com/jpbrule-del"
+  },
+  "metadata": {
     "description": "Official plugin marketplace for Claude Code plugins from Svrnty",
-    "version": "1.0.0",
-    "author": {
-      "name": "Svrnty",
-      "email": "contact@svrnty.com",
-      "url": "https://svrnty.com"
-    },
-    "homepage": "https://github.com/jpbrule-del/svrnty-marketplace",
-    "documentation": "https://github.com/jpbrule-del/svrnty-marketplace#readme"
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "id": "bmad-ralph",
-      "name": "BMAD Ralph Plugin",
-      "slug": "bmad-ralph",
-      "version": "1.0.0",
-      "description": "Autonomous development loop automation using the BMAD Method for executing sprints with quality gates, git workflow, and feedback tracking",
-      "author": "Svrnty",
-      "repository": "https://github.com/jpbrule-del/bmad-ralph-plugin",
-      "download_url": "https://github.com/jpbrule-del/bmad-ralph-plugin/archive/refs/heads/main.zip",
-      "categories": ["automation", "productivity", "development-tools", "project-management", "agile"],
-      "keywords": ["automation", "agile", "sprints", "BMAD", "loops", "quality-gates", "git-workflow"],
-      "min_claude_code_version": "1.0.0",
-      "platforms": ["darwin", "linux", "win32"],
-      "dependencies": {
-        "required": [
-          {"name": "jq", "version": ">=1.6"},
-          {"name": "yq", "version": ">=4.0.0"},
-          {"name": "git", "version": ">=2.0.0"}
-        ]
+      "name": "bmad-ralph",
+      "source": {
+        "source": "github",
+        "repo": "jpbrule-del/bmad-ralph-plugin"
       },
-      "featured": true,
-      "verified": true,
-      "status": "stable"
+      "description": "Autonomous development loop automation using the BMAD Method",
+      "version": "1.0.0",
+      "author": {
+        "name": "Svrnty",
+        "email": "contact@svrnty.com"
+      }
     }
-  ],
-  "categories": {
-    "automation": {
-      "name": "Automation",
-      "description": "Workflow and task automation plugins",
-      "icon": "gear"
-    },
-    "productivity": {
-      "name": "Productivity",
-      "description": "Developer productivity enhancement tools",
-      "icon": "rocket"
-    },
-    "development-tools": {
-      "name": "Development Tools",
-      "description": "Code generation, refactoring, and testing tools",
-      "icon": "wrench"
-    },
-    "project-management": {
-      "name": "Project Management",
-      "description": "Agile, planning, and tracking tools",
-      "icon": "clipboard"
-    },
-    "agile": {
-      "name": "Agile",
-      "description": "Agile methodology and sprint management",
-      "icon": "refresh"
-    }
-  },
-  "metadata": {
-    "total_plugins": 1,
-    "last_updated": "2026-01-11T00:00:00Z",
-    "index_version": "1.0.0"
-  }
+  ]
 }

@@ -8,7 +8,7 @@
       "name": "BMAD Ralph Plugin",
       "slug": "bmad-ralph",
       "author": "Svrnty",
-      "repository": "https://github.com/svrnty/bmad-ralph-plugin",
+      "repository": "https://github.com/jpbrule-del/bmad-ralph-plugin",
       "marketplace_entry": "./plugins/bmad-ralph/metadata.json",
       "version": "1.0.0",
       "min_claude_code_version": "1.0.0",

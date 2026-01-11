@@ -13,11 +13,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/svrnty/bmad-ralph-plugin"
+    "url": "https://github.com/jpbrule-del/bmad-ralph-plugin"
   },
-  "homepage": "https://github.com/svrnty/bmad-ralph-plugin",
-  "documentation": "https://github.com/svrnty/bmad-ralph-plugin#readme",
-  "bugs": "https://github.com/svrnty/bmad-ralph-plugin/issues",
+  "homepage": "https://github.com/jpbrule-del/bmad-ralph-plugin",
+  "documentation": "https://github.com/jpbrule-del/bmad-ralph-plugin#readme",
+  "bugs": "https://github.com/jpbrule-del/bmad-ralph-plugin/issues",
   "license": "MIT",
   "keywords": [
     "automation",
@@ -130,27 +130,27 @@
     ]
   },
   "assets": {
-    "icon": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/icon.png",
-    "banner": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/banner.png",
+    "icon": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/.claude-plugin/assets/icon.png",
+    "banner": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/.claude-plugin/assets/banner.png",
     "screenshots": [
       {
-        "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/loop-execution.png",
+        "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/loop-execution.png",
         "caption": "Loop execution with quality gates and progress tracking",
         "type": "screenshot"
       },
       {
-        "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/status-dashboard.png",
+        "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/status-dashboard.png",
         "caption": "Real-time status dashboard with live updates",
         "type": "screenshot"
       },
       {
-        "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/feedback-report.png",
+        "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/.claude-plugin/assets/screenshots/feedback-report.png",
         "caption": "Feedback analytics with satisfaction metrics",
         "type": "screenshot"
       }
     ],
     "demo": {
-      "url": "https://raw.githubusercontent.com/svrnty/bmad-ralph-plugin/main/.claude-plugin/assets/demo.gif",
+      "url": "https://raw.githubusercontent.com/jpbrule-del/bmad-ralph-plugin/main/.claude-plugin/assets/demo.gif",
       "caption": "Full loop execution demo"
     }
   },
@@ -165,5 +165,5 @@
   "featured": true,
   "added_at": "2026-01-11T00:00:00Z",
   "updated_at": "2026-01-11T00:00:00Z",
-  "changelog_url": "https://github.com/svrnty/bmad-ralph-plugin/blob/main/CHANGELOG.md"
+  "changelog_url": "https://github.com/jpbrule-del/bmad-ralph-plugin/blob/main/CHANGELOG.md"
 }
