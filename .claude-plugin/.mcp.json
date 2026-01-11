@@ -1,0 +1,76 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp-config.json",
+  "version": "1.0",
+  "description": "MCP server configuration for BMAD Ralph Plugin - External service integrations",
+  "servers": {
+    "perplexity": {
+      "name": "Perplexity AI Research",
+      "description": "AI-powered search and research capabilities for loop execution",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-perplexity"],
+      "env": {
+        "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}"
+      },
+      "capabilities": {
+        "search": true,
+        "research": true
+      },
+      "retry_policy": {
+        "enabled": true,
+        "max_attempts": 3,
+        "backoff_multiplier": 2,
+        "max_backoff_seconds": 30,
+        "retry_on": ["timeout", "network_error", "rate_limit"]
+      },
+      "timeout_seconds": 30,
+      "rate_limiting": {
+        "enabled": true,
+        "requests_per_minute": 10,
+        "burst_size": 5
+      },
+      "error_handling": {
+        "on_auth_failure": "fail_fast",
+        "on_timeout": "retry",
+        "on_rate_limit": "backoff",
+        "fallback_behavior": "continue_without_mcp"
+      }
+    }
+  },
+  "global_settings": {
+    "connection_timeout_seconds": 10,
+    "default_retry_attempts": 3,
+    "enable_logging": true,
+    "log_level": "info",
+    "cache_responses": true,
+    "cache_ttl_seconds": 300
+  },
+  "authentication": {
+    "method": "environment_variables",
+    "required_env_vars": [
+      "PERPLEXITY_API_KEY"
+    ],
+    "validation": {
+      "validate_on_startup": true,
+      "fail_on_missing_credentials": false,
+      "show_credential_warnings": true
+    }
+  },
+  "security": {
+    "encrypt_credentials_at_rest": false,
+    "never_log_credentials": true,
+    "allowed_domains": [
+      "api.perplexity.ai",
+      "*.anthropic.com"
+    ]
+  },
+  "monitoring": {
+    "track_usage": true,
+    "usage_log_path": "ralph/logs/mcp-usage.log",
+    "metrics": {
+      "request_count": true,
+      "response_time": true,
+      "error_rate": true,
+      "cache_hit_rate": true
+    }
+  }
+}
