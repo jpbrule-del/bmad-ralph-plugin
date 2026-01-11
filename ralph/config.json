@@ -17,10 +17,11 @@
   },
   "stats": {
     "iterationsRun": 80,
-    "storiesCompleted": 51,
+    "storiesCompleted": 52,
     "startedAt": "2026-01-11T01:13:59Z",
-    "completedAt": "2026-01-11T04:41:23Z",
-    "averageIterationsPerStory": 1.5490196078431373
+    "completedAt": "2026-01-11T04:47:57Z",
+    "averageIterationsPerStory": 1.5384615384615385,
+    "interruptedAt": "2026-01-11T04:48:22Z"
   },
   "storyAttempts": {
     "STORY-001": 1,
@@ -68,7 +69,8 @@
     "STORY-055": 1,
     "STORY-056": 1,
     "STORY-057": 1,
-    "STORY-060": 1
+    "STORY-060": 1,
+    "STORY-061": 1
   },
   "storyNotes": {
     "STORY-035": {
@@ -238,6 +240,14 @@
       "attempts": 1,
       "completedAt": "2026-01-11T04:46:26Z",
       "commit": "28655d7"
+    },
+    "STORY-061": {
+      "title": "Implement workflow registration",
+      "points": 2,
+      "epic": "EPIC-007",
+      "attempts": 1,
+      "completedAt": "2026-01-11T04:47:57Z",
+      "commit": "80c9efa"
     }
   }
 }
