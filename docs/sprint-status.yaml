@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-10T21:23:28Z"
+last_updated: "2026-01-10T21:26:06Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -323,7 +323,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 15
-    completed_points: 7
+    completed_points: 9
     stories:
       - id: "STORY-020"
         title: "Implement list command"
@@ -391,7 +391,7 @@ epics:
 
           As a developer, I want to edit loop config so that I can make
           adjustments without finding files manually.
-        status: "not-started"
+        status: "completed"
         points: 2
         priority: "could-have"
         functional_requirements:
@@ -1113,10 +1113,10 @@ metrics:
   total_epics: 7
   total_stories: 49
   total_points: 166
-  stories_completed: 18
+  stories_completed: 19
   stories_in_progress: 0
-  stories_not_started: 31
-  points_completed: 54
+  stories_not_started: 30
+  points_completed: 56
 # Priority Distribution
 priority_summary:
   must_have:
