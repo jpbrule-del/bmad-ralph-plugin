@@ -1,0 +1,60 @@
+{
+  "name": "bmad-ralph",
+  "version": "1.0.0",
+  "description": "Ralph - Autonomous AI agent loop for Claude Code",
+  "author": {
+    "name": "snarktank",
+    "email": "noreply@snarktank.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snarktank/ralph.git"
+  },
+  "homepage": "https://github.com/snarktank/ralph#readme",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "automation",
+    "autonomous",
+    "agent",
+    "bmad"
+  ],
+  "license": "MIT",
+  "claude_code_version": ">=1.0.0",
+  "dependencies": {
+    "system": {
+      "jq": ">=1.6",
+      "yq": ">=4.0",
+      "git": ">=2.0"
+    }
+  },
+  "permissions": {
+    "filesystem": {
+      "read": ["ralph/", "docs/", "bmad/"],
+      "write": ["ralph/"]
+    },
+    "process": {
+      "execute": ["jq", "yq", "git", "npm", "node"]
+    },
+    "network": {
+      "mcp": ["perplexity"]
+    }
+  },
+  "commands": {
+    "directory": "commands/",
+    "namespace": "bmad-ralph"
+  },
+  "hooks": {
+    "config": "hooks/hooks.json"
+  },
+  "skills": {
+    "directory": "skills/"
+  },
+  "agents": {
+    "directory": "agents/"
+  },
+  "mcp": {
+    "config": ".mcp.json"
+  }
+}
