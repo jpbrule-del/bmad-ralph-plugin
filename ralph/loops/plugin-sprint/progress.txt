@@ -1169,3 +1169,12 @@ Completed: Created comprehensive MCP security implementation with credential val
 Learning: MCP security requires multi-layered approach - credential validation on startup prevents runtime failures, encryption at rest protects stored credentials (GPG/OS keychain), log sanitization ensures credentials never leak in logs using regex pattern matching. Security configuration in .mcp.json provides central control over validation behavior (validate_on_startup, fail_on_invalid, show_warnings). Hook-based validation integrates seamlessly with plugin lifecycle - runs after dependency verification and config validation. Credential manager supports multiple storage backends (environment variables, GPG encryption, OS keychain on macOS/Linux/Windows, Claude Code credential store) giving users flexibility. Log sanitizer uses comprehensive regex patterns to detect and redact API keys, tokens, passwords, secrets, and private keys - operates in real-time watch mode or batch sanitization. Documentation separates concerns - MCP-USAGE.md for general usage, MCP-SECURITY.md for security-specific topics. All acceptance criteria met: environment variables supported, Claude Code credential store supported, credentials never logged (enforced by sanitizer), encryption at rest supported (GPG/keychain), startup validation implemented, clear error messages provided.
 
 Note for next: EPIC-005 (MCP Integration) now has 3 of 3 stories complete (STORY-029, STORY-030, STORY-031). Next epic is EPIC-006 (Marketplace & Distribution) starting with STORY-032 (Create Marketplace Manifest) - requires creating marketplace.json manifest for plugin listing in svrnty-marketplace with metadata, installation instructions, screenshots, category tags, and compatibility information.
+Claude Output:
+Output summary (69 lines total):
+## Summary
+
+Successfully completed **STORY-031: Implement MCP Security** for the BMAD Ralph Plugin sprint.
+...
+**STORY-032: Create Marketplace Manifest** (3 points, should-have) - Begin EPIC-006 (Marketplace & Distribution) by creating marketplace.json manifest for plugin listing in svrnty-marketplace with metadata, installation instructions, screenshots, category tags, and compatibility information.
+
+EPIC-005 (MCP Integration) is now complete with all 3 stories finished!
