@@ -79,7 +79,7 @@ cmd_edit() {
     exit 1
   fi
 
-  local prd_file="$loop_path/prd.json"
+  local prd_file="$loop_path/config.json"
   if [[ ! -f "$prd_file" ]]; then
     error "Loop configuration file not found: $prd_file"
     exit 1

@@ -1,0 +1,933 @@
+# BMAD Method Sprint Status
+# Generated: 2026-01-11T15:00:00Z
+# Project: bmad-ralph-plugin
+
+project_name: "bmad-ralph-plugin"
+sprint_number: 1
+sprint_goal: "Deliver BMAD Ralph Plugin with full Claude Code integration"
+sprint_start_date: "2026-01-11"
+sprint_end_date: "2026-01-15"
+last_updated: "2026-01-11T15:00:00Z"
+sprint_status: "not_started"
+
+# Point Scale: Fibonacci (1, 2, 3, 5, 8, 13)
+# 1 = Trivial (< 1 hour)
+# 2 = Small (1-2 hours)
+# 3 = Medium (half day)
+# 5 = Large (full day)
+# 8 = Extra Large (2+ days)
+# 13 = Epic (needs breakdown)
+
+epics:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-001: Plugin Foundation
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-001"
+    name: "Plugin Foundation"
+    description: "Create the core plugin structure and manifest system for Claude Code integration"
+    status: "not_started"
+    priority: "must-have"
+    total_points: 18
+    completed_points: 0
+    stories:
+      - id: "STORY-001"
+        title: "Create Plugin Manifest"
+        description: |
+          Create a valid plugin.json manifest that Claude Code recognizes as an installable plugin.
+
+          As a plugin developer, I want a valid plugin.json manifest so that Claude Code
+          recognizes this as an installable plugin.
+        status: "not_started"
+        points: 3
+        priority: "must-have"
+        functional_requirements:
+          - "FR-001"
+        acceptance_criteria:
+          - "Create `.claude-plugin/plugin.json` with required fields"
+          - "Include name: `bmad-ralph`"
+          - "Include version matching package.json"
+          - "Include description and author metadata"
+          - "Include minimum Claude Code version requirement"
+          - "Validate manifest against Claude Code schema"
+
+      - id: "STORY-002"
+        title: "Create Plugin Directory Structure"
+        description: |
+          Set up the correct directory structure for all plugin components.
+
+          As a plugin developer, I want the correct directory structure so that
+          all plugin components are properly organized.
+        status: "not_started"
+        points: 2
+        priority: "must-have"
+        functional_requirements:
+          - "FR-001"
+        acceptance_criteria:
+          - "Create `.claude-plugin/` root directory"
+          - "Create `commands/` subdirectory"
+          - "Create `skills/` subdirectory"
+          - "Create `agents/` subdirectory"
+          - "Create `hooks/` subdirectory"
+          - "Add `.gitkeep` files for empty directories"
+          - "Update `.gitignore` for plugin artifacts"
+
+      - id: "STORY-003"
+        title: "Implement Plugin Dependency System"
+        description: |
+          Declare and verify all required dependencies in the plugin manifest.
+
+          As a user installing the plugin, I want dependencies to be declared and
+          verified so that the plugin works correctly after installation.
+        status: "not_started"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-001"
+        acceptance_criteria:
+          - "Declare jq dependency in manifest"
+          - "Declare yq (v4+) dependency in manifest"
+          - "Declare git dependency in manifest"
+          - "Implement dependency verification on plugin load"
+          - "Show clear error messages for missing dependencies"
+          - "Provide installation instructions for each dependency"
+
+      - id: "STORY-004"
+        title: "Create Plugin Configuration System"
+        description: |
+          Implement plugin-level configuration options with defaults and overrides.
+
+          As a user, I want plugin-level configuration options so that I can
+          customize Ralph's behavior.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-001"
+        acceptance_criteria:
+          - "Define configuration schema in plugin.json"
+          - "Support default values for all settings"
+          - "Support project-level overrides via `ralph/config.yaml`"
+          - "Add settings for: max_iterations, stuck_threshold, quality_gates"
+          - "Implement config validation on load"
+
+      - id: "STORY-005"
+        title: "Implement Plugin Permissions System"
+        description: |
+          Declare explicit permissions so users understand what the plugin can access.
+
+          As a security-conscious user, I want explicit permission declarations so
+          that I understand what the plugin can access.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-001"
+          - "NFR-005"
+        acceptance_criteria:
+          - "Declare file system permissions (ralph/, docs/)"
+          - "Declare git operation permissions"
+          - "Declare process execution permissions"
+          - "Declare network permissions (for MCP)"
+          - "Show permissions during installation"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-002: Command Migration
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-002"
+    name: "Command Migration"
+    description: "Migrate all 13 CLI commands to plugin command format with bmad-ralph namespace"
+    status: "not_started"
+    priority: "must-have"
+    total_points: 68
+    completed_points: 0
+    stories:
+      - id: "STORY-006"
+        title: "Migrate Init Command"
+        description: |
+          Create the /bmad-ralph:init command to initialize Ralph in BMAD projects.
+
+          As a user, I want `/bmad-ralph:init` command so that I can initialize
+          Ralph in my BMAD project.
+        status: "not_started"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/init.md`"
+          - "Port all init logic from CLI"
+          - "Support `--force` flag"
+          - "Support `--install-agent` flag"
+          - "Create ralph/ directory structure"
+          - "Detect quality gates from package.json"
+          - "Test in fresh BMAD project"
+
+      - id: "STORY-007"
+        title: "Migrate Create Command"
+        description: |
+          Create the /bmad-ralph:create command to create new automation loops.
+
+          As a user, I want `/bmad-ralph:create <name>` command so that I can
+          create new automation loops.
+        status: "not_started"
+        points: 8
+        priority: "must-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/create.md`"
+          - "Port all create logic from CLI"
+          - "Support `--epic` filter flag"
+          - "Support `--yes` for defaults"
+          - "Support `--no-branch` flag"
+          - "Read from docs/sprint-status.yaml"
+          - "Generate loop files (prd.json, prompt.md, progress.txt)"
+          - "Create git branch `ralph/<name>`"
+
+      - id: "STORY-008"
+        title: "Migrate Run Command"
+        description: |
+          Create the /bmad-ralph:run command to execute automation loops.
+
+          As a user, I want `/bmad-ralph:run <name>` command so that I can
+          execute an automation loop.
+        status: "not_started"
+        points: 13
+        priority: "must-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/run.md`"
+          - "Port all run logic from CLI"
+          - "Support `--dry-run` flag"
+          - "Support `--restart` flag"
+          - "Execute stories in priority order"
+          - "Run quality gates after each story"
+          - "Track progress in progress.txt"
+          - "Handle stuck detection"
+
+      - id: "STORY-009"
+        title: "Migrate Status Command"
+        description: |
+          Create the /bmad-ralph:status command to monitor loop execution.
+
+          As a user, I want `/bmad-ralph:status <name>` command so that I can
+          monitor loop execution.
+        status: "not_started"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/status.md`"
+          - "Port all status logic from CLI"
+          - "Support `--once` flag for single check"
+          - "Support `--refresh <seconds>` flag"
+          - "Show overall progress (completed/total)"
+          - "Show current story being worked on"
+          - "Show iteration count"
+          - "Show quality gate status"
+          - "Show recent activity log"
+
+      - id: "STORY-010"
+        title: "Migrate List Command"
+        description: |
+          Create the /bmad-ralph:list command to see all loops.
+
+          As a user, I want `/bmad-ralph:list` command so that I can see all my loops.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/list.md`"
+          - "Port all list logic from CLI"
+          - "Support `--active` filter"
+          - "Support `--archived` filter"
+          - "Support `--json` output format"
+          - "Show loop name, status, story count"
+          - "Sort by last modified"
+
+      - id: "STORY-011"
+        title: "Migrate Show Command"
+        description: |
+          Create the /bmad-ralph:show command to see detailed loop information.
+
+          As a user, I want `/bmad-ralph:show <name>` command so that I can see
+          detailed loop information.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/show.md`"
+          - "Port all show logic from CLI"
+          - "Support `--json` output format"
+          - "Display loop configuration"
+          - "Display story list with status"
+          - "Display execution statistics"
+          - "Display quality gate results"
+
+      - id: "STORY-012"
+        title: "Migrate Edit Command"
+        description: |
+          Create the /bmad-ralph:edit command to modify loop configuration.
+
+          As a user, I want `/bmad-ralph:edit <name>` command so that I can
+          modify loop configuration.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/edit.md`"
+          - "Port all edit logic from CLI"
+          - "Open prd.json in $EDITOR"
+          - "Validate changes on save"
+          - "Support inline edits for common settings"
+
+      - id: "STORY-013"
+        title: "Migrate Clone Command"
+        description: |
+          Create the /bmad-ralph:clone command to copy loop configurations.
+
+          As a user, I want `/bmad-ralph:clone <source> <dest>` command so that
+          I can copy loop configurations.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/clone.md`"
+          - "Port all clone logic from CLI"
+          - "Copy all loop files"
+          - "Reset execution statistics"
+          - "Create new git branch for clone"
+          - "Update loop name in prd.json"
+
+      - id: "STORY-014"
+        title: "Migrate Delete Command"
+        description: |
+          Create the /bmad-ralph:delete command to remove loops.
+
+          As a user, I want `/bmad-ralph:delete <name>` command so that I can
+          remove loops I no longer need.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/delete.md`"
+          - "Port all delete logic from CLI"
+          - "Support `--force` flag to skip confirmation"
+          - "Prompt for confirmation without --force"
+          - "Remove loop directory"
+          - "Optionally delete git branch"
+
+      - id: "STORY-015"
+        title: "Migrate Archive Command"
+        description: |
+          Create the /bmad-ralph:archive command to archive completed loops.
+
+          As a user, I want `/bmad-ralph:archive <name>` command so that I can
+          archive completed loops with feedback.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/archive.md`"
+          - "Port all archive logic from CLI"
+          - "Support `--skip-feedback` flag"
+          - "Prompt for feedback questionnaire"
+          - "Move loop to ralph/archive/"
+          - "Use date-based naming (YYYY-MM-DD-name)"
+          - "Save feedback.json with responses"
+
+      - id: "STORY-016"
+        title: "Migrate Unarchive Command"
+        description: |
+          Create the /bmad-ralph:unarchive command to restore archived loops.
+
+          As a user, I want `/bmad-ralph:unarchive <name>` command so that I can
+          restore archived loops.
+        status: "not_started"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/unarchive.md`"
+          - "Port all unarchive logic from CLI"
+          - "Support `--reset-stats` flag"
+          - "Support `--no-branch` flag"
+          - "Move from archive/ to loops/"
+          - "Preserve feedback.json for history"
+          - "Create new git branch"
+
+      - id: "STORY-017"
+        title: "Migrate Config Command"
+        description: |
+          Create the /bmad-ralph:config command to manage Ralph configuration.
+
+          As a user, I want `/bmad-ralph:config` command so that I can manage
+          Ralph configuration.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/config.md`"
+          - "Port all config logic from CLI"
+          - "Support `show` subcommand"
+          - "Support `quality-gates` subcommand"
+          - "Interactive quality gate configuration"
+          - "Display current configuration"
+          - "Validate configuration values"
+
+      - id: "STORY-018"
+        title: "Migrate Feedback Report Command"
+        description: |
+          Create the /bmad-ralph:feedback-report command to view feedback analytics.
+
+          As a user, I want `/bmad-ralph:feedback-report` command so that I can
+          view aggregate feedback analytics.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-002"
+        acceptance_criteria:
+          - "Create `.claude-plugin/commands/feedback-report.md`"
+          - "Port all feedback-report logic from CLI"
+          - "Support `--json` output format"
+          - "Calculate average satisfaction scores"
+          - "Show distribution by score"
+          - "Aggregate common themes"
+          - "Show success metrics"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-003: Skills & Agents
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-003"
+    name: "Skills & Agents"
+    description: "Implement auto-invoked skills and sub-agents for enhanced functionality"
+    status: "not_started"
+    priority: "should-have"
+    total_points: 23
+    completed_points: 0
+    stories:
+      - id: "STORY-019"
+        title: "Create Loop Optimization Skill"
+        description: |
+          Create an auto-invoked skill that provides loop optimization suggestions.
+
+          As a user running loops, I want automatic loop optimization suggestions
+          so that my loops run more efficiently.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-003"
+        acceptance_criteria:
+          - "Create `.claude-plugin/skills/loop-optimization/SKILL.md`"
+          - "Define trigger conditions (during run command)"
+          - "Analyze loop performance metrics"
+          - "Suggest quality gate optimizations"
+          - "Suggest prompt improvements based on stuck patterns"
+          - "Provide iteration threshold recommendations"
+
+      - id: "STORY-020"
+        title: "Create Ralph Execution Agent"
+        description: |
+          Create a specialized Ralph agent for focused story execution.
+
+          As a user, I want a specialized Ralph agent so that story execution
+          has focused expertise.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-004"
+        acceptance_criteria:
+          - "Create `.claude-plugin/agents/ralph-agent.md`"
+          - "Define agent capabilities and constraints"
+          - "Include BMAD method knowledge"
+          - "Include quality gate expertise"
+          - "Include git workflow knowledge"
+          - "Configure agent invocation rules"
+
+      - id: "STORY-021"
+        title: "Create Loop Monitor Agent"
+        description: |
+          Create a monitoring sub-agent for intelligent status updates.
+
+          As a user, I want a monitoring sub-agent so that I get intelligent
+          status updates.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-004"
+        acceptance_criteria:
+          - "Create `.claude-plugin/agents/loop-monitor.md`"
+          - "Parse progress.txt for patterns"
+          - "Detect anomalies in iteration timing"
+          - "Provide ETA calculations"
+          - "Summarize quality gate history"
+          - "Flag potential issues early"
+
+      - id: "STORY-022"
+        title: "Implement Skill Auto-Invocation"
+        description: |
+          Configure skills to auto-invoke appropriately during loop execution.
+
+          As a plugin developer, I want skills to auto-invoke appropriately
+          so that users get help without asking.
+        status: "not_started"
+        points: 8
+        priority: "could-have"
+        functional_requirements:
+          - "FR-003"
+        acceptance_criteria:
+          - "Configure skill triggers in plugin.json"
+          - "Define context detection rules"
+          - "Implement graceful skill chaining"
+          - "Ensure skills don't interrupt critical operations"
+          - "Add skill invocation logging"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-004: Hooks System
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-004"
+    name: "Hooks System"
+    description: "Implement event automation through hooks for pre-commit, post-story, and lifecycle events"
+    status: "not_started"
+    priority: "should-have"
+    total_points: 31
+    completed_points: 0
+    stories:
+      - id: "STORY-023"
+        title: "Create Hooks Configuration"
+        description: |
+          Create hooks.json configuration file for registering all hook types.
+
+          As a plugin developer, I want a hooks.json configuration file so that
+          hooks are properly registered.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-005"
+        acceptance_criteria:
+          - "Create `.claude-plugin/hooks/hooks.json`"
+          - "Define hook schema"
+          - "Register all hook types"
+          - "Configure hook execution order"
+          - "Set hook timeout limits"
+
+      - id: "STORY-024"
+        title: "Implement Pre-Commit Hook"
+        description: |
+          Implement pre-commit validation to ensure commits meet quality standards.
+
+          As a user, I want pre-commit validation so that commits meet quality standards.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-005"
+        acceptance_criteria:
+          - "Define pre-commit hook in hooks.json"
+          - "Run quality gates before commit"
+          - "Block commit on failure"
+          - "Provide clear failure reasons"
+          - "Support bypass flag for emergencies"
+          - "Log hook execution"
+
+      - id: "STORY-025"
+        title: "Implement Post-Story Hook"
+        description: |
+          Implement actions that run after story completion.
+
+          As a user, I want actions after story completion so that follow-up
+          tasks run automatically.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-005"
+        acceptance_criteria:
+          - "Define post-story hook in hooks.json"
+          - "Trigger on story status change to complete"
+          - "Update progress.txt"
+          - "Send notification (optional)"
+          - "Trigger next story pickup"
+          - "Log completion metrics"
+
+      - id: "STORY-026"
+        title: "Implement Loop Lifecycle Hooks"
+        description: |
+          Implement hooks for loop start, pause, resume, and complete events.
+
+          As a user, I want loop start/pause/resume/complete hooks so that
+          I can automate loop lifecycle events.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-005"
+        acceptance_criteria:
+          - "Define loop-start hook"
+          - "Define loop-pause hook"
+          - "Define loop-resume hook"
+          - "Define loop-complete hook"
+          - "Pass loop context to hooks"
+          - "Support custom scripts per hook"
+          - "Log all lifecycle events"
+
+      - id: "STORY-027"
+        title: "Implement Stuck Detection Hook"
+        description: |
+          Implement automatic stuck detection with configurable thresholds.
+
+          As a user, I want automatic stuck detection so that I'm alerted
+          when loops need intervention.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-005"
+        acceptance_criteria:
+          - "Define stuck-detection hook"
+          - "Configure stuck threshold (default: 3 iterations)"
+          - "Detect story-level stuckness"
+          - "Detect loop-level stuckness"
+          - "Trigger notification on stuck"
+          - "Provide diagnostic information"
+          - "Suggest resolution actions"
+
+      - id: "STORY-028"
+        title: "Implement Hook Execution Engine"
+        description: |
+          Implement a robust hook execution system for reliable hook processing.
+
+          As a plugin developer, I want a robust hook execution system so that
+          hooks run reliably.
+        status: "not_started"
+        points: 8
+        priority: "should-have"
+        functional_requirements:
+          - "FR-005"
+        acceptance_criteria:
+          - "Parse hooks.json on plugin load"
+          - "Register hooks with Claude Code"
+          - "Execute hooks in correct order"
+          - "Handle hook failures gracefully"
+          - "Implement hook timeout handling"
+          - "Provide hook execution logs"
+          - "Support async hook execution"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-005: MCP Integration
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-005"
+    name: "MCP Integration"
+    description: "Integrate MCP servers for external capabilities like Perplexity research"
+    status: "not_started"
+    priority: "could-have"
+    total_points: 16
+    completed_points: 0
+    stories:
+      - id: "STORY-029"
+        title: "Create MCP Configuration"
+        description: |
+          Create MCP server configuration for external service integration.
+
+          As a plugin developer, I want MCP server configuration so that
+          external services are available.
+        status: "not_started"
+        points: 3
+        priority: "could-have"
+        functional_requirements:
+          - "FR-006"
+        acceptance_criteria:
+          - "Create `.claude-plugin/.mcp.json`"
+          - "Define MCP server schema"
+          - "Configure Perplexity server"
+          - "Set authentication method"
+          - "Configure retry policies"
+          - "Document MCP usage"
+
+      - id: "STORY-030"
+        title: "Implement Perplexity MCP Server"
+        description: |
+          Implement Perplexity integration for research during loop execution.
+
+          As a user, I want Perplexity integration so that I can research
+          during loop execution.
+        status: "not_started"
+        points: 8
+        priority: "could-have"
+        functional_requirements:
+          - "FR-006"
+        acceptance_criteria:
+          - "Configure Perplexity MCP server"
+          - "Expose search capability to agent"
+          - "Expose research capability to agent"
+          - "Handle API authentication"
+          - "Implement rate limiting"
+          - "Cache frequently used queries"
+          - "Handle network errors gracefully"
+
+      - id: "STORY-031"
+        title: "Implement MCP Security"
+        description: |
+          Implement secure credential handling for MCP servers.
+
+          As a security-conscious user, I want secure MCP credential handling
+          so that my API keys are protected.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-006"
+          - "NFR-005"
+        acceptance_criteria:
+          - "Support environment variable credentials"
+          - "Support Claude Code credential store"
+          - "Never log credentials"
+          - "Encrypt credentials at rest"
+          - "Validate credentials on startup"
+          - "Clear error messages for auth failures"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-006: Marketplace & Distribution
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-006"
+    name: "Marketplace & Distribution"
+    description: "Publish to svrnty-marketplace for one-click installation and auto-updates"
+    status: "not_started"
+    priority: "should-have"
+    total_points: 23
+    completed_points: 0
+    stories:
+      - id: "STORY-032"
+        title: "Create Marketplace Manifest"
+        description: |
+          Create marketplace.json manifest for plugin listing.
+
+          As a plugin publisher, I want a marketplace.json manifest so that
+          the plugin can be listed.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "FR-007"
+        acceptance_criteria:
+          - "Create `.claude-plugin/marketplace.json`"
+          - "Include plugin metadata"
+          - "Include installation instructions"
+          - "Include screenshots/demo GIFs"
+          - "Include category tags"
+          - "Include compatibility information"
+
+      - id: "STORY-033"
+        title: "Setup svrnty-marketplace Repository"
+        description: |
+          Configure the marketplace repository for plugin publishing.
+
+          As a marketplace owner, I want the marketplace repository configured
+          so that plugins can be published.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-007"
+        acceptance_criteria:
+          - "Create github.com/svrnty/svrnty-marketplace repo"
+          - "Create marketplace index structure"
+          - "Add bmad-ralph plugin entry"
+          - "Configure marketplace metadata"
+          - "Setup CI for validation"
+          - "Document contribution process"
+
+      - id: "STORY-034"
+        title: "Implement Version Management"
+        description: |
+          Implement proper versioning for safe updates.
+
+          As a plugin user, I want proper versioning so that I can update safely.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-007"
+        acceptance_criteria:
+          - "Follow semver for versioning"
+          - "Sync version between plugin.json and package.json"
+          - "Generate changelog on release"
+          - "Tag releases in git"
+          - "Update marketplace on release"
+          - "Support version rollback"
+
+      - id: "STORY-035"
+        title: "Implement Auto-Update Support"
+        description: |
+          Implement automatic updates for plugin users.
+
+          As a plugin user, I want automatic updates so that I always have
+          the latest features.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "FR-007"
+        acceptance_criteria:
+          - "Configure update check interval"
+          - "Notify user of available updates"
+          - "Support one-click updates"
+          - "Preserve user configuration on update"
+          - "Show changelog for new version"
+          - "Support update deferral"
+
+      - id: "STORY-036"
+        title: "Create Installation Validation"
+        description: |
+          Implement installation verification to ensure plugin works correctly.
+
+          As a plugin user, I want installation verification so that I know
+          the plugin is working.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "FR-007"
+        acceptance_criteria:
+          - "Verify all commands are registered"
+          - "Verify all hooks are active"
+          - "Verify MCP servers are connected"
+          - "Verify dependencies are available"
+          - "Show installation summary"
+          - "Provide repair option on failure"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC-007: Documentation
+  # ═══════════════════════════════════════════════════════════════════════════
+  - id: "EPIC-007"
+    name: "Documentation"
+    description: "Create comprehensive documentation for users and developers"
+    status: "not_started"
+    priority: "must-have"
+    total_points: 18
+    completed_points: 0
+    stories:
+      - id: "STORY-037"
+        title: "Create Plugin README"
+        description: |
+          Create comprehensive README documentation for users.
+
+          As a user, I want comprehensive README documentation so that I can
+          understand and use the plugin.
+        status: "not_started"
+        points: 5
+        priority: "must-have"
+        functional_requirements:
+          - "NFR-004"
+        acceptance_criteria:
+          - "Write installation section"
+          - "Write quick start guide"
+          - "Document all commands with examples"
+          - "Document all hooks with configuration"
+          - "Document MCP integrations"
+          - "Include troubleshooting section"
+          - "Include FAQ section"
+
+      - id: "STORY-038"
+        title: "Create Command Reference"
+        description: |
+          Create detailed command documentation with examples.
+
+          As a user, I want detailed command documentation so that I can
+          use all features correctly.
+        status: "not_started"
+        points: 5
+        priority: "should-have"
+        functional_requirements:
+          - "NFR-004"
+        acceptance_criteria:
+          - "Document each command syntax"
+          - "Document all flags and options"
+          - "Provide usage examples"
+          - "Document error messages"
+          - "Include command chaining examples"
+          - "Cross-reference related commands"
+
+      - id: "STORY-039"
+        title: "Create Hook Configuration Guide"
+        description: |
+          Create hook documentation for customization.
+
+          As a user, I want hook documentation so that I can customize automation.
+        status: "not_started"
+        points: 3
+        priority: "should-have"
+        functional_requirements:
+          - "NFR-004"
+        acceptance_criteria:
+          - "Explain hook types"
+          - "Document hooks.json format"
+          - "Provide configuration examples"
+          - "Document hook execution order"
+          - "Explain error handling"
+          - "Include custom hook examples"
+
+      - id: "STORY-040"
+        title: "Create Developer Guide"
+        description: |
+          Create developer documentation for contributors.
+
+          As a contributor, I want developer documentation so that I can
+          contribute to the plugin.
+        status: "not_started"
+        points: 5
+        priority: "could-have"
+        functional_requirements:
+          - "NFR-004"
+        acceptance_criteria:
+          - "Document project structure"
+          - "Explain plugin architecture"
+          - "Document testing procedures"
+          - "Explain release process"
+          - "Include contribution guidelines"
+          - "Document code style requirements"
+
+# Sprint Metrics
+metrics:
+  total_epics: 7
+  total_stories: 40
+  total_points: 197
+  stories_completed: 0
+  stories_in_progress: 0
+  stories_not_started: 40
+  points_completed: 0
+  completion_rate: "0%"
+
+# Priority Distribution
+priority_summary:
+  must_have:
+    stories: 8
+    points: 46
+  should_have:
+    stories: 18
+    points: 84
+  could_have:
+    stories: 14
+    points: 67

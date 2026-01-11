@@ -1,96 +1,105 @@
-# Ralph Loop Context
+# Ralph Agent Instructions
 
-## Project Overview
-Ralph is a BMAD Phase 5 autonomous execution CLI tool that automates story implementation after BMAD sprint planning. It reads all BMAD documentation, configures an autonomous loop, and executes Claude Code CLI iterations until all stories pass quality gates.
-
-## Architecture Patterns
-- **Pattern:** Modular Bash CLI with Command Routing
-- **Tech Stack:** Bash 4.0+, jq 1.6+, yq 4.x, Git 2.x, Claude Code CLI
-- **File Structure:**
-  ```
-  ralph/
-  ├── bin/ralph              # Entry point
-  ├── lib/
-  │   ├── commands/          # Command implementations
-  │   ├── core/              # Shared utilities
-  │   ├── engine/            # Loop execution
-  │   ├── dashboard/         # Terminal UI
-  │   ├── feedback/          # Feedback system
-  │   ├── generator/         # File generation
-  │   └── tools/             # External tool wrappers
-  ├── templates/             # Loop file templates
-  ├── tests/                 # Bats tests
-  ├── Makefile               # Build orchestration
-  └── install.sh             # Installation script
-  ```
-
-## Key Implementation Principles
-1. All state persists via atomic file writes (temp + rename pattern)
-2. POSIX-compliant bash for macOS/Linux compatibility
-3. Modular structure with lazy loading for performance
-4. Git-style subcommand routing
-5. Colored terminal output respecting NO_COLOR env var
-
-## Quality Gates
-Before committing, ALL must pass:
-- Build: `npm run build`
-- Lint: `npm run lint`
-
-## Current Sprint Context
-Sprint Goal: Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)
-Total Stories: 49
-Total Points: 166
-Epics: 7
+You are an autonomous coding agent working on a software project.
 
 ## Your Task
-1. Read `docs/sprint-status.yaml` - find next story where `status: "not-started"` or `status: "in-progress"`
-2. Read `ralph/progress.txt` - check for context from previous iterations
-3. Verify you're on correct branch: `ralph/sprint-1`
-4. Implement the single story following the architecture patterns
-5. Run quality gates: `npm run build && npm run lint`
-6. If all pass: commit with message `feat: {story_id} - {story_title}`
-7. Update `docs/sprint-status.yaml`: set story `status: "completed"`
-8. Update `ralph/config.json`: increment `stats.storiesCompleted`
-9. Append to `ralph/progress.txt`:
-   ```
-   ## Iteration {N} - {Story ID}
-   Completed: {what was done}
-   Learning: {pattern or gotcha discovered}
-   Note for next: {1-line context for next iteration}
-   ```
 
-## Rules
-- ONE story per iteration
-- Small, atomic commits
-- ALL quality gates must pass before commit
-- If stuck (can't complete): output `<stuck>STORY_ID: reason</stuck>`
-- If all stories done: output `<complete>ALL_STORIES_PASSED</complete>`
-- Follow existing code patterns in the codebase
-- Use ShellCheck for bash script linting
-- Write Bats tests for new functionality
+1. Read the PRD at `prd.json` (in the same directory as this file)
+2. Read the progress log at `progress.txt` (check Codebase Patterns section first)
+3. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
+4. Pick the **highest priority** user story where `passes: false`
+5. Implement that single user story
+6. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
+7. Update AGENTS.md files if you discover reusable patterns (see below)
+8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
+9. Update the PRD to set `passes: true` for the completed story
+10. Append your progress to `progress.txt`
 
-## Data Schemas
+## Progress Report Format
 
-### config.json Schema
-```json
-{
-  "project": "ralph",
-  "branchName": "ralph/sprint-1",
-  "config": {
-    "maxIterations": 50,
-    "stuckThreshold": 3,
-    "qualityGates": {...}
-  },
-  "stats": {
-    "iterationsRun": 0,
-    "storiesCompleted": 0
-  },
-  "storyAttempts": {}
-}
+APPEND to progress.txt (never replace, always append):
+```
+## [Date/Time] - [Story ID]
+- What was implemented
+- Files changed
+- **Learnings for future iterations:**
+  - Patterns discovered (e.g., "this codebase uses X for Y")
+  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+  - Useful context (e.g., "the evaluation panel is in component X")
+---
 ```
 
-### sprint-status.yaml (single source of truth for stories)
-Stories are tracked in `docs/sprint-status.yaml`. Update story status there when completing a story.
+The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
 
-## Progress Context
-First iteration - no previous context
+## Consolidate Patterns
+
+If you discover a **reusable pattern** that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of progress.txt (create it if it doesn't exist). This section should consolidate the most important learnings:
+
+```
+## Codebase Patterns
+- Example: Use `sql<number>` template for aggregations
+- Example: Always use `IF NOT EXISTS` for migrations
+- Example: Export types from actions.ts for UI components
+```
+
+Only add patterns that are **general and reusable**, not story-specific details.
+
+## Update AGENTS.md Files
+
+Before committing, check if any edited files have learnings worth preserving in nearby AGENTS.md files:
+
+1. **Identify directories with edited files** - Look at which directories you modified
+2. **Check for existing AGENTS.md** - Look for AGENTS.md in those directories or parent directories
+3. **Add valuable learnings** - If you discovered something future developers/agents should know:
+   - API patterns or conventions specific to that module
+   - Gotchas or non-obvious requirements
+   - Dependencies between files
+   - Testing approaches for that area
+   - Configuration or environment requirements
+
+**Examples of good AGENTS.md additions:**
+- "When modifying X, also update Y to keep them in sync"
+- "This module uses pattern Z for all API calls"
+- "Tests require the dev server running on PORT 3000"
+- "Field names must match the template exactly"
+
+**Do NOT add:**
+- Story-specific implementation details
+- Temporary debugging notes
+- Information already in progress.txt
+
+Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
+
+## Quality Requirements
+
+- ALL commits must pass your project's quality checks (typecheck, lint, test)
+- Do NOT commit broken code
+- Keep changes focused and minimal
+- Follow existing code patterns
+
+## Browser Testing (Required for Frontend Stories)
+
+For any story that changes UI, you MUST verify it works in the browser:
+
+1. Load the `dev-browser` skill
+2. Navigate to the relevant page
+3. Verify the UI changes work as expected
+4. Take a screenshot if helpful for the progress log
+
+A frontend story is NOT complete until browser verification passes.
+
+## Stop Condition
+
+After completing a user story, check if ALL stories have `passes: true`.
+
+If ALL stories are complete and passing, reply with:
+<promise>COMPLETE</promise>
+
+If there are still stories with `passes: false`, end your response normally (another iteration will pick up the next story).
+
+## Important
+
+- Work on ONE story per iteration
+- Commit frequently
+- Keep CI green
+- Read the Codebase Patterns section in progress.txt before starting

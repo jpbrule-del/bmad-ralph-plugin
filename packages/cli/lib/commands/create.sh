@@ -261,12 +261,12 @@ cmd_create() {
     exit 1
   fi
 
-  # Generate prd.json
-  info "Generating prd.json configuration file..."
+  # Generate config.json
+  info "Generating config.json configuration file..."
   if generate_prd_json "$loop_name" "$loop_dir" "$epic_filter" "$max_iterations" "$stuck_threshold"; then
-    success "Generated prd.json"
+    success "Generated config.json"
   else
-    error "Failed to generate prd.json"
+    error "Failed to generate config.json"
     exit 1
   fi
 

@@ -62,9 +62,9 @@ cmd_archive() {
     exit 1
   fi
 
-  local prd_file="$loop_path/prd.json"
+  local prd_file="$loop_path/config.json"
 
-  # Validate prd.json exists
+  # Validate config.json exists
   if [[ ! -f "$prd_file" ]]; then
     error "Loop configuration file not found: $prd_file"
     exit 1
@@ -123,7 +123,7 @@ cmd_archive() {
     exit 1
   fi
 
-  # Record archive timestamp in prd.json before moving
+  # Record archive timestamp in config.json before moving
   local archive_timestamp
   archive_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -134,7 +134,7 @@ cmd_archive() {
     '. + {archivedAt: $timestamp}' \
     "$prd_file" > "$temp_prd"; then
     rm -f "$temp_prd"
-    error "Failed to update archive timestamp in prd.json"
+    error "Failed to update archive timestamp in config.json"
     exit 1
   fi
 

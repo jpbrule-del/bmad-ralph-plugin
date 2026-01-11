@@ -72,9 +72,9 @@ generate_prompt_md() {
     architecture_patterns="Project architecture patterns should be discovered during implementation."
   fi
 
-  # Build quality gates list from prd.json (will be generated before this)
+  # Build quality gates list from config.json (will be generated before this)
   local quality_gates_section=""
-  local prd_file="$loop_dir/prd.json"
+  local prd_file="$loop_dir/config.json"
   if [[ -f "$prd_file" ]]; then
     local typecheck_cmd test_cmd lint_cmd build_cmd
     typecheck_cmd=$(jq -r '.config.qualityGates.typecheck // ""' "$prd_file")
@@ -92,7 +92,7 @@ generate_prompt_md() {
       quality_gates_section="No quality gates configured. Ensure code follows project conventions."
     fi
   else
-    quality_gates_section="Quality gates will be configured in prd.json."
+    quality_gates_section="Quality gates will be configured in config.json."
   fi
 
   # Build epic context

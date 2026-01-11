@@ -1121,7 +1121,6 @@ metrics:
   completion_rate: "100%"
   iterations_run: 86
   average_iterations_per_story: 1.54
-
 # Priority Distribution
 priority_summary:
   must_have:
@@ -1133,7 +1132,6 @@ priority_summary:
   could_have:
     stories: 6
     points: 21
-
 # Execution Summary
 execution_summary:
   started_at: "2026-01-11T01:13:59Z"

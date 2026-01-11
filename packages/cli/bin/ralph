@@ -4,10 +4,19 @@
 
 set -euo pipefail
 
-# Script directory
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
-readonly TEMPLATES_DIR="$(cd "$SCRIPT_DIR/../templates" && pwd)"
+# Script directory - resolve symlinks to find actual source
+resolve_script_dir() {
+  local source="${BASH_SOURCE[0]}"
+  while [ -L "$source" ]; do
+    local dir="$(cd -P "$(dirname "$source")" && pwd)"
+    source="$(readlink "$source")"
+    [[ $source != /* ]] && source="$dir/$source"
+  done
+  cd -P "$(dirname "$source")" && pwd
+}
+readonly SCRIPT_DIR="$(resolve_script_dir)"
+readonly LIB_DIR="$SCRIPT_DIR/../lib"
+readonly TEMPLATES_DIR="$SCRIPT_DIR/../templates"
 
 # Export for sourced scripts
 export LIB_DIR

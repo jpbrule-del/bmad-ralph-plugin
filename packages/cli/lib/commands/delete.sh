@@ -64,7 +64,7 @@ cmd_delete() {
   fi
 
   # Get loop information for confirmation
-  local prd_file="$loop_path/prd.json"
+  local prd_file="$loop_path/config.json"
   local branch_name=""
   if [[ -f "$prd_file" ]]; then
     branch_name=$(jq -r '.branchName // ""' "$prd_file")

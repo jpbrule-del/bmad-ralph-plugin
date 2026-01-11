@@ -69,13 +69,13 @@ cmd_show() {
     fi
   fi
 
-  local prd_file="$loop_path/prd.json"
+  local prd_file="$loop_path/config.json"
   if [[ ! -f "$prd_file" ]]; then
     error "Loop configuration file not found: $prd_file"
     exit 1
   fi
 
-  # Extract data from prd.json
+  # Extract data from config.json
   local project=$(jq -r '.project // "Unknown"' "$prd_file")
   local branch=$(jq -r '.branchName // "Unknown"' "$prd_file")
   local description=$(jq -r '.description // ""' "$prd_file")
@@ -113,7 +113,7 @@ cmd_show() {
 
   # Output results
   if [[ "$json_output" == "true" ]]; then
-    # JSON output - just output the prd.json with some additional fields
+    # JSON output - just output the config.json with some additional fields
     jq '. + {
       "loopName": "'"$loop_name"'",
       "isArchived": '"$([ "$is_archived" == "true" ] && echo "true" || echo "false")"',

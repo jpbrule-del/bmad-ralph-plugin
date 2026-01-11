@@ -76,9 +76,9 @@ cmd_unarchive() {
     exit 1
   fi
 
-  local prd_file="$archive_path/prd.json"
+  local prd_file="$archive_path/config.json"
 
-  # Validate prd.json exists
+  # Validate config.json exists
   if [[ ! -f "$prd_file" ]]; then
     error "Loop configuration file not found: $prd_file"
     exit 1
@@ -93,14 +93,14 @@ cmd_unarchive() {
     echo ""
     info "Loop location: $destination_path"
 
-    # Remove archivedAt timestamp from prd.json
+    # Remove archivedAt timestamp from config.json
     local lib_dir
     lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     # shellcheck source=../core/utils.sh
     source "$lib_dir/core/utils.sh"
 
     local restored_prd
-    restored_prd=$(jq 'del(.archivedAt)' "$destination_path/prd.json")
+    restored_prd=$(jq 'del(.archivedAt)' "$destination_path/config.json")
 
     # Reset stats if --reset-stats flag provided
     if [[ "$reset_stats" == "true" ]]; then
@@ -116,13 +116,13 @@ cmd_unarchive() {
       ')
     fi
 
-    # Save updated prd.json
-    if atomic_write_json "$destination_path/prd.json" "$restored_prd"; then
+    # Save updated config.json
+    if atomic_write_json "$destination_path/config.json" "$restored_prd"; then
       if [[ "$reset_stats" == "true" ]]; then
         success "Execution statistics reset"
       fi
     else
-      warning "Failed to update prd.json"
+      warning "Failed to update config.json"
     fi
 
     # Feedback.json is preserved in the loop directory
@@ -139,12 +139,12 @@ cmd_unarchive() {
 
       # Check if we're in a git repo
       if git rev-parse --git-dir > /dev/null 2>&1; then
-        # Extract branch name from prd.json
+        # Extract branch name from config.json
         local branch_name
         branch_name=$(echo "$restored_prd" | jq -r '.branchName // empty')
 
         if [[ -z "$branch_name" ]]; then
-          # Generate branch name if not in prd.json
+          # Generate branch name if not in config.json
           branch_name="ralph/$loop_name"
         fi
 

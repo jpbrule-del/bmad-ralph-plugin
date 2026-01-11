@@ -105,8 +105,8 @@ cmd_clone() {
     exit 1
   fi
 
-  # Update prd.json with new loop name and reset stats
-  local prd_file="$dest_path/prd.json"
+  # Update config.json with new loop name and reset stats
+  local prd_file="$dest_path/config.json"
   if [[ -f "$prd_file" ]]; then
     local temp_file
     temp_file=$(mktemp)
@@ -130,7 +130,7 @@ cmd_clone() {
     # Validate the updated JSON
     if ! jq . "$temp_file" >/dev/null 2>&1; then
       rm -f "$temp_file"
-      error "Failed to update prd.json"
+      error "Failed to update config.json"
       rm -rf "$dest_path"
       exit 1
     fi
@@ -138,7 +138,7 @@ cmd_clone() {
     # Move to final location (atomic write)
     mv "$temp_file" "$prd_file"
   else
-    warn "prd.json not found in source loop"
+    warn "config.json not found in source loop"
   fi
 
   # Reset progress.txt with new header (using atomic write pattern)
@@ -146,7 +146,7 @@ cmd_clone() {
   if [[ -f "$progress_file" ]]; then
     local project_name branch_name
 
-    # Get project and branch info from prd.json
+    # Get project and branch info from config.json
     if [[ -f "$prd_file" ]]; then
       project_name=$(jq -r '.project // "project"' "$prd_file")
       branch_name=$(jq -r '.branchName // "main"' "$prd_file")
@@ -207,7 +207,7 @@ EOF
       if [[ $REPLY =~ ^[Yy]$ ]]; then
         if git checkout "$branch_name" 2>/dev/null; then
           success "Checked out existing branch: $branch_name"
-          # Update branchName in prd.json
+          # Update branchName in config.json
           if [[ -f "$prd_file" ]]; then
             temp_file=$(mktemp)
             jq --arg branch "$branch_name" '.branchName = $branch' "$prd_file" > "$temp_file"
@@ -224,7 +224,7 @@ EOF
     echo ""
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
       if create_loop_branch "$dest_name"; then
-        # Update branchName in prd.json
+        # Update branchName in config.json
         if [[ -f "$prd_file" ]]; then
           temp_file=$(mktemp)
           jq --arg branch "$branch_name" '.branchName = $branch' "$prd_file" > "$temp_file"

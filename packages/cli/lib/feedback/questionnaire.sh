@@ -4,7 +4,7 @@
 # Collect feedback from user
 # Arguments:
 #   $1: loop_name - Name of the loop being archived
-#   $2: prd_file - Path to prd.json file
+#   $2: prd_file - Path to config.json file
 # Outputs:
 #   JSON string with feedback responses
 # Returns: 0 on success, 1 on failure

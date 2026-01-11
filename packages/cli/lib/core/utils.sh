@@ -194,7 +194,7 @@ atomic_write_yaml() {
 # ═══════════════════════════════════════════════════════════════════════════════
 #
 # WHEN TO USE ATOMIC WRITES:
-# - Configuration files (config.json, config.yaml, prd.json)
+# - Configuration files (config.json, config.yaml, config.json)
 # - State files that track loop execution (storyAttempts, stats)
 # - Sprint status files (sprint-status.yaml)
 # - Any file where partial writes would corrupt application state

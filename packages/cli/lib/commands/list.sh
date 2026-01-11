@@ -58,7 +58,7 @@ cmd_list() {
     for loop_dir in "$loops_dir"/*; do
       if [[ -d "$loop_dir" ]]; then
         local loop_name=$(basename "$loop_dir")
-        local prd_file="$loop_dir/prd.json"
+        local prd_file="$loop_dir/config.json"
 
         if [[ -f "$prd_file" ]]; then
           local created_at=$(jq -r '.generatedAt // "Unknown"' "$prd_file")
@@ -81,7 +81,7 @@ cmd_list() {
     for loop_dir in "$archive_dir"/*; do
       if [[ -d "$loop_dir" ]]; then
         local loop_name=$(basename "$loop_dir")
-        local prd_file="$loop_dir/prd.json"
+        local prd_file="$loop_dir/config.json"
         local feedback_file="$loop_dir/feedback.json"
 
         if [[ -f "$prd_file" ]]; then

@@ -1,11 +1,13 @@
 # BMM Workflow Status - ralph
 # Generated: 2026-01-10T00:00:00Z
-# Project Level: 3 (Complex, 12-40 stories)
+# Updated: 2026-01-11 (v2 Plugin Conversion)
+# Project Level: 4 (Major, 35-44 stories)
 
 project_name: "ralph"
-project_type: "cli-tool"
-project_level: 3
+project_type: "claude-code-plugin"
+project_level: 4
 initialized: "2026-01-10"
+current_version: "v2-plugin"
 
 # Workflow Status Tracking
 # Status values:
@@ -32,10 +34,13 @@ workflows:
     name: "Planning"
     workflows:
       prd:
-        status: "docs/prd-ralph-2026-01-10.md"
+        status: "docs/prd-bmad-ralph-plugin-2026-01-11.md"
         description: "Product Requirements Document"
+        versions:
+          v1: "docs/prd-ralph-2026-01-10.md"
+          v2: "docs/prd-bmad-ralph-plugin-2026-01-11.md"
       tech-spec:
-        status: "optional"
+        status: "required"
         description: "Technical Specification"
 
   # Phase 3: Solutioning
@@ -43,8 +48,11 @@ workflows:
     name: "Solutioning"
     workflows:
       architecture:
-        status: "docs/architecture-ralph-2026-01-10.md"
+        status: "docs/architecture-bmad-ralph-plugin-2026-01-11.md"
         description: "System architecture design"
+        versions:
+          v1: "docs/architecture-ralph-2026-01-10.md"
+          v2: "docs/architecture-bmad-ralph-plugin-2026-01-11.md"
       ux-design:
         status: "optional"
         description: "UX/UI design"
@@ -57,10 +65,16 @@ workflows:
       sprint-planning:
         status: "docs/sprint-status.yaml"
         description: "Sprint planning and story breakdown"
+        versions:
+          v1: "docs/sprint-status.yaml"
+          v2: "docs/sprint-status-v2.yaml"
       stories:
         status: "completed"
         description: "Story implementation"
         completed_at: "2026-01-11T05:09:33Z"
+      sprint-plan:
+        status: "docs/sprint-plan-bmad-ralph-plugin-2026-01-11.md"
+        description: "V2 Plugin sprint plan with estimates"
 
   # Phase 5: Autonomous Execution
   phase_5:
@@ -90,13 +104,28 @@ workflows:
           duration_hours: 3.9
           branch: "ralph/sprint-1"
 
-current_phase: "completed"
-last_updated: "2026-01-11T05:09:33Z"
+current_phase: "phase_4"
+last_updated: "2026-01-11T15:00:00Z"
 
-# Sprint Completion Summary
-sprint_summary:
+# V1 Sprint Completion Summary (CLI Implementation)
+v1_sprint_summary:
   status: "completed"
   stories: "56/56 (100%)"
   points: "166/166 (100%)"
   duration: "~4 hours"
   automated_by: "ralph autonomous loop"
+
+# V2 Plugin Conversion Summary
+v2_plugin_conversion:
+  status: "implementation"
+  prd: "docs/prd-bmad-ralph-plugin-2026-01-11.md"
+  architecture: "docs/architecture-bmad-ralph-plugin-2026-01-11.md"
+  sprint_plan: "docs/sprint-plan-bmad-ralph-plugin-2026-01-11.md"
+  sprint_status: "docs/sprint-status-v2.yaml"
+  stories: 40
+  points: 197
+  sprints: 4
+  epics: 7
+  pattern: "Plugin Adapter over Modular CLI"
+  next_step: "Create Ralph loop for Sprint 1 (/bmad-ralph:create plugin-v2-sprint-1)"
+  target: "Claude Code plugin with svrnty-marketplace distribution"
