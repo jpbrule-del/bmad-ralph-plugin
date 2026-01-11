@@ -29,10 +29,12 @@
     "./commands/archive.md",
     "./commands/unarchive.md",
     "./commands/config.md",
-    "./commands/feedback-report.md"
+    "./commands/feedback-report.md",
+    "./commands/update.md",
+    "./commands/uninstall.md"
   ],
   "agents": [
-    "./agents/ralph-execution-agent.md",
-    "./agents/loop-monitor-agent.md"
+    "./agents/ralph-agent.md",
+    "./agents/loop-monitor.md"
   ]
 }

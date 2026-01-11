@@ -239,7 +239,7 @@
     "description": "Quick demonstration of creating and running a Ralph loop in a BMAD project"
   },
   "commands": {
-    "count": 13,
+    "count": 15,
     "namespace": "bmad-ralph",
     "examples": [
       {
