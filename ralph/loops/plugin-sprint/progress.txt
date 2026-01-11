@@ -1312,3 +1312,32 @@ Successfully completed **STORY-034: Implement Version Management** for the BMAD 
 - ✅ Tag releases in git
 - ✅ Update marketplace on release
 - ✅ Support version rollback
+
+## Iteration 35 - STORY-034 (COMPLETED)
+Timestamp: 2026-01-11T10:02:46Z
+Story: Implement Version Management
+Epic: EPIC-006
+Points: 5
+Attempts: 0
+Quality gates: All passed
+Commit: a5ddaea
+
+## Iteration 36 - STORY-035 - STARTED
+Timestamp: 2026-01-11T10:02:48Z
+Story: Implement Auto-Update Support
+Attempts: 0/3
+
+## Iteration 37 - STORY-035 (COMPLETED)
+Timestamp: 2026-01-11T10:15:00Z
+Story: Implement Auto-Update Support
+Epic: EPIC-006
+Points: 5
+Attempts: 0
+Quality gates: All passed
+Commit: 228dc4d
+
+Completed: Created comprehensive auto-update system with auto-update.json configuration (check intervals, update channels, preservation settings), auto-update-check.sh for periodic checks with deferral support, auto-update-install.sh for one-click updates with backup and rollback, auto-update-defer.sh for deferring updates, auto-update-changelog.sh for release notes display, integration with plugin-load hook, and comprehensive AUTO-UPDATE.md documentation.
+
+Learning: Auto-update systems require careful balance between automation and user control - default to manual updates (auto_install: false) while providing one-click convenience. Configuration preservation is critical during updates - backup all user-modified files (config.yaml, custom hooks, loop data) and restore after installation. Update deferral allows users to postpone updates without disabling the notification system. Changelog display integration helps users make informed update decisions. Hook integration via plugin-load provides non-intrusive update checks on startup respecting check intervals. Rollback support via backup system provides safety net for problematic updates.
+
+Note for next: STORY-036 (Create Installation Validation) requires implementing verification that plugin works correctly after installation - verifying commands registered, hooks active, MCP servers connected, dependencies available, and providing repair options on failure. This is a 5-point "should-have" story completing EPIC-006 distribution infrastructure.
