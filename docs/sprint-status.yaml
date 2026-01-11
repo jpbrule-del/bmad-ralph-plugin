@@ -712,7 +712,7 @@ epics:
 
           As a marketplace owner, I want the marketplace repository configured
           so that plugins can be published.
-        status: "not_started"
+        status: "completed"
         points: 5
         priority: "should-have"
         functional_requirements:
@@ -872,11 +872,11 @@ metrics:
   total_epics: 7
   total_stories: 40
   total_points: 197
-  stories_completed: 32
+  stories_completed: 33
   stories_in_progress: 0
-  stories_not_started: 8
-  points_completed: 209
-  completion_rate: "106.1%"
+  stories_not_started: 7
+  points_completed: 214
+  completion_rate: "108.6%"
 # Priority Distribution
 priority_summary:
   must_have:
