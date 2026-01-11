@@ -1,0 +1,399 @@
+{
+  "$schema": "https://marketplace.claude.ai/schemas/plugin-manifest/v1.json",
+  "manifest_version": "1.0.0",
+  "metadata": {
+    "id": "bmad-ralph",
+    "name": "BMAD Ralph Plugin",
+    "display_name": "Ralph - AI Agent Loop",
+    "version": "1.0.0",
+    "description": "Autonomous AI agent loop for Claude Code that automates story execution following the BMAD methodology. Ralph executes user stories from sprint backlogs with quality gates, progress tracking, and intelligent stuck detection.",
+    "tagline": "Automate your BMAD sprint stories with autonomous AI execution",
+    "author": {
+      "name": "snarktank",
+      "email": "noreply@snarktank.dev",
+      "url": "https://github.com/snarktank"
+    },
+    "publisher": "snarktank",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/snarktank/ralph.git"
+    },
+    "homepage": "https://github.com/snarktank/ralph#readme",
+    "documentation": "https://github.com/snarktank/ralph/blob/main/README.md",
+    "support_url": "https://github.com/snarktank/ralph/issues",
+    "changelog_url": "https://github.com/snarktank/ralph/blob/main/CHANGELOG.md"
+  },
+  "categories": [
+    "automation",
+    "productivity",
+    "development-tools",
+    "project-management",
+    "agile"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "automation",
+    "autonomous",
+    "agent",
+    "bmad",
+    "sprint",
+    "stories",
+    "agile",
+    "scrum",
+    "quality-gates",
+    "loop",
+    "execution"
+  ],
+  "compatibility": {
+    "claude_code_version": {
+      "minimum": "1.0.0",
+      "recommended": "1.2.0"
+    },
+    "platforms": {
+      "macos": {
+        "supported": true,
+        "minimum_version": "11.0",
+        "architectures": ["x86_64", "arm64"]
+      },
+      "linux": {
+        "supported": true,
+        "distributions": ["ubuntu", "debian", "fedora", "arch"],
+        "minimum_kernel": "5.4"
+      },
+      "windows": {
+        "supported": true,
+        "minimum_version": "10",
+        "notes": "WSL2 recommended for best experience"
+      }
+    },
+    "dependencies": {
+      "required": [
+        {
+          "name": "jq",
+          "version": ">=1.6",
+          "type": "system",
+          "description": "JSON processor for parsing configuration files",
+          "install_url": "https://stedolan.github.io/jq/download/"
+        },
+        {
+          "name": "yq",
+          "version": ">=4.0",
+          "type": "system",
+          "description": "YAML processor for parsing sprint files",
+          "install_url": "https://github.com/mikefarah/yq#install"
+        },
+        {
+          "name": "git",
+          "version": ">=2.0",
+          "type": "system",
+          "description": "Version control system for branch management",
+          "install_url": "https://git-scm.com/downloads"
+        }
+      ],
+      "optional": [
+        {
+          "name": "perplexity-mcp-server",
+          "type": "mcp",
+          "description": "Perplexity AI integration for research capabilities",
+          "install_url": "https://www.npmjs.com/package/@anthropic-ai/perplexity-mcp-server",
+          "notes": "Requires PERPLEXITY_API_KEY environment variable"
+        }
+      ]
+    }
+  },
+  "installation": {
+    "quick_start": {
+      "description": "Install the BMAD Ralph plugin directly from the Claude Code marketplace",
+      "steps": [
+        "Open Claude Code",
+        "Navigate to Settings > Plugins",
+        "Search for 'BMAD Ralph Plugin'",
+        "Click 'Install' and restart Claude Code"
+      ]
+    },
+    "manual_installation": {
+      "description": "Install the plugin manually from the GitHub repository",
+      "steps": [
+        "Clone the repository: `git clone https://github.com/snarktank/ralph.git`",
+        "Navigate to your Claude Code plugins directory",
+        "Copy the `.claude-plugin` directory to your plugins folder",
+        "Install system dependencies: `jq`, `yq`, `git`",
+        "Restart Claude Code to load the plugin"
+      ]
+    },
+    "dependency_installation": {
+      "macos": {
+        "description": "Install dependencies using Homebrew",
+        "command": "brew install jq yq git"
+      },
+      "linux": {
+        "description": "Install dependencies using package manager",
+        "ubuntu": "sudo apt-get install jq git && sudo snap install yq",
+        "fedora": "sudo dnf install jq yq git"
+      },
+      "windows": {
+        "description": "Install dependencies using Chocolatey or WSL2",
+        "chocolatey": "choco install jq yq git",
+        "wsl2": "Follow Linux installation instructions in WSL2"
+      }
+    },
+    "post_installation": {
+      "description": "Steps to complete after installation",
+      "steps": [
+        "Verify dependencies: `/bmad-ralph:init --help` will check for dependencies",
+        "Optional: Set up Perplexity MCP for research capabilities",
+        "Create your first loop: `/bmad-ralph:init` in a BMAD project",
+        "Configure quality gates: `/bmad-ralph:config quality-gates`"
+      ]
+    },
+    "upgrade_instructions": {
+      "description": "How to upgrade from a previous version",
+      "steps": [
+        "Check current version: `/bmad-ralph:version`",
+        "Back up existing loops: `cp -r ralph/ ralph-backup/`",
+        "Install new version from marketplace",
+        "Restart Claude Code",
+        "Verify upgrade: Check plugin loads without errors"
+      ]
+    }
+  },
+  "features": {
+    "core": [
+      {
+        "name": "Autonomous Story Execution",
+        "description": "Automatically executes user stories from sprint backlog with quality gates and progress tracking",
+        "icon": "🤖"
+      },
+      {
+        "name": "Quality Gate Integration",
+        "description": "Runs lint, test, and build commands before committing to ensure code quality",
+        "icon": "✅"
+      },
+      {
+        "name": "Intelligent Stuck Detection",
+        "description": "Detects when stories are stuck and provides diagnostic information with resolution suggestions",
+        "icon": "🔍"
+      },
+      {
+        "name": "Progress Tracking",
+        "description": "Real-time monitoring dashboard with iteration count, story completion, and time estimates",
+        "icon": "📊"
+      },
+      {
+        "name": "Git Workflow Integration",
+        "description": "Automatic branch creation, commits with conventional messages, and merge readiness",
+        "icon": "🌿"
+      }
+    ],
+    "advanced": [
+      {
+        "name": "Loop Optimization Skill",
+        "description": "Auto-invoked skill that analyzes loop performance and suggests optimizations",
+        "icon": "⚡"
+      },
+      {
+        "name": "MCP Integration",
+        "description": "Perplexity AI integration for research during story implementation",
+        "icon": "🔬"
+      },
+      {
+        "name": "Hook System",
+        "description": "Comprehensive lifecycle hooks (pre-commit, post-story, loop events) for automation",
+        "icon": "🪝"
+      },
+      {
+        "name": "Sub-Agents",
+        "description": "Specialized agents for execution (Ralph Execution Agent) and monitoring (Loop Monitor Agent)",
+        "icon": "👥"
+      }
+    ]
+  },
+  "screenshots": [
+    {
+      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/screenshot-status-dashboard.png",
+      "caption": "Real-time status dashboard showing loop progress and quality gate results",
+      "alt": "Ralph status dashboard displaying iteration count, story progress, and quality gates"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/screenshot-create-loop.png",
+      "caption": "Creating a new automation loop from sprint backlog",
+      "alt": "Ralph create command interface with epic filtering and configuration options"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/screenshot-run-execution.png",
+      "caption": "Loop execution showing story implementation with quality gates",
+      "alt": "Ralph run command executing stories with real-time progress updates"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/demo-loop-optimization.gif",
+      "caption": "Loop optimization skill providing performance suggestions",
+      "alt": "Animated demonstration of loop optimization skill analyzing performance"
+    }
+  ],
+  "demo": {
+    "video_url": "https://www.youtube.com/watch?v=PLACEHOLDER_VIDEO_ID",
+    "gif_url": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/demo-quick-start.gif",
+    "description": "Quick demonstration of creating and running a Ralph loop in a BMAD project"
+  },
+  "commands": {
+    "count": 13,
+    "namespace": "bmad-ralph",
+    "examples": [
+      {
+        "command": "/bmad-ralph:init",
+        "description": "Initialize Ralph in a BMAD project"
+      },
+      {
+        "command": "/bmad-ralph:create my-sprint",
+        "description": "Create a new automation loop from sprint backlog"
+      },
+      {
+        "command": "/bmad-ralph:run my-sprint",
+        "description": "Execute the automation loop"
+      },
+      {
+        "command": "/bmad-ralph:status my-sprint",
+        "description": "Monitor loop execution with real-time dashboard"
+      },
+      {
+        "command": "/bmad-ralph:list",
+        "description": "List all loops with status and progress"
+      }
+    ]
+  },
+  "use_cases": [
+    {
+      "title": "Sprint Automation",
+      "description": "Automate execution of sprint backlog stories with quality gates and progress tracking for agile teams",
+      "audience": "Agile Development Teams"
+    },
+    {
+      "title": "Solo Development",
+      "description": "Accelerate solo development by automating story implementation with AI-powered execution",
+      "audience": "Solo Developers"
+    },
+    {
+      "title": "Technical Debt Reduction",
+      "description": "Create focused loops for refactoring, testing, and quality improvements with automated validation",
+      "audience": "Tech Leads & Architects"
+    },
+    {
+      "title": "Prototyping & MVPs",
+      "description": "Rapidly build prototypes and MVPs by automating feature implementation from user stories",
+      "audience": "Startup Teams"
+    }
+  ],
+  "pricing": {
+    "model": "free",
+    "details": "Open source and free to use under MIT license"
+  },
+  "ratings": {
+    "average": null,
+    "count": 0,
+    "distribution": {
+      "5": 0,
+      "4": 0,
+      "3": 0,
+      "2": 0,
+      "1": 0
+    }
+  },
+  "stats": {
+    "downloads": 0,
+    "active_installs": 0,
+    "last_updated": "2026-01-11T00:00:00Z",
+    "created_at": "2026-01-11T00:00:00Z"
+  },
+  "marketplace_meta": {
+    "featured": false,
+    "verified": false,
+    "status": "active",
+    "visibility": "public",
+    "submission_date": "2026-01-11T00:00:00Z",
+    "approval_date": null,
+    "review_status": "pending"
+  },
+  "resources": {
+    "documentation": [
+      {
+        "title": "Getting Started Guide",
+        "url": "https://github.com/snarktank/ralph/blob/main/docs/getting-started.md",
+        "description": "Step-by-step guide to set up and use Ralph"
+      },
+      {
+        "title": "Command Reference",
+        "url": "https://github.com/snarktank/ralph/blob/main/docs/commands.md",
+        "description": "Complete reference for all Ralph commands"
+      },
+      {
+        "title": "Hook Configuration Guide",
+        "url": "https://github.com/snarktank/ralph/blob/main/docs/hooks.md",
+        "description": "How to customize automation with hooks"
+      },
+      {
+        "title": "MCP Integration Guide",
+        "url": "https://github.com/snarktank/ralph/blob/main/.claude-plugin/MCP-USAGE.md",
+        "description": "Set up Perplexity AI integration for research"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "Your First Ralph Loop",
+        "url": "https://github.com/snarktank/ralph/blob/main/docs/tutorials/first-loop.md",
+        "duration": "10 minutes"
+      },
+      {
+        "title": "Configuring Quality Gates",
+        "url": "https://github.com/snarktank/ralph/blob/main/docs/tutorials/quality-gates.md",
+        "duration": "5 minutes"
+      },
+      {
+        "title": "Advanced Hook Configuration",
+        "url": "https://github.com/snarktank/ralph/blob/main/docs/tutorials/advanced-hooks.md",
+        "duration": "15 minutes"
+      }
+    ],
+    "community": {
+      "discord": null,
+      "slack": null,
+      "forum": "https://github.com/snarktank/ralph/discussions",
+      "twitter": null
+    }
+  },
+  "seo": {
+    "meta_title": "BMAD Ralph Plugin - Autonomous AI Agent Loop for Claude Code",
+    "meta_description": "Automate your BMAD sprint stories with Ralph, an autonomous AI agent loop for Claude Code. Features quality gates, progress tracking, and intelligent stuck detection.",
+    "og_image": "https://raw.githubusercontent.com/snarktank/ralph/main/docs/images/og-image.png",
+    "keywords": "claude code plugin, ai automation, autonomous agent, sprint automation, bmad methodology, quality gates, agile development"
+  },
+  "changelog_preview": {
+    "version": "1.0.0",
+    "date": "2026-01-11",
+    "changes": [
+      "Initial release with 13 commands for full loop lifecycle management",
+      "Autonomous story execution with quality gate integration",
+      "Real-time monitoring dashboard with progress tracking",
+      "Intelligent stuck detection with diagnostic information",
+      "Loop optimization skill for performance analysis",
+      "Comprehensive hook system for lifecycle automation",
+      "Perplexity MCP integration for research capabilities",
+      "Specialized agents for execution and monitoring"
+    ]
+  },
+  "notes": {
+    "developer_notes": "This marketplace.json was created as part of STORY-032 in EPIC-006 (Marketplace & Distribution). Screenshot URLs and demo assets are placeholders - actual assets should be created and uploaded to the repository before marketplace submission.",
+    "review_checklist": [
+      "Upload actual screenshots to docs/images/",
+      "Create demo video and upload to YouTube",
+      "Create animated GIF demos",
+      "Test installation on all supported platforms",
+      "Verify all documentation URLs are accessible",
+      "Get initial user feedback and testimonials",
+      "Complete security review for marketplace submission",
+      "Ensure all metadata is accurate and compelling"
+    ]
+  }
+}
