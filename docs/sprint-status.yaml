@@ -7,7 +7,7 @@ sprint_number: 1
 sprint_goal: "Deliver MVP ralph CLI with full loop lifecycle (create, run, archive)"
 sprint_start_date: "2026-01-10"
 sprint_end_date: ""
-last_updated: "2026-01-10T23:54:01Z"
+last_updated: "2026-01-11T05:03:24Z"
 # Point Scale: Fibonacci (1, 2, 3, 5, 8)
 # 1 = Trivial (< 1 hour)
 # 2 = Small (1-2 hours)
@@ -997,7 +997,7 @@ epics:
     status: "in-progress"
     priority: "must-have"
     total_points: 18
-    completed_points: 13
+    completed_points: 16
     stories:
       - id: "STORY-060"
         title: "Create agent definition file"
@@ -1079,7 +1079,7 @@ epics:
 
           As a BMAD user, I want seamless integration so that ralph
           uses the same source of truth.
-        status: "not-started"
+        status: "completed"
         points: 3
         priority: "must-have"
         functional_requirements:
