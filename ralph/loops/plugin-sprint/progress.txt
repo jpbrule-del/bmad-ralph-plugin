@@ -1140,3 +1140,32 @@ Successfully completed **STORY-030: Implement Perplexity MCP Server** for the BM
 ### Next Story
 
 **STORY-031: Implement MCP Security** (5 points, should-have) - Implement secure credential handling for MCP servers with environment variable support, Claude Code credential store integration, credential encryption at rest, validation on startup, and clear error messages for auth failures.
+
+## Iteration 30 - STORY-030 (COMPLETED)
+Timestamp: 2026-01-11T09:37:27Z
+Story: Implement Perplexity MCP Server
+Epic: EPIC-005
+Points: 8
+Attempts: 0
+Quality gates: All passed
+Commit: 4719591
+
+## Iteration 31 - STORY-031 - STARTED
+Timestamp: 2026-01-11T09:37:29Z
+Story: Implement MCP Security
+Attempts: 0/3
+
+## Iteration 31 - STORY-031 (COMPLETED)
+Timestamp: 2026-01-11T09:45:00Z
+Story: Implement MCP Security
+Epic: EPIC-005
+Points: 5
+Attempts: 0
+Quality gates: All passed
+Commit: f4876ed
+
+Completed: Created comprehensive MCP security implementation with credential validation script (mcp-credential-validator.sh) supporting environment variables, Claude Code credential store, and OS keychain. Implemented credential manager (mcp-credential-manager.sh) with GPG encryption and cross-platform keychain support. Created log sanitizer (mcp-log-sanitizer.sh) with pattern-based credential redaction for automatic log sanitization. Updated hooks.json with MCP credential validation hook as plugin-load hook (execution_order: 4). Enhanced .mcp.json security section with encryption at rest, credential storage method configuration, and validation settings. Created comprehensive MCP-SECURITY.md documentation covering all security features, best practices, troubleshooting, and usage examples.
+
+Learning: MCP security requires multi-layered approach - credential validation on startup prevents runtime failures, encryption at rest protects stored credentials (GPG/OS keychain), log sanitization ensures credentials never leak in logs using regex pattern matching. Security configuration in .mcp.json provides central control over validation behavior (validate_on_startup, fail_on_invalid, show_warnings). Hook-based validation integrates seamlessly with plugin lifecycle - runs after dependency verification and config validation. Credential manager supports multiple storage backends (environment variables, GPG encryption, OS keychain on macOS/Linux/Windows, Claude Code credential store) giving users flexibility. Log sanitizer uses comprehensive regex patterns to detect and redact API keys, tokens, passwords, secrets, and private keys - operates in real-time watch mode or batch sanitization. Documentation separates concerns - MCP-USAGE.md for general usage, MCP-SECURITY.md for security-specific topics. All acceptance criteria met: environment variables supported, Claude Code credential store supported, credentials never logged (enforced by sanitizer), encryption at rest supported (GPG/keychain), startup validation implemented, clear error messages provided.
+
+Note for next: EPIC-005 (MCP Integration) now has 3 of 3 stories complete (STORY-029, STORY-030, STORY-031). Next epic is EPIC-006 (Marketplace & Distribution) starting with STORY-032 (Create Marketplace Manifest) - requires creating marketplace.json manifest for plugin listing in svrnty-marketplace with metadata, installation instructions, screenshots, category tags, and compatibility information.
