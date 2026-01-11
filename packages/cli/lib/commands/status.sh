@@ -321,6 +321,84 @@ display_status() {
   fi
   echo ""
 
+  # Estimated Time
+  section "Estimated Time"
+  if [[ $stories_completed -lt 2 ]]; then
+    echo "${COLOR_DIM}Calculating... (need at least 2 completed stories)${COLOR_RESET}"
+  else
+    # Get all completion timestamps and sort them
+    local timestamps=($(jq -r '.storyNotes | to_entries[] | .value.completedAt' "$prd_file" 2>/dev/null | grep -v "null" | sort))
+
+    if [[ ${#timestamps[@]} -ge 2 ]]; then
+      # Calculate time differences between consecutive completions
+      local total_duration=0
+      local duration_count=0
+
+      for ((i=1; i<${#timestamps[@]}; i++)); do
+        local prev_time="${timestamps[$((i-1))]}"
+        local curr_time="${timestamps[$i]}"
+
+        # Convert ISO 8601 timestamps to seconds (macOS and Linux compatible)
+        local prev_seconds=$(date -jf "%Y-%m-%dT%H:%M:%SZ" "$prev_time" "+%s" 2>/dev/null || date -d "$prev_time" "+%s" 2>/dev/null)
+        local curr_seconds=$(date -jf "%Y-%m-%dT%H:%M:%SZ" "$curr_time" "+%s" 2>/dev/null || date -d "$curr_time" "+%s" 2>/dev/null)
+
+        if [[ -n "$prev_seconds" ]] && [[ -n "$curr_seconds" ]]; then
+          local duration=$((curr_seconds - prev_seconds))
+          total_duration=$((total_duration + duration))
+          duration_count=$((duration_count + 1))
+        fi
+      done
+
+      if [[ $duration_count -gt 0 ]]; then
+        local avg_seconds_per_story=$((total_duration / duration_count))
+        local remaining_stories=$((total_stories - stories_completed))
+        local estimated_seconds=$((remaining_stories * avg_seconds_per_story))
+
+        # Format average time per story
+        local avg_time=""
+        if [[ $avg_seconds_per_story -ge 3600 ]]; then
+          local avg_hours=$((avg_seconds_per_story / 3600))
+          local avg_minutes=$(((avg_seconds_per_story % 3600) / 60))
+          avg_time="${avg_hours}h ${avg_minutes}m"
+        elif [[ $avg_seconds_per_story -ge 60 ]]; then
+          local avg_minutes=$((avg_seconds_per_story / 60))
+          local avg_seconds=$((avg_seconds_per_story % 60))
+          avg_time="${avg_minutes}m ${avg_seconds}s"
+        else
+          avg_time="${avg_seconds_per_story}s"
+        fi
+
+        # Format estimated remaining time
+        local eta_time=""
+        if [[ $estimated_seconds -ge 86400 ]]; then
+          local eta_days=$((estimated_seconds / 86400))
+          local eta_hours=$(((estimated_seconds % 86400) / 3600))
+          local eta_minutes=$(((estimated_seconds % 3600) / 60))
+          eta_time="${eta_days}d ${eta_hours}h ${eta_minutes}m"
+        elif [[ $estimated_seconds -ge 3600 ]]; then
+          local eta_hours=$((estimated_seconds / 3600))
+          local eta_minutes=$(((estimated_seconds % 3600) / 60))
+          eta_time="${eta_hours}h ${eta_minutes}m"
+        elif [[ $estimated_seconds -ge 60 ]]; then
+          local eta_minutes=$((estimated_seconds / 60))
+          local eta_seconds=$((estimated_seconds % 60))
+          eta_time="${eta_minutes}m ${eta_seconds}s"
+        else
+          eta_time="${estimated_seconds}s"
+        fi
+
+        echo "Avg Time/Story: $avg_time"
+        echo "Remaining:      $remaining_stories stories"
+        echo "ETA:            $eta_time"
+      else
+        echo "${COLOR_DIM}Calculating... (insufficient timestamp data)${COLOR_RESET}"
+      fi
+    else
+      echo "${COLOR_DIM}Calculating... (need at least 2 completed stories)${COLOR_RESET}"
+    fi
+  fi
+  echo ""
+
   # Quality Gates
   section "Quality Gates"
   local gates_enabled=0
