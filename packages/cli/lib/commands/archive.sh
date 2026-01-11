@@ -147,15 +147,21 @@ cmd_archive() {
 
   # Move loop to archive
   if mv "$loop_path" "$archive_path"; then
-    # Save feedback to archive directory if collected
-    # STORY-052 will implement proper feedback storage
+    # STORY-052: Save feedback to archive directory with atomic write
     if [[ -n "$feedback_json" ]]; then
       local feedback_file="$archive_path/feedback.json"
-      echo "$feedback_json" > "$feedback_file"
-      if [[ $? -eq 0 ]]; then
+
+      # Source utils module for atomic write functions
+      # shellcheck source=../core/utils.sh
+      source "$lib_dir/core/utils.sh"
+
+      # Use atomic write for feedback storage
+      if atomic_write_json "$feedback_file" "$feedback_json"; then
         info "Feedback saved to: $feedback_file"
       else
         warning "Failed to save feedback to archive"
+        # Don't fail the archive operation if feedback save fails
+        # The loop is already moved, so we just log a warning
       fi
     fi
 
