@@ -152,8 +152,7 @@
       "required": true,
       "on_failure": "warn",
       "execution_order": 1,
-      "enabled": false,
-      "note": "To be implemented in STORY-025"
+      "enabled": true
     },
     {
       "type": "post-story",
