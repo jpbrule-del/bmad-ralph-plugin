@@ -2,35 +2,21 @@
 # Sprint status analysis utilities
 # Parses sprint-status.yaml to extract story information
 
+# Get LIB_DIR from main script or fallback to relative path
+readonly SPRINT_ANALYSIS_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
+
+# Source bmad_config utilities
+# shellcheck source=lib/core/bmad_config.sh
+source "$SPRINT_ANALYSIS_LIB_DIR/core/bmad_config.sh"
+
 # Get the path to sprint-status.yaml
+# Uses get_bmad_sprint_status_path which checks:
+# 1. bmad/config.yaml (bmm.sprint_status_file)
+# 2. ralph/config.yaml (bmad.sprint_status_path)
+# 3. ralph/config.json (sprintStatusPath)
+# 4. Falls back to docs/sprint-status.yaml
 get_sprint_status_path() {
-  # Check for custom path in ralph config
-  if [[ -f "ralph/config.yaml" ]]; then
-    local custom_path
-    custom_path=$(yq eval '.sprintStatusPath // ""' ralph/config.yaml 2>/dev/null)
-    if [[ -n "$custom_path" ]] && [[ -f "$custom_path" ]]; then
-      echo "$custom_path"
-      return 0
-    fi
-  fi
-
-  # Check for custom path in ralph config.json
-  if [[ -f "ralph/config.json" ]]; then
-    local custom_path
-    custom_path=$(jq -r '.sprintStatusPath // ""' ralph/config.json 2>/dev/null)
-    if [[ -n "$custom_path" ]] && [[ -f "$custom_path" ]]; then
-      echo "$custom_path"
-      return 0
-    fi
-  fi
-
-  # Default path
-  if [[ -f "docs/sprint-status.yaml" ]]; then
-    echo "docs/sprint-status.yaml"
-    return 0
-  fi
-
-  return 1
+  get_bmad_sprint_status_path
 }
 
 # Validate sprint-status.yaml is readable

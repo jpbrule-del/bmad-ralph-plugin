@@ -4,6 +4,10 @@
 # Get LIB_DIR from main script or fallback to relative path
 readonly PRD_GEN_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
 
+# Source bmad_config utilities
+# shellcheck source=lib/core/bmad_config.sh
+source "$PRD_GEN_LIB_DIR/core/bmad_config.sh"
+
 # Generate prd.json for a given loop
 # Arguments:
 #   $1: loop_name - Name of the loop
@@ -20,21 +24,13 @@ generate_prd_json() {
 
   local output_file="$loop_dir/prd.json"
 
-  # Get project info
+  # Get project info from BMAD config
   local project_name
-  local sprint_status_path="docs/sprint-status.yaml"
+  local sprint_status_path
 
-  # Try to read project name from sprint-status.yaml
-  if [[ -f "$sprint_status_path" ]]; then
-    project_name=$(yq -r '.project_name // "project"' "$sprint_status_path" 2>/dev/null || echo "project")
-  else
-    # Fallback to git repo name or current directory name
-    if git rev-parse --git-dir >/dev/null 2>&1; then
-      project_name=$(basename "$(git rev-parse --show-toplevel)")
-    else
-      project_name=$(basename "$(pwd)")
-    fi
-  fi
+  # Use BMAD config detection for project name and sprint status path
+  project_name=$(get_bmad_project_name)
+  sprint_status_path=$(get_bmad_sprint_status_path || echo "docs/sprint-status.yaml")
 
   # Get current branch
   local branch_name

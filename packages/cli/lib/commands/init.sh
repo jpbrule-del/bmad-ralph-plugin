@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # ralph init - Initialize ralph in a BMAD project
 
+# Get LIB_DIR from main script or fallback to relative path
+readonly INIT_LIB_DIR="${LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)}"
+
+# Source bmad_config utilities
+# shellcheck source=lib/core/bmad_config.sh
+source "$INIT_LIB_DIR/core/bmad_config.sh"
+
 cmd_init() {
   local force=false
   local install_agent=false
@@ -87,14 +94,13 @@ is_bmad_project() {
 # Create config.yaml with defaults
 create_config_yaml() {
   local project_name
-  project_name="$(basename "$(pwd)")"
+  local sprint_status_path
+  local bmad_config_path
 
-  # Detect BMAD paths
-  local sprint_status_path="docs/sprint-status.yaml"
-  local bmad_config_path="bmad/config.yaml"
-
-  [[ ! -f "$sprint_status_path" ]] && sprint_status_path=""
-  [[ ! -f "$bmad_config_path" ]] && bmad_config_path=""
+  # Use BMAD config detection for project name and paths
+  project_name=$(get_bmad_project_name)
+  sprint_status_path=$(get_bmad_sprint_status_path || echo "")
+  bmad_config_path=$(get_bmad_config_path || echo "")
 
   # Write config using atomic pattern (temp + rename)
   local temp_file="ralph/config.yaml.tmp.$$"
